@@ -6,23 +6,31 @@ import { GameForm } from '@/components/game-form';
 import { GameList } from '@/components/game-list';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { GameStatus } from '@/data/game';
 import { useGameStorage } from '@/hooks/use-game-storage';
 import { useThemeColor } from '@/hooks/use-theme-color';
 
-export default function HomeScreen() {
+export default function CompletedScreen() {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const { games, loading, addGame, updateGame, deleteGame } = useGameStorage();
   const tintColor = useThemeColor({}, 'tint');
 
+  // Filter games for completed
+  const completedGames = games.filter(game => game.status === GameStatus.COMPLETED);
+
   const handleAddGame = async (gameData: Parameters<typeof addGame>[0]) => {
-    await addGame(gameData);
+    // Force status to COMPLETED for completed games
+    await addGame({
+      ...gameData,
+      status: GameStatus.COMPLETED,
+    });
   };
 
   if (loading) {
     return (
       <ThemedView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={tintColor} />
-        <ThemedText style={styles.loadingText}>Loading your games...</ThemedText>
+        <ThemedText style={styles.loadingText}>Loading completed games...</ThemedText>
       </ThemedView>
     );
   }
@@ -30,13 +38,19 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ThemedView style={styles.header}>
-        <ThemedText type="title">All Games</ThemedText>
+        <ThemedText type="title">Completed</ThemedText>
         <ThemedText style={styles.subtitle}>
-          {games.length} game{games.length !== 1 ? 's' : ''} tracked
+          {completedGames.length} game{completedGames.length !== 1 ? 's' : ''} completed
         </ThemedText>
       </ThemedView>
 
-      <GameList games={games} onDeleteGame={deleteGame} onUpdateGame={updateGame} />
+      <GameList 
+        games={completedGames} 
+        onDeleteGame={deleteGame}
+        onUpdateGame={updateGame}
+        emptyTitle="No completed games yet"
+        emptySubtitle="Mark games as completed to see them here!"
+      />
 
       <TouchableOpacity
         style={[styles.fab, { backgroundColor: tintColor }]}
