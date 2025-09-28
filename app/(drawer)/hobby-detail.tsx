@@ -2,24 +2,31 @@ import { BookForm } from '@/components/book-form';
 import { CustomForm } from '@/components/custom-form';
 import { GameForm } from '@/components/game-form';
 import { GameList } from '@/components/game-list';
+import { TagFilterModal } from '@/components/tag-filter-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { TvFilmForm } from '@/components/tv-film-form';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Game } from '@/data/game';
 import { Hobby, HobbyType } from '@/data/hobby';
 import { useHobbyStorage } from '@/hooks/use-hobby-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Modal, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function HobbyDetailScreen() {
   const { hobbyId, hobbyName } = useLocalSearchParams<{ hobbyId: string; hobbyName: string }>();
-  const { hobbies, deleteHobby, addItemToHobby, updateItemInHobby, deleteItemFromHobby } = useHobbyStorage();
+  const { hobbies, deleteHobby, updateHobby, addItemToHobby, updateItemInHobby, deleteItemFromHobby } = useHobbyStorage();
   const [hobby, setHobby] = useState<Hobby | null>(null);
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [showEditItemModal, setShowEditItemModal] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showTagFilter, setShowTagFilter] = useState(false);
+  const [selectedFilterTags, setSelectedFilterTags] = useState<string[]>([]);
+  const [showEditHobbyModal, setShowEditHobbyModal] = useState(false);
+  const [editHobbyName, setEditHobbyName] = useState('');
+  const [editHobbyDate, setEditHobbyDate] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -28,6 +35,50 @@ export default function HobbyDetailScreen() {
       setHobby(foundHobby || null);
     }
   }, [hobbyId, hobbies, refreshKey]);
+
+  // Get all unique tags from items
+  const getAllTags = () => {
+    if (!hobby) return [];
+    const allTags = new Set<string>();
+    hobby.items.forEach((item: any) => {
+      if (item.tags) {
+        item.tags.forEach((tag: string) => allTags.add(tag));
+      }
+    });
+    return Array.from(allTags).sort();
+  };
+
+  // Filter items based on selected tags
+  const getFilteredItems = () => {
+    if (!hobby || selectedFilterTags.length === 0) {
+      return hobby?.items || [];
+    }
+    return hobby.items.filter((item: any) => {
+      if (!item.tags) return false;
+      return selectedFilterTags.every(filterTag => item.tags.includes(filterTag));
+    });
+  };
+
+  // Get filtered items by type
+  const getFilteredGameItems = () => {
+    const filtered = getFilteredItems();
+    return filtered.filter((item: any) => item.platform !== undefined) as Game[]; // Games have platform property
+  };
+
+  const getFilteredBookItems = () => {
+    const filtered = getFilteredItems();
+    return filtered.filter((item: any) => item.author !== undefined); // Books have author property
+  };
+
+  const getFilteredTvFilmItems = () => {
+    const filtered = getFilteredItems();
+    return filtered.filter((item: any) => item.director !== undefined); // TV/Films have director property
+  };
+
+  const getFilteredCustomItems = () => {
+    const filtered = getFilteredItems();
+    return filtered.filter((item: any) => item.description !== undefined && item.platform === undefined && item.author === undefined && item.director === undefined); // Custom items have description but not type-specific fields
+  };
 
   const handleDeleteHobby = () => {
     Alert.alert(
@@ -47,6 +98,49 @@ export default function HobbyDetailScreen() {
         },
       ]
     );
+  };
+
+  const handleEditHobby = () => {
+    if (hobby) {
+      setEditHobbyName(hobby.name);
+      setEditHobbyDate(formatDateForInput(hobby.dateStarted));
+      setShowEditHobbyModal(true);
+    }
+  };
+
+  const handleSaveHobbyEdits = async () => {
+    if (!hobby || !hobbyId) return;
+    
+    const trimmedName = editHobbyName.trim();
+    if (!trimmedName) {
+      Alert.alert('Error', 'Hobby name cannot be empty.');
+      return;
+    }
+    
+    try {
+      await updateHobby(hobbyId, {
+        name: trimmedName,
+        dateStarted: editHobbyDate
+      });
+      
+      setShowEditHobbyModal(false);
+      setRefreshKey(prev => prev + 1);
+      
+      Alert.alert('Success', 'Hobby updated successfully!');
+    } catch (error) {
+      console.error('Error updating hobby:', error);
+      Alert.alert('Error', 'Failed to update hobby. Please try again.');
+    }
+  };
+
+  const formatDateForInput = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD format
+  };
+
+  const formatDateFromInput = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
   };
 
   const handleAddItem = async (itemData: any) => {
@@ -122,17 +216,18 @@ export default function HobbyDetailScreen() {
           <ThemedText type="title" style={styles.hobbyTitle}>
             {hobby.name}
           </ThemedText>
-          <TouchableOpacity onPress={handleDeleteHobby} style={styles.deleteHobbyButton}>
-            <IconSymbol name="trash" size={18} color="#dc3545" />
-          </TouchableOpacity>
+          <View style={styles.hobbyActions}>
+            <TouchableOpacity onPress={handleEditHobby} style={styles.editHobbyButton}>
+              <IconSymbol name="pencil" size={18} color="#007AFF" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleDeleteHobby} style={styles.deleteHobbyButton}>
+              <IconSymbol name="trash" size={18} color="#dc3545" />
+            </TouchableOpacity>
+          </View>
         </View>
         
         <ThemedText style={styles.hobbyInfo}>
-          Type: {hobby.type}
-        </ThemedText>
-        
-        <ThemedText style={styles.hobbyInfo}>
-          Started: {formatDate(hobby.dateStarted)}
+          Hobby Started: {formatDate(hobby.dateStarted)}
         </ThemedText>
 
         <ThemedText style={styles.itemCount}>
@@ -142,26 +237,45 @@ export default function HobbyDetailScreen() {
         {hobby.type === HobbyType.GAMES && (
           <View style={styles.gameSection}>
             <View style={styles.sectionHeader}>
-              <ThemedText type="subtitle" style={styles.sectionTitle}>
-                Games Collection
-              </ThemedText>
-              <TouchableOpacity 
-                style={styles.addButton} 
-                onPress={() => setShowAddItemModal(true)}
-              >
-                <ThemedText style={styles.addButtonText}>+ Add Game</ThemedText>
-              </TouchableOpacity>
+              <View style={styles.sectionTitleContainer}>
+                <ThemedText type="subtitle" style={styles.sectionTitle}>
+                  Games Collection
+                </ThemedText>
+                {selectedFilterTags.length > 0 && (
+                  <ThemedText style={styles.filterIndicator}>
+                    Filtered by: {selectedFilterTags.join(', ')}
+                  </ThemedText>
+                )}
+              </View>
+              <View style={styles.headerButtons}>
+                <TouchableOpacity 
+                  style={[styles.filterButton, selectedFilterTags.length > 0 && styles.filterButtonActive]} 
+                  onPress={() => setShowTagFilter(true)}
+                >
+                  <ThemedText style={[styles.filterButtonText, selectedFilterTags.length > 0 && styles.filterButtonTextActive]}>
+                    🏷️ Filter{selectedFilterTags.length > 0 && ` (${selectedFilterTags.length})`}
+                  </ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.addButton} 
+                  onPress={() => setShowAddItemModal(true)}
+                >
+                  <ThemedText style={styles.addButtonText}>+ Add Game</ThemedText>
+                </TouchableOpacity>
+              </View>
             </View>
-            {hobby.items.length > 0 ? (
+            {getFilteredGameItems().length > 0 ? (
               <GameList 
-                games={[...hobby.items].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime())} 
+                games={[...getFilteredGameItems()].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime())} 
                 onDeleteGame={() => {}}
                 onUpdateGame={() => {}}
                 onEditGame={() => {}}
               />
             ) : (
               <ThemedText style={styles.emptyText}>
-                No games added yet. Tap "Add Game" to get started!
+                {selectedFilterTags.length > 0 
+                  ? "No games match the selected tags. Try adjusting your filters." 
+                  : "No games added yet. Tap 'Add Game' to get started!"}
               </ThemedText>
             )}
           </View>
@@ -170,19 +284,36 @@ export default function HobbyDetailScreen() {
         {hobby.type === HobbyType.BOOKS && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <ThemedText type="subtitle" style={styles.sectionTitle}>
-                Books Collection
-              </ThemedText>
-              <TouchableOpacity 
-                style={styles.addButton} 
-                onPress={() => setShowAddItemModal(true)}
-              >
-                <ThemedText style={styles.addButtonText}>+ Add Book</ThemedText>
-              </TouchableOpacity>
+              <View style={styles.sectionTitleContainer}>
+                <ThemedText type="subtitle" style={styles.sectionTitle}>
+                  Books Collection
+                </ThemedText>
+                {selectedFilterTags.length > 0 && (
+                  <ThemedText style={styles.filterIndicator}>
+                    Filtered by: {selectedFilterTags.join(', ')}
+                  </ThemedText>
+                )}
+              </View>
+              <View style={styles.headerButtons}>
+                <TouchableOpacity 
+                  style={[styles.filterButton, selectedFilterTags.length > 0 && styles.filterButtonActive]} 
+                  onPress={() => setShowTagFilter(true)}
+                >
+                  <ThemedText style={[styles.filterButtonText, selectedFilterTags.length > 0 && styles.filterButtonTextActive]}>
+                    🏷️ Filter{selectedFilterTags.length > 0 && ` (${selectedFilterTags.length})`}
+                  </ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.addButton} 
+                  onPress={() => setShowAddItemModal(true)}
+                >
+                  <ThemedText style={styles.addButtonText}>+ Add Book</ThemedText>
+                </TouchableOpacity>
+              </View>
             </View>
-            {hobby.items.length > 0 ? (
+            {getFilteredBookItems().length > 0 ? (
               <View>
-                {[...hobby.items].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).map((book: any) => (
+                {[...getFilteredBookItems()].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).map((book: any) => (
                   <TouchableOpacity 
                     key={book.id} 
                     style={styles.itemCard} 
@@ -227,7 +358,9 @@ export default function HobbyDetailScreen() {
               </View>
             ) : (
               <ThemedText style={styles.emptyText}>
-                No books added yet. Tap "Add Book" to get started!
+                {selectedFilterTags.length > 0 
+                  ? "No books match the selected tags. Try adjusting your filters." 
+                  : "No books added yet. Tap 'Add Book' to get started!"}
               </ThemedText>
             )}
           </View>
@@ -236,19 +369,36 @@ export default function HobbyDetailScreen() {
         {hobby.type === HobbyType.TV_FILM && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <ThemedText type="subtitle" style={styles.sectionTitle}>
-                TV/Film Collection
-              </ThemedText>
-              <TouchableOpacity 
-                style={styles.addButton} 
-                onPress={() => setShowAddItemModal(true)}
-              >
-                <ThemedText style={styles.addButtonText}>+ Add TV/Film</ThemedText>
-              </TouchableOpacity>
+              <View style={styles.sectionTitleContainer}>
+                <ThemedText type="subtitle" style={styles.sectionTitle}>
+                  TV/Film Collection
+                </ThemedText>
+                {selectedFilterTags.length > 0 && (
+                  <ThemedText style={styles.filterIndicator}>
+                    Filtered by: {selectedFilterTags.join(', ')}
+                  </ThemedText>
+                )}
+              </View>
+              <View style={styles.headerButtons}>
+                <TouchableOpacity 
+                  style={[styles.filterButton, selectedFilterTags.length > 0 && styles.filterButtonActive]} 
+                  onPress={() => setShowTagFilter(true)}
+                >
+                  <ThemedText style={[styles.filterButtonText, selectedFilterTags.length > 0 && styles.filterButtonTextActive]}>
+                    🏷️ Filter{selectedFilterTags.length > 0 && ` (${selectedFilterTags.length})`}
+                  </ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.addButton} 
+                  onPress={() => setShowAddItemModal(true)}
+                >
+                  <ThemedText style={styles.addButtonText}>+ Add TV/Film</ThemedText>
+                </TouchableOpacity>
+              </View>
             </View>
-            {hobby.items.length > 0 ? (
+            {getFilteredTvFilmItems().length > 0 ? (
               <View>
-                {[...hobby.items].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).map((movie: any) => (
+                {[...getFilteredTvFilmItems()].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).map((movie: any) => (
                   <TouchableOpacity 
                     key={movie.id} 
                     style={styles.itemCard} 
@@ -294,7 +444,9 @@ export default function HobbyDetailScreen() {
               </View>
             ) : (
               <ThemedText style={styles.emptyText}>
-                No TV shows or movies added yet. Tap "Add TV/Film" to get started!
+                {selectedFilterTags.length > 0 
+                  ? "No TV shows or movies match the selected tags. Try adjusting your filters." 
+                  : "No TV shows or movies added yet. Tap 'Add TV/Film' to get started!"}
               </ThemedText>
             )}
           </View>
@@ -303,19 +455,36 @@ export default function HobbyDetailScreen() {
         {hobby.type === HobbyType.CUSTOM && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <ThemedText type="subtitle" style={styles.sectionTitle}>
-                Custom Items
-              </ThemedText>
-              <TouchableOpacity 
-                style={styles.addButton} 
-                onPress={() => setShowAddItemModal(true)}
-              >
-                <ThemedText style={styles.addButtonText}>+ Add Item</ThemedText>
-              </TouchableOpacity>
+              <View style={styles.sectionTitleContainer}>
+                <ThemedText type="subtitle" style={styles.sectionTitle}>
+                  Custom Items
+                </ThemedText>
+                {selectedFilterTags.length > 0 && (
+                  <ThemedText style={styles.filterIndicator}>
+                    Filtered by: {selectedFilterTags.join(', ')}
+                  </ThemedText>
+                )}
+              </View>
+              <View style={styles.headerButtons}>
+                <TouchableOpacity 
+                  style={[styles.filterButton, selectedFilterTags.length > 0 && styles.filterButtonActive]} 
+                  onPress={() => setShowTagFilter(true)}
+                >
+                  <ThemedText style={[styles.filterButtonText, selectedFilterTags.length > 0 && styles.filterButtonTextActive]}>
+                    🏷️ Filter{selectedFilterTags.length > 0 && ` (${selectedFilterTags.length})`}
+                  </ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.addButton} 
+                  onPress={() => setShowAddItemModal(true)}
+                >
+                  <ThemedText style={styles.addButtonText}>+ Add Item</ThemedText>
+                </TouchableOpacity>
+              </View>
             </View>
-            {hobby.items.length > 0 ? (
+            {getFilteredCustomItems().length > 0 ? (
               <View>
-                {[...hobby.items].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).map((item: any) => (
+                {[...getFilteredCustomItems()].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).map((item: any) => (
                   <TouchableOpacity 
                     key={item.id} 
                     style={styles.itemCard} 
@@ -356,7 +525,9 @@ export default function HobbyDetailScreen() {
               </View>
             ) : (
               <ThemedText style={styles.emptyText}>
-                No items added yet. Tap "Add Item" to get started!
+                {selectedFilterTags.length > 0 
+                  ? "No items match the selected tags. Try adjusting your filters." 
+                  : "No items added yet. Tap 'Add Item' to get started!"}
               </ThemedText>
             )}
           </View>
@@ -478,6 +649,67 @@ export default function HobbyDetailScreen() {
       </ScrollView>
       {renderAddItemModal()}
       {renderEditItemModal()}
+      
+      {/* Edit Hobby Modal */}
+      <Modal
+        visible={showEditHobbyModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowEditHobbyModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.editHobbyModal}>
+            <ThemedText style={styles.editHobbyTitle}>Edit Hobby</ThemedText>
+            
+            <ThemedText style={styles.editHobbyLabel}>Hobby Name</ThemedText>
+            <TextInput
+              style={styles.editHobbyInput}
+              value={editHobbyName}
+              onChangeText={setEditHobbyName}
+              placeholder="Enter hobby name"
+              autoFocus={true}
+            />
+            
+            <ThemedText style={styles.editHobbyLabel}>Date Started</ThemedText>
+            <TextInput
+              style={styles.editHobbyInput}
+              value={editHobbyDate}
+              onChangeText={setEditHobbyDate}
+              placeholder="YYYY-MM-DD"
+            />
+            
+            <View style={styles.editHobbyButtonContainer}>
+              <TouchableOpacity
+                style={styles.editHobbyCancelButton}
+                onPress={() => setShowEditHobbyModal(false)}
+              >
+                <ThemedText style={[styles.editHobbyButtonText, styles.editHobbyCancelText]}>
+                  Cancel
+                </ThemedText>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.editHobbySaveButton}
+                onPress={handleSaveHobbyEdits}
+              >
+                <ThemedText style={[styles.editHobbyButtonText, styles.editHobbySaveText]}>
+                  Save
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      
+      {/* Tag Filter Modal */}
+      <TagFilterModal
+        visible={showTagFilter}
+        onClose={() => setShowTagFilter(false)}
+        availableTags={getAllTags()}
+        selectedTags={selectedFilterTags}
+        onTagsChange={setSelectedFilterTags}
+        title={`Filter ${hobby?.type || 'Items'} by Tags`}
+      />
     </ThemedView>
   );
 }
@@ -662,5 +894,116 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#1976d2',
     fontWeight: '500',
+  },
+  sectionTitleContainer: {
+    flex: 1,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  filterButton: {
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  filterButtonActive: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  filterButtonText: {
+    fontSize: 12,
+    color: '#333',
+  },
+  filterButtonTextActive: {
+    color: '#fff',
+  },
+  filterIndicator: {
+    fontSize: 11,
+    color: '#666',
+    fontStyle: 'italic',
+    marginTop: 2,
+  },
+  hobbyActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  editHobbyButton: {
+    padding: 8,
+    borderRadius: 6,
+    backgroundColor: '#f0f8ff',
+    borderWidth: 1,
+    borderColor: '#007AFF',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  editHobbyModal: {
+    backgroundColor: '#fff',
+    margin: 20,
+    borderRadius: 12,
+    padding: 20,
+    minWidth: 300,
+    maxWidth: 400,
+    width: '90%',
+  },
+  editHobbyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  editHobbyLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 5,
+    color: '#333',
+  },
+  editHobbyInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    marginBottom: 15,
+    backgroundColor: '#f9f9f9',
+  },
+  editHobbyButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  editHobbyCancelButton: {
+    flex: 1,
+    backgroundColor: '#f0f0f0',
+    padding: 12,
+    borderRadius: 8,
+    marginRight: 10,
+  },
+  editHobbySaveButton: {
+    flex: 1,
+    backgroundColor: '#007AFF',
+    padding: 12,
+    borderRadius: 8,
+    marginLeft: 10,
+  },
+  editHobbyButtonText: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  editHobbyCancelText: {
+    color: '#333',
+  },
+  editHobbySaveText: {
+    color: '#fff',
   },
 });
