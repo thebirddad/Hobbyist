@@ -264,7 +264,6 @@ export const GameForm: React.FC<GameFormProps> = ({
 
           {/* Game Thumbnail */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Game Thumbnail</Text>
             <GameImagePicker
               imageUri={thumbnail}
               onImageSelected={(uri) => {
@@ -275,6 +274,8 @@ export const GameForm: React.FC<GameFormProps> = ({
                 console.log('🖼️ GameForm thumbnail removed');
                 setThumbnail(undefined);
               }}
+              itemType="Game"
+              label="Game Thumbnail"
             />
           </View>
         </ScrollView>

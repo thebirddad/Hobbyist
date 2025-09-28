@@ -15,12 +15,16 @@ interface GameImagePickerProps {
   imageUri?: string;
   onImageSelected: (uri: string) => void;
   onImageRemoved: () => void;
+  itemType?: 'Game' | 'Book' | 'Movie' | 'Item';
+  label?: string;
 }
 
 export const GameImagePicker: React.FC<GameImagePickerProps> = ({
   imageUri,
   onImageSelected,
   onImageRemoved,
+  itemType = 'Game',
+  label,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   
@@ -124,8 +128,8 @@ export const GameImagePicker: React.FC<GameImagePickerProps> = ({
       );
     } else {
       Alert.alert(
-        'Add Game Photo',
-        'Choose how you want to add a photo for this game',
+        `Add ${itemType} Photo`,
+        `Choose how you want to add a photo for this ${itemType.toLowerCase()}`,
         [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Take Photo', onPress: pickImageFromCamera },
@@ -152,7 +156,7 @@ export const GameImagePicker: React.FC<GameImagePickerProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Game Photo</Text>
+      <Text style={styles.label}>{label || `${itemType} Photo`}</Text>
       
       {imageUri ? (
         <View style={styles.imageContainer}>
@@ -183,7 +187,7 @@ export const GameImagePicker: React.FC<GameImagePickerProps> = ({
           <View style={styles.addPhotoContent}>
             <Text style={styles.addPhotoIcon}>📷</Text>
             <Text style={styles.addPhotoText}>
-              {isLoading ? 'Loading...' : 'Add Game Photo'}
+              {isLoading ? 'Loading...' : `Add ${itemType} Photo`}
             </Text>
             <Text style={styles.addPhotoSubtext}>
               Take a photo or choose from library

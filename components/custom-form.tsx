@@ -97,11 +97,12 @@ export const CustomForm: React.FC<CustomFormProps> = ({
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Image</Text>
               <GameImagePicker
                 onImageSelected={handleImageSelected}
                 onImageRemoved={() => setThumbnail('')}
                 imageUri={thumbnail}
+                itemType="Item"
+                label="Item Photo"
               />
             </View>
 

@@ -1,6 +1,5 @@
 import { GameImagePicker } from '@/components/game-image-picker';
 import { MovieItem, MovieStatus } from '@/data/hobby';
-import { Picker } from '@react-native-picker/picker';
 import React, { useCallback, useState } from 'react';
 import {
     Alert,
@@ -36,6 +35,12 @@ export const MovieForm: React.FC<MovieFormProps> = ({
   const [rating, setRating] = useState(initialMovie?.rating?.toString() || '');
   const [thumbnail, setThumbnail] = useState(initialMovie?.thumbnail || '');
   const [dateWatched, setDateWatched] = useState(initialMovie?.dateWatched || '');
+  const [showStatusPicker, setShowStatusPicker] = useState(false);
+
+  const movieStatusOptions = [
+    { key: MovieStatus.WANT_TO_WATCH, label: 'Want to Watch' },
+    { key: MovieStatus.WATCHED, label: 'Watched' },
+  ];
 
   const resetForm = useCallback(() => {
     if (mode === 'add') {
@@ -46,6 +51,7 @@ export const MovieForm: React.FC<MovieFormProps> = ({
       setThumbnail('');
       setDateWatched('');
     }
+    setShowStatusPicker(false);
   }, [mode]);
 
   const handleSubmit = () => {
@@ -160,16 +166,38 @@ export const MovieForm: React.FC<MovieFormProps> = ({
 
             <View style={styles.formGroup}>
               <Text style={styles.label}>Status</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={status}
-                  onValueChange={setStatus}
-                  style={styles.picker}
-                >
-                  <Picker.Item label="Want to Watch" value={MovieStatus.WANT_TO_WATCH} />
-                  <Picker.Item label="Watched" value={MovieStatus.WATCHED} />
-                </Picker>
-              </View>
+              <TouchableOpacity 
+                style={styles.pickerButton} 
+                onPress={() => setShowStatusPicker(!showStatusPicker)}
+              >
+                <Text style={styles.pickerButtonText}>
+                  {movieStatusOptions.find(opt => opt.key === status)?.label || 'Select Status'}
+                </Text>
+                <Text style={styles.pickerArrow}>{showStatusPicker ? '\u25b2' : '\u25bc'}</Text>
+              </TouchableOpacity>
+              
+              {showStatusPicker && (
+                <View style={styles.pickerOptions}>
+                  {movieStatusOptions.map((option) => (
+                    <TouchableOpacity
+                      key={option.key}
+                      style={[
+                        styles.pickerOption,
+                        status === option.key && styles.pickerOptionSelected
+                      ]}
+                      onPress={() => {
+                        setStatus(option.key);
+                        setShowStatusPicker(false);
+                      }}
+                    >
+                      <Text style={[
+                        styles.pickerOptionText,
+                        status === option.key && styles.pickerOptionTextSelected
+                      ]}>{option.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
 
             <View style={styles.formGroup}>
@@ -178,11 +206,12 @@ export const MovieForm: React.FC<MovieFormProps> = ({
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Movie Poster</Text>
               <GameImagePicker
                 onImageSelected={handleImageSelected}
                 onImageRemoved={() => setThumbnail('')}
                 imageUri={thumbnail}
+                itemType="Movie"
+                label="Movie Poster"
               />
             </View>
           </View>
@@ -244,15 +273,49 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     color: '#000',
   },
-  pickerContainer: {
+  pickerButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
+    padding: 12,
     backgroundColor: '#fff',
   },
-  picker: {
-    height: 50,
+  pickerButtonText: {
+    fontSize: 16,
     color: '#000',
+  },
+  pickerArrow: {
+    fontSize: 12,
+    color: '#666',
+  },
+  pickerOptions: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderTopWidth: 0,
+    borderRadius: 8,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    backgroundColor: '#fff',
+    maxHeight: 200,
+  },
+  pickerOption: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  pickerOptionSelected: {
+    backgroundColor: '#e3f2fd',
+  },
+  pickerOptionText: {
+    fontSize: 16,
+    color: '#000',
+  },
+  pickerOptionTextSelected: {
+    color: '#1976d2',
+    fontWeight: '600',
   },
   starContainer: {
     flexDirection: 'row',
