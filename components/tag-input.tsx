@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import {
-  Alert,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 interface TagInputProps {
@@ -13,6 +13,7 @@ interface TagInputProps {
   onTagsChange: (tags: string[]) => void;
   placeholder?: string;
   maxTags?: number;
+  protectedTags?: string[]; // Tags that cannot be removed
 }
 
 export const TagInput: React.FC<TagInputProps> = ({
@@ -20,6 +21,7 @@ export const TagInput: React.FC<TagInputProps> = ({
   onTagsChange,
   placeholder = 'Add tag...',
   maxTags = 5,
+  protectedTags = [],
 }) => {
   const [inputValue, setInputValue] = useState('');
 
@@ -50,6 +52,10 @@ export const TagInput: React.FC<TagInputProps> = ({
   };
 
   const removeTag = (tagToRemove: string) => {
+    if (protectedTags.includes(tagToRemove)) {
+      Alert.alert('Cannot Remove', 'This tag is required and cannot be removed.');
+      return;
+    }
     onTagsChange(tags.filter(tag => tag !== tagToRemove));
   };
 
@@ -64,18 +70,28 @@ export const TagInput: React.FC<TagInputProps> = ({
       {/* Display existing tags */}
       {tags.length > 0 && (
         <View style={styles.tagsContainer}>
-          {tags.map((tag, index) => (
-            <View key={index} style={styles.tag}>
-              <Text style={styles.tagText}>{tag}</Text>
-              <TouchableOpacity
-                onPress={() => removeTag(tag)}
-                style={styles.removeTagButton}
-                hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
-              >
-                <Text style={styles.removeTagText}>×</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
+          {tags.map((tag, index) => {
+            const isProtected = protectedTags.includes(tag);
+            return (
+              <View key={index} style={[styles.tag, isProtected && styles.protectedTag]}>
+                <Text style={[styles.tagText, isProtected && styles.protectedTagText]}>{tag}</Text>
+                {!isProtected && (
+                  <TouchableOpacity
+                    onPress={() => removeTag(tag)}
+                    style={styles.removeTagButton}
+                    hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
+                  >
+                    <Text style={styles.removeTagText}>×</Text>
+                  </TouchableOpacity>
+                )}
+                {isProtected && (
+                  <View style={styles.lockIcon}>
+                    <Text style={styles.lockText}>🔒</Text>
+                  </View>
+                )}
+              </View>
+            );
+          })}
         </View>
       )}
       
@@ -195,5 +211,18 @@ const styles = StyleSheet.create({
     color: '#666',
     fontStyle: 'italic',
     marginTop: 4,
+  },
+  protectedTag: {
+    backgroundColor: '#f0f0f0',
+    borderColor: '#999',
+  },
+  protectedTagText: {
+    color: '#666',
+  },
+  lockIcon: {
+    marginLeft: 4,
+  },
+  lockText: {
+    fontSize: 10,
   },
 });

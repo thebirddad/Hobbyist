@@ -37,7 +37,12 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
   const [currentSeason, setCurrentSeason] = useState(initialTvFilmItem?.currentSeason || '');
   const [thumbnail, setThumbnail] = useState(initialTvFilmItem?.thumbnail || '');
   const [dateWatched, setDateWatched] = useState(initialTvFilmItem?.dateWatched || '');
-  const [tags, setTags] = useState<string[]>(initialTvFilmItem?.tags || []);
+  const [tags, setTags] = useState<string[]>(() => {
+    const initialTags = initialTvFilmItem?.tags || [];
+    // Ensure 'Film' tag is always present and first
+    const filteredTags = initialTags.filter(tag => tag !== 'Film');
+    return ['Film', ...filteredTags];
+  });
   const [showStatusPicker, setShowStatusPicker] = useState(false);
 
   const tvFilmStatusOptions = [
@@ -55,7 +60,7 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
       setCurrentSeason('');
       setThumbnail('');
       setDateWatched('');
-      setTags([]);
+      setTags(['Film']);
     }
     setShowStatusPicker(false);
   }, [mode]);
@@ -229,9 +234,14 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
             <View style={styles.formGroup}>
               <TagInput
                 tags={tags}
-                onTagsChange={setTags}
+                onTagsChange={(newTags) => {
+                  // Always ensure 'Film' tag is present and first
+                  const filteredTags = newTags.filter(tag => tag !== 'Film');
+                  setTags(['Film', ...filteredTags]);
+                }}
                 placeholder="Add tag (e.g., Action, Comedy)..."
                 maxTags={5}
+                protectedTags={['Film']}
               />
             </View>
 

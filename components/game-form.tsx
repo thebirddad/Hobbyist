@@ -40,7 +40,13 @@ export const GameForm: React.FC<GameFormProps> = ({
   const [timeToBeat, setTimeToBeat] = useState('');
   const [hoursPlayed, setHoursPlayed] = useState('');
   const [thumbnail, setThumbnail] = useState<string | undefined>(undefined);
-  const [tags, setTags] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>(() => {
+    const initialTags = initialGame?.tags || [];
+    const currentPlatform = initialGame?.platform || availablePlatforms[0] || 'PC';
+    // Ensure 'Game' and platform tags are always present
+    const filteredTags = initialTags.filter(tag => tag !== 'Game' && tag !== currentPlatform);
+    return ['Game', currentPlatform, ...filteredTags];
+  });
 
   // Selection state
   const [showPlatformPicker, setShowPlatformPicker] = useState(false);
@@ -56,21 +62,38 @@ export const GameForm: React.FC<GameFormProps> = ({
       setTimeToBeat(initialGame.timeToBeat?.toString() || '');
       setHoursPlayed(initialGame.hoursPlayed?.toString() || '');
       setThumbnail(initialGame.thumbnail);
-      setTags(initialGame.tags || []);
+      
+      // Set tags with mandatory 'Game' and platform tags
+      const initialTags = initialGame.tags || [];
+      const filteredTags = initialTags.filter(tag => tag !== 'Game' && tag !== initialGame.platform);
+      setTags(['Game', initialGame.platform, ...filteredTags]);
     } else {
       console.log('🖼️ GameForm initializing for new game');
       resetForm();
     }
   }, [initialGame]);
 
+  // Update tags when platform changes
+  useEffect(() => {
+    setTags(prevTags => {
+      // Remove any existing platform tags and add the new one
+      const filteredTags = prevTags.filter(tag => 
+        tag !== 'Game' && 
+        !availablePlatforms.includes(tag)
+      );
+      return ['Game', platform, ...filteredTags];
+    });
+  }, [platform, availablePlatforms]);
+
   const resetForm = () => {
+    const defaultPlatform = availablePlatforms[0] || 'PC';
     setTitle('');
-    setPlatform(availablePlatforms[0] || 'PC');
+    setPlatform(defaultPlatform);
     setStatus(GameStatus.WANT_TO_PLAY);
     setTimeToBeat('');
     setHoursPlayed('');
     setThumbnail(undefined);
-    setTags([]);
+    setTags(['Game', defaultPlatform]);
     setShowPlatformPicker(false);
     setShowStatusPicker(false);
   };
@@ -273,9 +296,17 @@ export const GameForm: React.FC<GameFormProps> = ({
           <View style={styles.inputGroup}>
             <TagInput
               tags={tags}
-              onTagsChange={setTags}
+              onTagsChange={(newTags) => {
+                // Always ensure 'Game' and platform tags are present
+                const filteredTags = newTags.filter(tag => 
+                  tag !== 'Game' && 
+                  !availablePlatforms.includes(tag)
+                );
+                setTags(['Game', platform, ...filteredTags]);
+              }}
               placeholder="Add tag (e.g., RPG, Action)..."
               maxTags={5}
+              protectedTags={['Game', platform]}
             />
           </View>
 

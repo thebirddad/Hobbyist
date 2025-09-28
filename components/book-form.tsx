@@ -38,7 +38,12 @@ export const BookForm: React.FC<BookFormProps> = ({
   const [pagesRead, setPagesRead] = useState(initialBook?.pagesRead?.toString() || '');
   const [thumbnail, setThumbnail] = useState(initialBook?.thumbnail || '');
   const [dateCompleted, setDateCompleted] = useState(initialBook?.dateCompleted || '');
-  const [tags, setTags] = useState<string[]>(initialBook?.tags || []);
+  const [tags, setTags] = useState<string[]>(() => {
+    const initialTags = initialBook?.tags || [];
+    // Ensure 'Book' tag is always present and first
+    const filteredTags = initialTags.filter(tag => tag !== 'Book');
+    return ['Book', ...filteredTags];
+  });
   const [showStatusPicker, setShowStatusPicker] = useState(false);
 
   const bookStatusOptions = [
@@ -57,7 +62,7 @@ export const BookForm: React.FC<BookFormProps> = ({
       setPagesRead('');
       setThumbnail('');
       setDateCompleted('');
-      setTags([]);
+      setTags(['Book']);
     }
     setShowStatusPicker(false);
   }, [mode]);
@@ -209,9 +214,14 @@ export const BookForm: React.FC<BookFormProps> = ({
             <View style={styles.formGroup}>
               <TagInput
                 tags={tags}
-                onTagsChange={setTags}
+                onTagsChange={(newTags) => {
+                  // Always ensure 'Book' tag is present and first
+                  const filteredTags = newTags.filter(tag => tag !== 'Book');
+                  setTags(['Book', ...filteredTags]);
+                }}
                 placeholder="Add tag (e.g., Fiction, Mystery)..."
                 maxTags={5}
+                protectedTags={['Book']}
               />
             </View>
 

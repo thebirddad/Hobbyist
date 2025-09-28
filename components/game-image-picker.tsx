@@ -4,6 +4,7 @@ import {
     ActionSheetIOS,
     Alert,
     Image,
+    Linking,
     Platform,
     StyleSheet,
     Text,
@@ -108,6 +109,62 @@ export const GameImagePicker: React.FC<GameImagePickerProps> = ({
     }
   };
 
+  const openGoogleImageSearch = async () => {
+    try {
+      // Create a search query - you can customize this based on the item type
+      let searchQuery = '';
+      if (itemType === 'Game') {
+        searchQuery = 'game cover art'; // User can add specific game name
+      } else if (itemType === 'Book') {
+        searchQuery = 'book cover';
+      } else if (itemType === 'TV/Film') {
+        searchQuery = 'movie poster';
+      } else {
+        searchQuery = itemType.toLowerCase() + ' image';
+      }
+      
+      const googleImagesUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}&tbm=isch&safe=active`;
+      
+      Alert.alert(
+        'Search for Images',
+        'This will open Google Images in your browser. After finding an image you like:\n\n1. Long press on the image\n2. Select "Copy Image Address" or "Copy Link"\n3. Return to the app and paste the URL',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Open Google Images', 
+            onPress: async () => {
+              await Linking.openURL(googleImagesUrl);
+              
+              // Show URL input after a short delay
+              setTimeout(() => {
+                Alert.prompt(
+                  'Paste Image URL',
+                  'Paste the image URL you copied from Google Images:',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    { 
+                      text: 'Use Image', 
+                      onPress: (url?: string) => {
+                        if (url && url.trim()) {
+                          console.log('🔍 Using image URL from Google Images:', url.trim());
+                          onImageSelected(url.trim());
+                        }
+                      }
+                    }
+                  ],
+                  'plain-text'
+                );
+              }, 2000);
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('🔍 Error opening Google Images:', error);
+      Alert.alert('Error', 'Failed to open Google Images search.');
+    }
+  };
+
   const showImagePicker = async () => {
     const hasPermissions = await requestPermissions();
     if (!hasPermissions) return;
@@ -115,7 +172,7 @@ export const GameImagePicker: React.FC<GameImagePickerProps> = ({
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: ['Cancel', 'Take Photo', 'Choose from Library'],
+          options: ['Cancel', 'Take Photo', 'Choose from Library', 'Search Google Images'],
           cancelButtonIndex: 0,
         },
         (buttonIndex) => {
@@ -123,6 +180,8 @@ export const GameImagePicker: React.FC<GameImagePickerProps> = ({
             pickImageFromCamera();
           } else if (buttonIndex === 2) {
             pickImageFromLibrary();
+          } else if (buttonIndex === 3) {
+            openGoogleImageSearch();
           }
         }
       );
@@ -134,6 +193,7 @@ export const GameImagePicker: React.FC<GameImagePickerProps> = ({
           { text: 'Cancel', style: 'cancel' },
           { text: 'Take Photo', onPress: pickImageFromCamera },
           { text: 'Choose from Library', onPress: pickImageFromLibrary },
+          { text: 'Search Google Images', onPress: openGoogleImageSearch },
         ]
       );
     }
@@ -190,7 +250,7 @@ export const GameImagePicker: React.FC<GameImagePickerProps> = ({
               {isLoading ? 'Loading...' : `Add ${itemType} Photo`}
             </Text>
             <Text style={styles.addPhotoSubtext}>
-              Take a photo or choose from library
+              Take photo, choose from library, or search Google Images
             </Text>
           </View>
         </TouchableOpacity>
