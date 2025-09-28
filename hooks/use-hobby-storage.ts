@@ -1,0 +1,150 @@
+import { BaseHobby, Hobby } from '@/data/hobby';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useState } from 'react';
+
+const HOBBIES_STORAGE_KEY = 'hobbies_data';
+const MAX_HOBBIES = 7;
+
+export const useHobbyStorage = () => {
+  const [hobbies, setHobbies] = useState<Hobby[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load hobbies from storage on mount
+  useEffect(() => {
+    loadHobbies();
+  }, []);
+
+  const loadHobbies = async () => {
+    try {
+      console.log('🎯 Loading hobbies from AsyncStorage...');
+      const storedHobbies = await AsyncStorage.getItem(HOBBIES_STORAGE_KEY);
+      if (storedHobbies) {
+        const parsedHobbies = JSON.parse(storedHobbies);
+        console.log('🎯 Loaded hobbies:', parsedHobbies.length, 'hobbies');
+        setHobbies(parsedHobbies);
+      } else {
+        console.log('🎯 No stored hobbies found');
+      }
+    } catch (error) {
+      console.error('🎯 Failed to load hobbies:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveHobbies = async (hobbiesToSave: Hobby[]) => {
+    try {
+      console.log('🎯 Saving hobbies to AsyncStorage...', hobbiesToSave.length, 'hobbies');
+      const jsonData = JSON.stringify(hobbiesToSave);
+      await AsyncStorage.setItem(HOBBIES_STORAGE_KEY, jsonData);
+      console.log('🎯 Hobbies saved successfully');
+      setHobbies(hobbiesToSave);
+    } catch (error) {
+      console.error('🎯 Failed to save hobbies:', error);
+    }
+  };
+
+  const addHobby = async (hobbyData: Omit<BaseHobby, 'id'>) => {
+    if (hobbies.length >= MAX_HOBBIES) {
+      throw new Error(`Maximum of ${MAX_HOBBIES} hobbies allowed`);
+    }
+
+    console.log('🎯 Adding new hobby:', hobbyData.name, 'type:', hobbyData.type);
+    
+    // Create hobby with empty items array based on type
+    const newHobby: Hobby = {
+      ...hobbyData,
+      id: Date.now().toString(),
+      items: []
+    } as Hobby;
+
+    console.log('🎯 New hobby object created with ID:', newHobby.id);
+    const updatedHobbies = [...hobbies, newHobby];
+    await saveHobbies(updatedHobbies);
+  };
+
+  const updateHobby = async (id: string, updates: Partial<BaseHobby>) => {
+    console.log('🎯 Updating hobby with ID:', id, 'updates:', updates);
+    const updatedHobbies = hobbies.map(hobby => {
+      if (hobby.id === id) {
+        const updatedHobby = { ...hobby, ...updates };
+        console.log('🎯 Hobby updated:', updatedHobby.name);
+        return updatedHobby;
+      }
+      return hobby;
+    });
+    await saveHobbies(updatedHobbies);
+  };
+
+  const deleteHobby = async (id: string) => {
+    console.log('🎯 Deleting hobby with ID:', id);
+    const updatedHobbies = hobbies.filter(hobby => hobby.id !== id);
+    await saveHobbies(updatedHobbies);
+  };
+
+  const addItemToHobby = async (hobbyId: string, item: any) => {
+    console.log('🎯 Adding item to hobby:', hobbyId, 'item:', item.title || item.name);
+    const updatedHobbies = hobbies.map(hobby => {
+      if (hobby.id === hobbyId) {
+        const newItem = {
+          ...item,
+          id: Date.now().toString(),
+          dateAdded: new Date().toISOString(),
+        };
+        return {
+          ...hobby,
+          items: [...hobby.items, newItem]
+        } as Hobby;
+      }
+      return hobby;
+    });
+    await saveHobbies(updatedHobbies);
+  };
+
+  const updateItemInHobby = async (hobbyId: string, itemId: string, updates: any) => {
+    console.log('🎯 Updating item in hobby:', hobbyId, 'item:', itemId);
+    const updatedHobbies = hobbies.map(hobby => {
+      if (hobby.id === hobbyId) {
+        const updatedItems = hobby.items.map(item => {
+          if (item.id === itemId) {
+            return { ...item, ...updates };
+          }
+          return item;
+        });
+        return { ...hobby, items: updatedItems } as Hobby;
+      }
+      return hobby;
+    });
+    await saveHobbies(updatedHobbies);
+  };
+
+  const deleteItemFromHobby = async (hobbyId: string, itemId: string) => {
+    console.log('🎯 Deleting item from hobby:', hobbyId, 'item:', itemId);
+    const updatedHobbies = hobbies.map(hobby => {
+      if (hobby.id === hobbyId) {
+        const filteredItems = hobby.items.filter(item => item.id !== itemId);
+        return { ...hobby, items: filteredItems } as Hobby;
+      }
+      return hobby;
+    });
+    await saveHobbies(updatedHobbies);
+  };
+
+  const canAddHobby = () => hobbies.length < MAX_HOBBIES;
+  const getRemainingHobbySlots = () => MAX_HOBBIES - hobbies.length;
+
+  return {
+    hobbies,
+    loading,
+    addHobby,
+    updateHobby,
+    deleteHobby,
+    addItemToHobby,
+    updateItemInHobby,
+    deleteItemFromHobby,
+    refreshHobbies: loadHobbies,
+    canAddHobby,
+    getRemainingHobbySlots,
+    MAX_HOBBIES
+  };
+};

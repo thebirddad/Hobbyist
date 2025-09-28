@@ -7,11 +7,29 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
+import { HobbyType } from '@/data/hobby';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useHobbyStorage } from '@/hooks/use-hobby-storage';
 
 function CustomDrawerContent(props: any) {
   const colorScheme = useColorScheme();
   const tintColor = Colors[colorScheme ?? 'light'].tint;
+  const { hobbies, canAddHobby } = useHobbyStorage();
+
+  const getHobbyIcon = (type: HobbyType) => {
+    switch (type) {
+      case HobbyType.GAMES:
+        return 'gamecontroller.fill';
+      case HobbyType.BOOKS:
+        return 'book.fill';
+      case HobbyType.MOVIES:
+        return 'tv.fill';
+      case HobbyType.CUSTOM:
+        return 'star.fill';
+      default:
+        return 'folder.fill';
+    }
+  };
 
   return (
     <SafeAreaView style={styles.drawerContainer}>
@@ -33,35 +51,74 @@ function CustomDrawerContent(props: any) {
           inactiveTintColor="#666"
         />
         
-        <DrawerItem
-          label="Currently Playing"
-          onPress={() => router.push('/playing')}
-          icon={({ color, size }) => (
-            <IconSymbol name="play.circle.fill" size={size} color={color} />
-          )}
-          activeTintColor={tintColor}
-          inactiveTintColor="#666"
-        />
+        {canAddHobby() && (
+          <DrawerItem
+            label="Create Hobby"
+            onPress={() => router.push('/(drawer)/hobbies')}
+            icon={({ color, size }) => (
+              <IconSymbol name="plus.circle.fill" size={size} color={color} />
+            )}
+            activeTintColor={tintColor}
+            inactiveTintColor="#666"
+          />
+        )}
         
-        <DrawerItem
-          label="Game Library"
-          onPress={() => router.push('/library')}
-          icon={({ color, size }) => (
-            <IconSymbol name="list.bullet" size={size} color={color} />
-          )}
-          activeTintColor={tintColor}
-          inactiveTintColor="#666"
-        />
+        {hobbies.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>My Hobbies</Text>
+            {hobbies.map((hobby) => (
+              <DrawerItem
+                key={hobby.id}
+                label={hobby.name}
+                onPress={() => {
+                  // For now, navigate to a hobby page with the ID as a param
+                  router.push({
+                    pathname: '/(drawer)/hobby-detail',
+                    params: { hobbyId: hobby.id, hobbyName: hobby.name }
+                  });
+                }}
+                icon={({ color, size }) => (
+                  <IconSymbol name={getHobbyIcon(hobby.type)} size={size} color={color} />
+                )}
+                activeTintColor={tintColor}
+                inactiveTintColor="#666"
+              />
+            ))}
+          </View>
+        )}
         
-        <DrawerItem
-          label="Consoles"
-          onPress={() => router.push('/consoles')}
-          icon={({ color, size }) => (
-            <IconSymbol name="gamecontroller.fill" size={size} color={color} />
-          )}
-          activeTintColor={tintColor}
-          inactiveTintColor="#666"
-        />
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Legacy Gaming</Text>
+          <DrawerItem
+            label="Currently Playing"
+            onPress={() => router.push('/playing')}
+            icon={({ color, size }) => (
+              <IconSymbol name="play.circle.fill" size={size} color={color} />
+            )}
+            activeTintColor={tintColor}
+            inactiveTintColor="#666"
+          />
+          
+          <DrawerItem
+            label="Game Library"
+            onPress={() => router.push('/library')}
+            icon={({ color, size }) => (
+              <IconSymbol name="list.bullet" size={size} color={color} />
+            )}
+            activeTintColor={tintColor}
+            inactiveTintColor="#666"
+          />
+          
+          <DrawerItem
+            label="Consoles"
+            onPress={() => router.push('/consoles')}
+            icon={({ color, size }) => (
+              <IconSymbol name="gamecontroller.fill" size={size} color={color} />
+            )}
+            activeTintColor={tintColor}
+            inactiveTintColor="#666"
+          />
+        </View>
       </DrawerContentScrollView>
       
       <View style={styles.drawerFooter}>
@@ -97,6 +154,13 @@ export default function DrawerLayout() {
         }}
       />
       <Drawer.Screen
+        name="hobbies"
+        options={{
+          drawerLabel: 'Create Hobby',
+          title: 'Create New Hobby',
+        }}
+      />
+      <Drawer.Screen
         name="playing"
         options={{
           drawerLabel: 'Currently Playing',
@@ -115,6 +179,13 @@ export default function DrawerLayout() {
         options={{
           drawerLabel: 'Consoles',
           title: 'Consoles',
+        }}
+      />
+      <Drawer.Screen
+        name="hobby-detail"
+        options={{
+          drawerItemStyle: { display: 'none' },
+          title: 'Hobby Details',
         }}
       />
     </Drawer>
@@ -137,6 +208,19 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginTop: 10,
+  },
+  section: {
+    marginTop: 20,
+    marginBottom: 10,
+    paddingHorizontal: 16,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   drawerFooter: {
     padding: 20,
