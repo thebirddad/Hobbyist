@@ -27,6 +27,16 @@ export const TagFilterModal: React.FC<TagFilterProps> = ({
 }) => {
   const [tempSelectedTags, setTempSelectedTags] = useState<string[]>(selectedTags);
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log('🏷️ TagFilterModal props:', {
+      visible,
+      availableTags,
+      selectedTags,
+      title
+    });
+  }, [visible, availableTags, selectedTags, title]);
+
   const handleTagToggle = (tag: string) => {
     if (tempSelectedTags.includes(tag)) {
       setTempSelectedTags(prev => prev.filter(t => t !== tag));

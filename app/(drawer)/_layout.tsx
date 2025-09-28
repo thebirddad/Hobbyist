@@ -2,7 +2,7 @@ import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { router } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -38,7 +38,11 @@ function CustomDrawerContent(props: any) {
     <SafeAreaView style={styles.drawerContainer}>
       <DrawerContentScrollView {...props}>
         <View style={styles.drawerHeader}>
-          <IconSymbol name="gamecontroller.fill" size={40} color={tintColor} />
+          <Image 
+            source={require('@/assets/images/icon.png')} 
+            style={styles.drawerIcon}
+            resizeMode="contain"
+          />
           <Text style={[styles.drawerTitle, { color: tintColor }]}>
             Hobbyist
           </Text>
@@ -213,6 +217,10 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginTop: 10,
+  },
+  drawerIcon: {
+    width: 40,
+    height: 40,
   },
   section: {
     marginTop: 20,

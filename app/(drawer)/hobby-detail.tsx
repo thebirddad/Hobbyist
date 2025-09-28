@@ -30,6 +30,7 @@ export default function HobbyDetailScreen() {
   const [editHobbyDate, setEditHobbyDate] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date()); // Always start with valid current date
+  const [searchText, setSearchText] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -41,24 +42,69 @@ export default function HobbyDetailScreen() {
 
   // Get all unique tags from items
   const getAllTags = () => {
-    if (!hobby) return [];
+    if (!hobby) {
+      console.log('🏷️ No hobby found for tags');
+      return [];
+    }
     const allTags = new Set<string>();
     hobby.items.forEach((item: any) => {
-      if (item.tags) {
-        item.tags.forEach((tag: string) => allTags.add(tag));
+      if (item.tags && Array.isArray(item.tags)) {
+        item.tags.forEach((tag: string) => {
+          if (tag && tag.trim()) {
+            allTags.add(tag.trim());
+          }
+        });
       }
     });
-    return Array.from(allTags).sort();
+    const tags = Array.from(allTags).sort();
+    console.log('🏷️ Available tags:', tags);
+    return tags;
   };
 
-  // Filter items based on selected tags
+  // Filter items based on selected tags and search text
   const getFilteredItems = () => {
-    if (!hobby || selectedFilterTags.length === 0) {
-      return hobby?.items || [];
-    }
+    if (!hobby) return [];
+    
     return hobby.items.filter((item: any) => {
-      if (!item.tags) return false;
-      return selectedFilterTags.every(filterTag => item.tags.includes(filterTag));
+      // Apply tag filter
+      if (selectedFilterTags.length > 0) {
+        if (!item.tags) return false;
+        if (!selectedFilterTags.every(filterTag => item.tags.includes(filterTag))) {
+          return false;
+        }
+      }
+      
+      // Apply search filter
+      if (searchText.trim()) {
+        const searchLower = searchText.toLowerCase().trim();
+        
+        // Search in title/name
+        if (item.title?.toLowerCase().includes(searchLower)) return true;
+        if (item.name?.toLowerCase().includes(searchLower)) return true;
+        
+        // Search in author (books)
+        if (item.author?.toLowerCase().includes(searchLower)) return true;
+        
+        // Search in director (TV/Film)
+        if (item.director?.toLowerCase().includes(searchLower)) return true;
+        
+        // Search in platform (games)
+        if (item.platform?.toLowerCase().includes(searchLower)) return true;
+        
+        // Search in description (custom items)
+        if (item.description?.toLowerCase().includes(searchLower)) return true;
+        
+        // Search in tags
+        if (item.tags && Array.isArray(item.tags)) {
+          if (item.tags.some((tag: string) => tag.toLowerCase().includes(searchLower))) {
+            return true;
+          }
+        }
+        
+        return false;
+      }
+      
+      return true; // Show item if no filters applied
     });
   };
 
@@ -179,6 +225,12 @@ export default function HobbyDetailScreen() {
     setShowDatePicker(true);
   };
 
+  // Test function to manually trigger tag filter
+  const testTagFilter = () => {
+    console.log('🏷️ Manual test - opening tag filter');
+    setShowTagFilter(true);
+  };
+
   const handleAddItem = async (itemData: any) => {
     if (hobbyId) {
       try {
@@ -257,6 +309,9 @@ export default function HobbyDetailScreen() {
             {hobby.name}
           </ThemedText>
           <View style={styles.hobbyActions}>
+            <TouchableOpacity onPress={testTagFilter} style={styles.editHobbyButton}>
+              <IconSymbol name="tag" size={18} color="#00AA00" />
+            </TouchableOpacity>
             <TouchableOpacity onPress={handleEditHobby} style={styles.editHobbyButton}>
               <IconSymbol name="pencil" size={18} color="#007AFF" />
             </TouchableOpacity>
@@ -271,8 +326,26 @@ export default function HobbyDetailScreen() {
         </ThemedText>
 
         <ThemedText style={styles.itemCount}>
-          {hobby.items.length} items
+          {hobby.items.length} items {getFilteredItems().length !== hobby.items.length && `(${getFilteredItems().length} shown)`}
         </ThemedText>
+        
+        {/* Search Input */}
+        <View style={styles.searchContainer}>
+          <IconSymbol name="magnifyingglass" size={16} color="#999" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search items by title, author, platform, tags..."
+            value={searchText}
+            onChangeText={setSearchText}
+            returnKeyType="search"
+            clearButtonMode="while-editing"
+          />
+          {searchText.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchText('')} style={styles.clearSearchButton}>
+              <IconSymbol name="xmark.circle.fill" size={16} color="#999" />
+            </TouchableOpacity>
+          )}
+        </View>
 
         {hobby.type === HobbyType.GAMES && (
           <View style={styles.gameSection}>
@@ -290,7 +363,12 @@ export default function HobbyDetailScreen() {
               <View style={styles.headerButtons}>
                 <TouchableOpacity 
                   style={[styles.filterButton, selectedFilterTags.length > 0 && styles.filterButtonActive]} 
-                  onPress={() => setShowTagFilter(true)}
+                  onPress={() => {
+                    console.log('🏷️ Filter button pressed');
+                    const availableTags = getAllTags();
+                    console.log('🏷️ Available tags for filter:', availableTags);
+                    setShowTagFilter(true);
+                  }}
                 >
                   <ThemedText style={[styles.filterButtonText, selectedFilterTags.length > 0 && styles.filterButtonTextActive]}>
                     🏷️ Filter{selectedFilterTags.length > 0 && ` (${selectedFilterTags.length})`}
@@ -313,8 +391,8 @@ export default function HobbyDetailScreen() {
               />
             ) : (
               <ThemedText style={styles.emptyText}>
-                {selectedFilterTags.length > 0 
-                  ? "No games match the selected tags. Try adjusting your filters." 
+                {(selectedFilterTags.length > 0 || searchText.trim()) 
+                  ? "No games match your search or filters. Try adjusting your criteria." 
                   : "No games added yet. Tap 'Add Game' to get started!"}
               </ThemedText>
             )}
@@ -398,8 +476,8 @@ export default function HobbyDetailScreen() {
               </View>
             ) : (
               <ThemedText style={styles.emptyText}>
-                {selectedFilterTags.length > 0 
-                  ? "No books match the selected tags. Try adjusting your filters." 
+                {(selectedFilterTags.length > 0 || searchText.trim()) 
+                  ? "No books match your search or filters. Try adjusting your criteria." 
                   : "No books added yet. Tap 'Add Book' to get started!"}
               </ThemedText>
             )}
@@ -484,8 +562,8 @@ export default function HobbyDetailScreen() {
               </View>
             ) : (
               <ThemedText style={styles.emptyText}>
-                {selectedFilterTags.length > 0 
-                  ? "No TV shows or movies match the selected tags. Try adjusting your filters." 
+                {(selectedFilterTags.length > 0 || searchText.trim()) 
+                  ? "No TV shows or movies match your search or filters. Try adjusting your criteria." 
                   : "No TV shows or movies added yet. Tap 'Add TV/Film' to get started!"}
               </ThemedText>
             )}
@@ -565,8 +643,8 @@ export default function HobbyDetailScreen() {
               </View>
             ) : (
               <ThemedText style={styles.emptyText}>
-                {selectedFilterTags.length > 0 
-                  ? "No items match the selected tags. Try adjusting your filters." 
+                {(selectedFilterTags.length > 0 || searchText.trim()) 
+                  ? "No items match your search or filters. Try adjusting your criteria." 
                   : "No items added yet. Tap 'Add Item' to get started!"}
               </ThemedText>
             )}
@@ -778,10 +856,16 @@ export default function HobbyDetailScreen() {
       {/* Tag Filter Modal */}
       <TagFilterModal
         visible={showTagFilter}
-        onClose={() => setShowTagFilter(false)}
+        onClose={() => {
+          console.log('🏷️ TagFilterModal closing');
+          setShowTagFilter(false);
+        }}
         availableTags={getAllTags()}
         selectedTags={selectedFilterTags}
-        onTagsChange={setSelectedFilterTags}
+        onTagsChange={(tags) => {
+          console.log('🏷️ Filter tags changed:', tags);
+          setSelectedFilterTags(tags);
+        }}
         title={`Filter ${hobby?.type || 'Items'} by Tags`}
       />
     </ThemedView>
@@ -1001,6 +1085,30 @@ const styles = StyleSheet.create({
     color: '#666',
     fontStyle: 'italic',
     marginTop: 2,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    marginHorizontal: 16,
+    marginVertical: 12,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#333',
+  },
+  clearSearchButton: {
+    padding: 4,
+    marginLeft: 8,
   },
   hobbyActions: {
     flexDirection: 'row',
