@@ -78,9 +78,26 @@ export const useConsoleStorage = () => {
   }, [consoles, saveConsoles]);
 
   // Delete a console
-  const deleteConsole = useCallback(async (id: string) => {
+  const deleteConsole = useCallback(async (id: string, games?: any[]) => {
     console.log('deleteConsole called with ID:', id);
     console.log('Current consoles:', consoles.map(c => ({ id: c.id, name: c.name })));
+    
+    // Find the console to get its name for validation
+    const consoleToDelete = consoles.find(console => console.id === id);
+    if (!consoleToDelete) {
+      throw new Error('Console not found');
+    }
+    
+    // Check if any games are using this console
+    if (games && games.length > 0) {
+      const gamesUsingConsole = games.filter(game => game.platform === consoleToDelete.name);
+      if (gamesUsingConsole.length > 0) {
+        const gameCount = gamesUsingConsole.length;
+        const gameWord = gameCount === 1 ? 'game' : 'games';
+        throw new Error(`Cannot delete "${consoleToDelete.name}" because ${gameCount} ${gameWord} ${gameCount === 1 ? 'is' : 'are'} using this console. Please remove or change the platform for ${gameCount === 1 ? 'this game' : 'these games'} first.`);
+      }
+    }
+    
     const updatedConsoles = consoles.filter(console => console.id !== id);
     console.log('Updated consoles after filter:', updatedConsoles.map(c => ({ id: c.id, name: c.name })));
     await saveConsoles(updatedConsoles);

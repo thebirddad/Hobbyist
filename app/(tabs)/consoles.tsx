@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Console, useConsoleStorage } from '../../hooks/use-console-storage';
+import { useGameStorage } from '../../hooks/use-game-storage';
 
 interface ConsoleFormProps {
   visible: boolean;
@@ -104,6 +105,7 @@ const ConsoleForm: React.FC<ConsoleFormProps> = ({
 
 export default function ConsolesScreen() {
   const { consoles, loading, addConsole, deleteConsole, updateConsole } = useConsoleStorage();
+  const { games } = useGameStorage();
   const [isAddFormVisible, setIsAddFormVisible] = useState(false);
   const [editingConsole, setEditingConsole] = useState<Console | null>(null);
 
@@ -125,9 +127,25 @@ export default function ConsolesScreen() {
 
   const handleDeleteConsole = (consoleItem: Console) => {
     console.log('Delete button pressed for console:', consoleItem.name);
+    
+    // Check if console has games before showing confirmation
+    const gamesUsingConsole = games.filter(game => game.platform === consoleItem.name);
+    const hasGames = gamesUsingConsole.length > 0;
+    
+    if (hasGames) {
+      const gameCount = gamesUsingConsole.length;
+      const gameWord = gameCount === 1 ? 'game' : 'games';
+      Alert.alert(
+        'Cannot Delete Console',
+        `"${consoleItem.name}" cannot be deleted because ${gameCount} ${gameWord} ${gameCount === 1 ? 'is' : 'are'} using this console.\n\nPlease remove or change the platform for ${gameCount === 1 ? 'this game' : 'these games'} first.`,
+        [{ text: 'OK', style: 'default' }]
+      );
+      return;
+    }
+
     Alert.alert(
       'Delete Console',
-      `Are you sure you want to delete "${consoleItem.name}"?\n\nNote: This won't affect games that are already using this console.`,
+      `Are you sure you want to delete "${consoleItem.name}"?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -136,11 +154,12 @@ export default function ConsolesScreen() {
           onPress: async () => {
             try {
               console.log('Deleting console with ID:', consoleItem.id);
-              await deleteConsole(consoleItem.id);
+              await deleteConsole(consoleItem.id, games);
               console.log('Console deleted successfully');
             } catch (error) {
               console.error('Failed to delete console:', error);
-              Alert.alert('Error', 'Failed to delete console. Please try again.');
+              const errorMessage = error instanceof Error ? error.message : 'Failed to delete console. Please try again.';
+              Alert.alert('Error', errorMessage);
             }
           },
         },
