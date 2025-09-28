@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { GameAccordion } from '../../components/game-accordion';
 import { GameForm } from '../../components/game-form';
 import { GameStats } from '../../components/game-stats';
+import { ImagePickerDebugTool } from '../../components/image-picker-debug-tool';
 import { Game } from '../../data/game';
 import { useGameStorage } from '../../hooks/use-game-storage';
 
@@ -50,6 +51,7 @@ export default function HomeScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <ImagePickerDebugTool />
         <GameStats games={games} />
         
         <GameAccordion

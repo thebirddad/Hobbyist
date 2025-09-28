@@ -47,6 +47,7 @@ export const GameForm: React.FC<GameFormProps> = ({
   // Initialize form data when initialGame changes
   useEffect(() => {
     if (initialGame) {
+      console.log('🖼️ GameForm initializing with existing game:', initialGame.title, 'thumbnail:', initialGame.thumbnail);
       setTitle(initialGame.title);
       setPlatform(initialGame.platform);
       setStatus(initialGame.status);
@@ -54,6 +55,7 @@ export const GameForm: React.FC<GameFormProps> = ({
       setHoursPlayed(initialGame.hoursPlayed?.toString() || '');
       setThumbnail(initialGame.thumbnail);
     } else {
+      console.log('🖼️ GameForm initializing for new game');
       resetForm();
     }
   }, [initialGame]);
@@ -265,8 +267,14 @@ export const GameForm: React.FC<GameFormProps> = ({
             <Text style={styles.label}>Game Thumbnail</Text>
             <GameImagePicker
               imageUri={thumbnail}
-              onImageSelected={setThumbnail}
-              onImageRemoved={() => setThumbnail(undefined)}
+              onImageSelected={(uri) => {
+                console.log('🖼️ GameForm received new thumbnail URI:', uri);
+                setThumbnail(uri);
+              }}
+              onImageRemoved={() => {
+                console.log('🖼️ GameForm thumbnail removed');
+                setThumbnail(undefined);
+              }}
             />
           </View>
         </ScrollView>

@@ -23,6 +23,8 @@ export const GameImagePicker: React.FC<GameImagePickerProps> = ({
   onImageRemoved,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  
+  console.log('🖼️ GameImagePicker rendered with imageUri:', imageUri);
 
   const requestPermissions = async () => {
     // Request camera permissions
@@ -41,6 +43,7 @@ export const GameImagePicker: React.FC<GameImagePickerProps> = ({
   };
 
   const pickImageFromCamera = async () => {
+    console.log('🖼️ Starting camera image capture...');
     setIsLoading(true);
     try {
       const result = await ImagePicker.launchCameraAsync({
@@ -49,11 +52,21 @@ export const GameImagePicker: React.FC<GameImagePickerProps> = ({
         aspect: [3, 4], // Portrait aspect ratio for game covers
         quality: 0.8,
       });
+      
+      console.log('🖼️ Camera result:', {
+        canceled: result.canceled,
+        assets: result.assets?.length || 0,
+        firstAssetUri: result.assets?.[0]?.uri
+      });
 
       if (!result.canceled && result.assets[0]) {
+        console.log('🖼️ Selected image from camera:', result.assets[0].uri);
         onImageSelected(result.assets[0].uri);
+      } else {
+        console.log('🖼️ Camera capture was canceled or no assets returned');
       }
     } catch (error) {
+      console.error('🖼️ Camera capture error:', error);
       Alert.alert('Error', 'Failed to take photo. Please try again.');
     } finally {
       setIsLoading(false);
@@ -61,6 +74,7 @@ export const GameImagePicker: React.FC<GameImagePickerProps> = ({
   };
 
   const pickImageFromLibrary = async () => {
+    console.log('🖼️ Starting library image selection...');
     setIsLoading(true);
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -69,11 +83,21 @@ export const GameImagePicker: React.FC<GameImagePickerProps> = ({
         aspect: [3, 4], // Portrait aspect ratio for game covers
         quality: 0.8,
       });
+      
+      console.log('🖼️ Library result:', {
+        canceled: result.canceled,
+        assets: result.assets?.length || 0,
+        firstAssetUri: result.assets?.[0]?.uri
+      });
 
       if (!result.canceled && result.assets[0]) {
+        console.log('🖼️ Selected image from library:', result.assets[0].uri);
         onImageSelected(result.assets[0].uri);
+      } else {
+        console.log('🖼️ Library selection was canceled or no assets returned');
       }
     } catch (error) {
+      console.error('🖼️ Library selection error:', error);
       Alert.alert('Error', 'Failed to select photo. Please try again.');
     } finally {
       setIsLoading(false);
@@ -112,12 +136,16 @@ export const GameImagePicker: React.FC<GameImagePickerProps> = ({
   };
 
   const handleRemoveImage = () => {
+    console.log('🖼️ User initiated image removal');
     Alert.alert(
       'Remove Photo',
       'Are you sure you want to remove this photo?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Remove', style: 'destructive', onPress: onImageRemoved },
+        { text: 'Remove', style: 'destructive', onPress: () => {
+          console.log('🖼️ Image removed by user');
+          onImageRemoved();
+        }},
       ]
     );
   };
