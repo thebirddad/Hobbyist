@@ -1,7 +1,3 @@
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Game, GameStatus } from '@/data/game';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import React from 'react';
 import {
     Alert,
@@ -11,11 +7,13 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { Game, GameStatus } from '../data/game';
 
 interface GameListProps {
   games: Game[];
   onDeleteGame: (id: string) => void;
   onUpdateGame?: (id: string, updates: Partial<Game>) => void;
+  onEditGame?: (game: Game) => void;
   emptyTitle?: string;
   emptySubtitle?: string;
 }
@@ -24,26 +22,38 @@ export const GameList: React.FC<GameListProps> = ({
   games, 
   onDeleteGame, 
   onUpdateGame,
+  onEditGame,
   emptyTitle = "No games added yet",
   emptySubtitle = "Tap the \"+\" button to add your first game!"
 }) => {
-  const tintColor = useThemeColor({}, 'tint');
-  const backgroundColor = useThemeColor({}, 'background');
 
   const getStatusColor = (status: GameStatus) => {
     switch (status) {
-      case GameStatus.NOT_STARTED:
+      case GameStatus.WANT_TO_PLAY:
         return '#6B7280';
       case GameStatus.PLAYING:
         return '#10B981';
       case GameStatus.COMPLETED:
         return '#3B82F6';
-      case GameStatus.ON_HOLD:
-        return '#F59E0B';
       case GameStatus.DROPPED:
         return '#EF4444';
       default:
         return '#6B7280';
+    }
+  };
+
+  const getStatusLabel = (status: GameStatus) => {
+    switch (status) {
+      case GameStatus.WANT_TO_PLAY:
+        return 'Want to Play';
+      case GameStatus.PLAYING:
+        return 'Currently Playing';
+      case GameStatus.COMPLETED:
+        return 'Completed';
+      case GameStatus.DROPPED:
+        return 'Dropped';
+      default:
+        return status;
     }
   };
 
@@ -58,10 +68,20 @@ export const GameList: React.FC<GameListProps> = ({
     );
   };
 
+  const handleTilePress = (game: Game) => {
+    if (onEditGame) {
+      onEditGame(game);
+    }
+  };
+
   const renderGameItem = ({ item }: { item: Game }) => (
-    <ThemedView style={[styles.gameItem, { borderColor: tintColor + '20' }]}>
+    <TouchableOpacity 
+      style={styles.gameItem} 
+      onPress={() => handleTilePress(item)}
+      activeOpacity={0.7}
+    >
       <View style={styles.gameHeader}>
-        <ThemedText style={styles.gameTitle}>{item.title}</ThemedText>
+        <Text style={styles.gameTitle}>{item.title}</Text>
         <TouchableOpacity
           onPress={() => handleDeleteGame(item)}
           style={styles.deleteButton}
@@ -72,72 +92,39 @@ export const GameList: React.FC<GameListProps> = ({
       
       <View style={styles.gameDetails}>
         <View style={styles.gameRow}>
-          <ThemedText style={styles.gameLabel}>Platform:</ThemedText>
-          <ThemedText style={styles.gameValue}>{item.platform}</ThemedText>
+          <Text style={styles.gameLabel}>Platform:</Text>
+          <Text style={styles.gameValue}>{item.platform}</Text>
         </View>
         
         <View style={styles.gameRow}>
-          <ThemedText style={styles.gameLabel}>Genre:</ThemedText>
-          <ThemedText style={styles.gameValue}>{item.genre}</ThemedText>
-        </View>
-        
-        <View style={styles.gameRow}>
-          <ThemedText style={styles.gameLabel}>Status:</ThemedText>
+          <Text style={styles.gameLabel}>Status:</Text>
           <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-            <Text style={styles.statusText}>{item.status}</Text>
+            <Text style={styles.statusText}>{getStatusLabel(item.status)}</Text>
           </View>
         </View>
         
-        {item.rating && (
+        {item.timeToBeat && (
           <View style={styles.gameRow}>
-            <ThemedText style={styles.gameLabel}>Rating:</ThemedText>
-            <ThemedText style={styles.gameValue}>{item.rating}/10</ThemedText>
+            <Text style={styles.gameLabel}>Time to Beat:</Text>
+            <Text style={styles.gameValue}>{item.timeToBeat}h</Text>
           </View>
         )}
         
         {item.hoursPlayed && (
           <View style={styles.gameRow}>
-            <ThemedText style={styles.gameLabel}>Hours Played:</ThemedText>
-            <ThemedText style={styles.gameValue}>{item.hoursPlayed}h</ThemedText>
-          </View>
-        )}
-        
-        {item.hltbData && (
-          <View style={styles.hltbContainer}>
-            <ThemedText style={styles.gameLabel}>HowLongToBeat:</ThemedText>
-            {item.hltbData.gameplayMain && (
-              <ThemedText style={styles.hltbTime}>
-                Main Story: {item.hltbData.gameplayMain}h
-              </ThemedText>
-            )}
-            {item.hltbData.gameplayMainExtra && (
-              <ThemedText style={styles.hltbTime}>
-                Main + Extras: {item.hltbData.gameplayMainExtra}h
-              </ThemedText>
-            )}
-            {item.hltbData.gameplayCompletionist && (
-              <ThemedText style={styles.hltbTime}>
-                Completionist: {item.hltbData.gameplayCompletionist}h
-              </ThemedText>
-            )}
-          </View>
-        )}
-
-        {item.notes && (
-          <View style={styles.notesContainer}>
-            <ThemedText style={styles.gameLabel}>Notes:</ThemedText>
-            <ThemedText style={styles.notesText}>{item.notes}</ThemedText>
+            <Text style={styles.gameLabel}>Hours Played:</Text>
+            <Text style={styles.gameValue}>{item.hoursPlayed}h</Text>
           </View>
         )}
 
         {onUpdateGame && (
           <View style={styles.quickActions}>
-            <ThemedText style={styles.quickActionsLabel}>Quick Actions:</ThemedText>
+            <Text style={styles.quickActionsLabel}>Quick Actions:</Text>
             <View style={styles.actionButtons}>
-              {item.status !== GameStatus.NOT_STARTED && (
+              {item.status !== GameStatus.WANT_TO_PLAY && (
                 <TouchableOpacity
                   style={[styles.actionButton, { backgroundColor: '#6B7280' }]}
-                  onPress={() => onUpdateGame(item.id, { status: GameStatus.NOT_STARTED })}
+                  onPress={() => onUpdateGame(item.id, { status: GameStatus.WANT_TO_PLAY })}
                 >
                   <Text style={styles.actionButtonText}>Wishlist</Text>
                 </TouchableOpacity>
@@ -153,7 +140,10 @@ export const GameList: React.FC<GameListProps> = ({
               {item.status !== GameStatus.COMPLETED && (
                 <TouchableOpacity
                   style={[styles.actionButton, { backgroundColor: '#3B82F6' }]}
-                  onPress={() => onUpdateGame(item.id, { status: GameStatus.COMPLETED })}
+                  onPress={() => onUpdateGame(item.id, { 
+                    status: GameStatus.COMPLETED,
+                    dateCompleted: new Date().toISOString()
+                  })}
                 >
                   <Text style={styles.actionButtonText}>Completed</Text>
                 </TouchableOpacity>
@@ -163,23 +153,38 @@ export const GameList: React.FC<GameListProps> = ({
         )}
         
         <View style={styles.gameRow}>
-          <ThemedText style={styles.gameLabel}>Added:</ThemedText>
-          <ThemedText style={styles.gameValue}>
+          <Text style={styles.gameLabel}>Added:</Text>
+          <Text style={styles.gameValue}>
             {new Date(item.dateAdded).toLocaleDateString()}
-          </ThemedText>
+          </Text>
         </View>
+
+        {item.dateCompleted && (
+          <View style={styles.gameRow}>
+            <Text style={styles.gameLabel}>Completed:</Text>
+            <Text style={styles.gameValue}>
+              {new Date(item.dateCompleted).toLocaleDateString()}
+            </Text>
+          </View>
+        )}
       </View>
-    </ThemedView>
+
+      {onEditGame && (
+        <View style={styles.editHint}>
+          <Text style={styles.editHintText}>Tap to edit</Text>
+        </View>
+      )}
+    </TouchableOpacity>
   );
 
   if (games.length === 0) {
     return (
-      <ThemedView style={styles.emptyContainer}>
-        <ThemedText style={styles.emptyText}>{emptyTitle}</ThemedText>
-        <ThemedText style={styles.emptySubtext}>
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyText}>{emptyTitle}</Text>
+        <Text style={styles.emptySubtext}>
           {emptySubtitle}
-        </ThemedText>
-      </ThemedView>
+        </Text>
+      </View>
     );
   }
 
@@ -204,8 +209,10 @@ const styles = StyleSheet.create({
     paddingBottom: 100, // Space for floating action button
   },
   gameItem: {
+    backgroundColor: '#fff',
     borderRadius: 12,
     borderWidth: 1,
+    borderColor: '#e0e0e0',
     marginBottom: 16,
     padding: 16,
     shadowColor: '#000',
@@ -227,6 +234,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     flex: 1,
+    color: '#333',
   },
   deleteButton: {
     width: 30,
@@ -261,6 +269,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     flex: 1,
     textAlign: 'right',
+    color: '#333',
   },
   statusBadge: {
     paddingHorizontal: 12,
@@ -271,23 +280,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 12,
     fontWeight: '600',
-  },
-  hltbContainer: {
-    marginTop: 8,
-  },
-  hltbTime: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginTop: 2,
-  },
-  notesContainer: {
-    marginTop: 8,
-  },
-  notesText: {
-    fontSize: 14,
-    fontStyle: 'italic',
-    marginTop: 4,
-    lineHeight: 20,
   },
   quickActions: {
     marginTop: 12,
@@ -318,6 +310,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
+  editHint: {
+    marginTop: 12,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    alignItems: 'center',
+  },
+  editHintText: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontStyle: 'italic',
+  },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -329,6 +333,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 8,
     textAlign: 'center',
+    color: '#333',
   },
   emptySubtext: {
     fontSize: 14,

@@ -2,25 +2,17 @@ export interface Game {
   id: string;
   title: string;
   platform: string;
-  genre: string;
   status: GameStatus;
-  rating?: number; // 1-10 scale
-  dateAdded: string;
+  timeToBeat?: number; // hours
   hoursPlayed?: number;
-  notes?: string;
-  hltbData?: {
-    gameplayMain?: number;
-    gameplayMainExtra?: number;
-    gameplayCompletionist?: number;
-    imageUrl?: string;
-  };
+  dateAdded: string;
+  dateCompleted?: string;
 }
 
 export enum GameStatus {
-  NOT_STARTED = 'Not Started',
+  WANT_TO_PLAY = 'Want to Play',
   PLAYING = 'Currently Playing',
   COMPLETED = 'Completed',
-  ON_HOLD = 'On Hold',
   DROPPED = 'Dropped'
 }
 
@@ -36,23 +28,4 @@ export const PLATFORMS = [
   'Other'
 ] as const;
 
-export const GENRES = [
-  'Action',
-  'Adventure',
-  'RPG',
-  'Strategy',
-  'Simulation',
-  'Sports',
-  'Racing',
-  'Fighting',
-  'Puzzle',
-  'Horror',
-  'FPS',
-  'Platformer',
-  'Indie',
-  'MMO',
-  'Other'
-] as const;
-
 export type Platform = typeof PLATFORMS[number];
-export type Genre = typeof GENRES[number];
