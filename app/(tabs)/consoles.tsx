@@ -113,28 +113,44 @@ export default function ConsolesScreen() {
 
   const handleUpdateConsole = async (name: string) => {
     if (editingConsole) {
-      await updateConsole(editingConsole.id, name);
-      setEditingConsole(null);
+      try {
+        await updateConsole(editingConsole.id, name);
+        setEditingConsole(null);
+      } catch (error) {
+        console.error('Failed to update console:', error);
+        throw error; // Re-throw to show the error in the form
+      }
     }
   };
 
-  const handleDeleteConsole = (console: Console) => {
+  const handleDeleteConsole = (consoleItem: Console) => {
+    console.log('Delete button pressed for console:', consoleItem.name);
     Alert.alert(
       'Delete Console',
-      `Are you sure you want to delete "${console.name}"?\n\nNote: This won't affect games that are already using this console.`,
+      `Are you sure you want to delete "${consoleItem.name}"?\n\nNote: This won't affect games that are already using this console.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => deleteConsole(console.id),
+          onPress: async () => {
+            try {
+              console.log('Deleting console with ID:', consoleItem.id);
+              await deleteConsole(consoleItem.id);
+              console.log('Console deleted successfully');
+            } catch (error) {
+              console.error('Failed to delete console:', error);
+              Alert.alert('Error', 'Failed to delete console. Please try again.');
+            }
+          },
         },
       ]
     );
   };
 
-  const handleEditConsole = (console: Console) => {
-    setEditingConsole(console);
+  const handleEditConsole = (consoleItem: Console) => {
+    console.log('Edit button pressed for console:', consoleItem.name);
+    setEditingConsole(consoleItem);
   };
 
   const renderConsoleItem = ({ item }: { item: Console }) => (

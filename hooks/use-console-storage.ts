@@ -13,13 +13,6 @@ const STORAGE_KEY = '@game_tracker_consoles';
 const DEFAULT_CONSOLES: Console[] = [
   { id: '1', name: 'PC', dateAdded: new Date().toISOString() },
   { id: '2', name: 'PlayStation 5', dateAdded: new Date().toISOString() },
-  { id: '3', name: 'PlayStation 4', dateAdded: new Date().toISOString() },
-  { id: '4', name: 'Xbox Series X/S', dateAdded: new Date().toISOString() },
-  { id: '5', name: 'Xbox One', dateAdded: new Date().toISOString() },
-  { id: '6', name: 'Nintendo Switch', dateAdded: new Date().toISOString() },
-  { id: '7', name: 'iOS', dateAdded: new Date().toISOString() },
-  { id: '8', name: 'Android', dateAdded: new Date().toISOString() },
-  { id: '9', name: 'Other', dateAdded: new Date().toISOString() },
 ];
 
 export const useConsoleStorage = () => {
@@ -86,12 +79,17 @@ export const useConsoleStorage = () => {
 
   // Delete a console
   const deleteConsole = useCallback(async (id: string) => {
+    console.log('deleteConsole called with ID:', id);
+    console.log('Current consoles:', consoles.map(c => ({ id: c.id, name: c.name })));
     const updatedConsoles = consoles.filter(console => console.id !== id);
+    console.log('Updated consoles after filter:', updatedConsoles.map(c => ({ id: c.id, name: c.name })));
     await saveConsoles(updatedConsoles);
+    console.log('Console deletion completed');
   }, [consoles, saveConsoles]);
 
   // Update a console
   const updateConsole = useCallback(async (id: string, name: string) => {
+    console.log('updateConsole called with ID:', id, 'and name:', name);
     const trimmedName = name.trim();
     if (!trimmedName) {
       throw new Error('Console name cannot be empty');
@@ -110,7 +108,9 @@ export const useConsoleStorage = () => {
       console.id === id ? { ...console, name: trimmedName } : console
     );
     
+    console.log('Updated consoles for update:', updatedConsoles.map(c => ({ id: c.id, name: c.name })));
     await saveConsoles(updatedConsoles);
+    console.log('Console update completed');
   }, [consoles, saveConsoles]);
 
   // Get console names as array (for compatibility with existing code)
