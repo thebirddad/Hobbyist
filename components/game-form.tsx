@@ -1,13 +1,13 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Alert,
-  Modal,
+    Alert,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { Game, GameStatus, PLATFORMS, Platform } from '../data/game';
 
@@ -62,7 +62,7 @@ export const GameForm: React.FC<GameFormProps> = ({
   };
 
   const handleSubmit = useCallback(() => {
-    if (!title.trim()) {
+    if (!isEditing && !title.trim()) {
       Alert.alert('Error', 'Please enter a game title');
       return;
     }
@@ -83,14 +83,8 @@ export const GameForm: React.FC<GameFormProps> = ({
     if (isEditing && initialGame && onGameUpdated) {
       const updatedGame: Game = {
         ...initialGame,
-        title: title.trim(),
-        platform,
-        status,
         timeToBeat: timeToBeatNum,
         hoursPlayed: hoursPlayedNum,
-        dateCompleted: status === GameStatus.COMPLETED && initialGame.status !== GameStatus.COMPLETED 
-          ? new Date().toISOString() 
-          : status !== GameStatus.COMPLETED ? undefined : initialGame.dateCompleted,
       };
       onGameUpdated(updatedGame);
     } else if (onGameAdded) {
@@ -103,9 +97,9 @@ export const GameForm: React.FC<GameFormProps> = ({
         dateCompleted: status === GameStatus.COMPLETED ? new Date().toISOString() : undefined,
       };
       onGameAdded(newGame);
+      resetForm();
     }
     
-    resetForm();
     onClose();
   }, [title, platform, status, timeToBeat, hoursPlayed, isEditing, initialGame, onGameAdded, onGameUpdated, onClose]);
 
@@ -121,7 +115,7 @@ export const GameForm: React.FC<GameFormProps> = ({
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>{isEditing ? 'Edit Game' : 'Add New Game'}</Text>
-          <TouchableOpacity style={styles.closeButton} onPress={() => { resetForm(); onClose(); }}>
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <Text style={styles.closeButtonText}>✕</Text>
           </TouchableOpacity>
         </View>
@@ -130,87 +124,103 @@ export const GameForm: React.FC<GameFormProps> = ({
           {/* Game Title */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Game Title</Text>
-            <TextInput
-              style={styles.textInput}
-              value={title}
-              onChangeText={setTitle}
-              placeholder="Enter game title"
-              autoCorrect={false}
-              autoCapitalize="words"
-            />
+            {isEditing ? (
+              <View style={[styles.textInput, styles.readOnlyInput]}>
+                <Text style={styles.readOnlyText}>{title}</Text>
+              </View>
+            ) : (
+              <TextInput
+                style={styles.textInput}
+                value={title}
+                onChangeText={setTitle}
+                placeholder="Enter game title"
+                autoCorrect={false}
+                autoCapitalize="words"
+              />
+            )}
           </View>
 
           {/* Platform Selection */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Platform</Text>
-            <TouchableOpacity 
-              style={styles.pickerButton} 
-              onPress={() => setShowPlatformPicker(!showPlatformPicker)}
-            >
-              <Text style={styles.pickerButtonText}>{platform}</Text>
-              <Text style={styles.pickerArrow}>{showPlatformPicker ? '▲' : '▼'}</Text>
-            </TouchableOpacity>
-            
-            {showPlatformPicker && (
-              <View style={styles.pickerOptions}>
-                {PLATFORMS.map((p) => (
-                  <TouchableOpacity
-                    key={p}
-                    style={[
-                      styles.pickerOption,
-                      platform === p && styles.pickerOptionSelected
-                    ]}
-                    onPress={() => {
-                      setPlatform(p);
-                      setShowPlatformPicker(false);
-                    }}
-                  >
-                    <Text style={[
-                      styles.pickerOptionText,
-                      platform === p && styles.pickerOptionTextSelected
-                    ]}>{p}</Text>
-                  </TouchableOpacity>
-                ))}
+            {isEditing ? (
+              <View style={[styles.pickerButton, styles.readOnlyInput]}>
+                <Text style={styles.readOnlyText}>{platform}</Text>
               </View>
+            ) : (
+              <>
+                <TouchableOpacity 
+                  style={styles.pickerButton} 
+                  onPress={() => setShowPlatformPicker(!showPlatformPicker)}
+                >
+                  <Text style={styles.pickerButtonText}>{platform}</Text>
+                  <Text style={styles.pickerArrow}>{showPlatformPicker ? '▲' : '▼'}</Text>
+                </TouchableOpacity>
+                
+                {showPlatformPicker && (
+                  <View style={styles.pickerOptions}>
+                    {PLATFORMS.map((p) => (
+                      <TouchableOpacity
+                        key={p}
+                        style={[
+                          styles.pickerOption,
+                          platform === p && styles.pickerOptionSelected
+                        ]}
+                        onPress={() => {
+                          setPlatform(p);
+                          setShowPlatformPicker(false);
+                        }}
+                      >
+                        <Text style={[
+                          styles.pickerOptionText,
+                          platform === p && styles.pickerOptionTextSelected
+                        ]}>{p}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </>
             )}
           </View>
 
-          {/* Status Selection */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Status</Text>
-            <TouchableOpacity 
-              style={styles.pickerButton} 
-              onPress={() => setShowStatusPicker(!showStatusPicker)}
-            >
-              <Text style={styles.pickerButtonText}>
-                {statusOptions.find(opt => opt.key === status)?.label || 'Select Status'}
-              </Text>
-              <Text style={styles.pickerArrow}>{showStatusPicker ? '▲' : '▼'}</Text>
-            </TouchableOpacity>
-            
-            {showStatusPicker && (
-              <View style={styles.pickerOptions}>
-                {statusOptions.map((option) => (
-                  <TouchableOpacity
-                    key={option.key}
-                    style={[
-                      styles.pickerOption,
-                      status === option.key && styles.pickerOptionSelected
-                    ]}
-                    onPress={() => {
-                      setStatus(option.key);
-                      setShowStatusPicker(false);
-                    }}
-                  >
-                    <Text style={[
-                      styles.pickerOptionText,
-                      status === option.key && styles.pickerOptionTextSelected
-                    ]}>{option.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </View>
+          {/* Status Selection - Hidden when editing */}
+          {!isEditing && (
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Status</Text>
+              <TouchableOpacity 
+                style={styles.pickerButton} 
+                onPress={() => setShowStatusPicker(!showStatusPicker)}
+              >
+                <Text style={styles.pickerButtonText}>
+                  {statusOptions.find(opt => opt.key === status)?.label || 'Select Status'}
+                </Text>
+                <Text style={styles.pickerArrow}>{showStatusPicker ? '▲' : '▼'}</Text>
+              </TouchableOpacity>
+              
+              {showStatusPicker && (
+                <View style={styles.pickerOptions}>
+                  {statusOptions.map((option) => (
+                    <TouchableOpacity
+                      key={option.key}
+                      style={[
+                        styles.pickerOption,
+                        status === option.key && styles.pickerOptionSelected
+                      ]}
+                      onPress={() => {
+                        setStatus(option.key);
+                        setShowStatusPicker(false);
+                      }}
+                    >
+                      <Text style={[
+                        styles.pickerOptionText,
+                        status === option.key && styles.pickerOptionTextSelected
+                      ]}>{option.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
 
           {/* Time to Beat */}
           <View style={styles.inputGroup}>
@@ -367,5 +377,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
+  },
+  readOnlyInput: {
+    backgroundColor: '#f8f8f8',
+    borderColor: '#e0e0e0',
+  },
+  readOnlyText: {
+    fontSize: 16,
+    color: '#666',
   },
 });
