@@ -1,8 +1,8 @@
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { router } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
-import React from 'react';
-import { StyleSheet, Text, View, Image } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -17,9 +17,11 @@ function CustomDrawerContent(props: any) {
   const { hobbies, canAddHobby, loading } = useHobbyStorage();
 
   // Check if there's at least one Game hobby
-  const hasGameHobby = hobbies.some(hobby => hobby.type === HobbyType.GAMES);
+  const hasGameHobby = useMemo(() => {
+    return hobbies.some(hobby => hobby.type === HobbyType.GAMES);
+  }, [hobbies]);
 
-  const getHobbyIcon = (type: HobbyType) => {
+  const getHobbyIcon = useCallback((type: HobbyType) => {
     switch (type) {
       case HobbyType.GAMES:
         return 'gamecontroller.fill';
@@ -32,7 +34,7 @@ function CustomDrawerContent(props: any) {
       default:
         return 'folder.fill';
     }
-  };
+  }, []);
 
   return (
     <SafeAreaView style={styles.drawerContainer}>
@@ -58,7 +60,7 @@ function CustomDrawerContent(props: any) {
           inactiveTintColor="#666"
         />
         
-        {canAddHobby() && (
+        {canAddHobby() ? (
           <DrawerItem
             label="Create Hobby"
             onPress={() => router.push('/(drawer)/hobbies')}
@@ -68,9 +70,9 @@ function CustomDrawerContent(props: any) {
             activeTintColor={tintColor}
             inactiveTintColor="#666"
           />
-        )}
+        ) : null}
         
-        {hobbies.length > 0 && (
+        {hobbies.length > 0 ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>My Hobbies</Text>
             {hobbies.map((hobby) => (
@@ -92,9 +94,9 @@ function CustomDrawerContent(props: any) {
               />
             ))}
           </View>
-        )}
+        ) : null}
         
-        {hasGameHobby && (
+        {hasGameHobby ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Gaming</Text>
             <DrawerItem
@@ -127,7 +129,19 @@ function CustomDrawerContent(props: any) {
               inactiveTintColor="#666"
             />
           </View>
-        )}
+        ) : null}
+        
+        <View style={styles.section}>
+          <DrawerItem
+            label="Help & Support"
+            onPress={() => router.push('/(drawer)/help')}
+            icon={({ color, size }) => (
+              <IconSymbol name="questionmark.circle.fill" size={size} color={color} />
+            )}
+            activeTintColor={tintColor}
+            inactiveTintColor="#666"
+          />
+        </View>
       </DrawerContentScrollView>
       
       <View style={styles.drawerFooter}>
@@ -195,6 +209,13 @@ export default function DrawerLayout() {
         options={{
           drawerItemStyle: { display: 'none' },
           title: 'Hobby Details',
+        }}
+      />
+      <Drawer.Screen
+        name="help"
+        options={{
+          drawerLabel: 'Help & Support',
+          title: 'Help & Support',
         }}
       />
     </Drawer>
