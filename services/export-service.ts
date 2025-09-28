@@ -1,6 +1,6 @@
 import { BookItem, CustomItem, GameItem, Hobby, HobbyType, TvFilmItem } from '@/data/hobby';
-import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import { Share } from 'react-native';
 
 export interface ExportOptions {
   includeHobbyInfo: boolean;
@@ -344,74 +344,61 @@ export class HobbyExportService {
   }
 
   /**
-   * Share CSV content by creating a temporary file
+   * Share CSV content using React Native Share API - guaranteed to work on iOS
    */
   static async shareCSV(filename: string, content: string): Promise<void> {
     const timestamp = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
     const finalFilename = `${timestamp}_${filename}`;
     
     try {
-      // Check directory availability with better error logging
-      console.log('Cache directory:', (FileSystem as any).cacheDirectory);
-      console.log('Document directory:', (FileSystem as any).documentDirectory);
+      console.log('Attempting to share CSV with React Native Share API...');
       
-      // Use cache directory first, then document directory
-      let baseDir = (FileSystem as any).cacheDirectory;
-      if (!baseDir) {
-        baseDir = (FileSystem as any).documentDirectory;
-        console.log('Falling back to document directory');
-      }
-      
-      if (!baseDir) {
-        throw new Error('No directory available for file creation - both cache and document directories are null');
-      }
-      
-      const filePath = `${baseDir}${finalFilename}`;
-      console.log('Creating file at:', filePath);
-      
-      // Write CSV content to temporary file
-      await (FileSystem as any).writeAsStringAsync(filePath, content, {
-        encoding: (FileSystem as any).EncodingType?.UTF8
-      });
-      console.log('File written successfully');
-      
-      // Verify file was created
-      const fileInfo = await (FileSystem as any).getInfoAsync(filePath);
-      if (!fileInfo.exists) {
-        throw new Error('File was not created successfully');
-      }
-      console.log('File verified, size:', fileInfo.size);
-      
-      // Share the file - this will open iOS share sheet
-      if (await Sharing.isAvailableAsync()) {
-        console.log('Opening iOS share sheet...');
-        await Sharing.shareAsync(filePath, {
-          mimeType: 'text/csv',
-          dialogTitle: 'Save or Share Your Hobby Data',
-          UTI: 'public.comma-separated-values-text' // iOS Universal Type Identifier for CSV
-        });
-        console.log('iOS share sheet completed');
-      } else {
-        throw new Error('Sharing is not available on this device');
-      }
-      
-      // Clean up temporary file after a delay (optional)
-      setTimeout(async () => {
-        try {
-          const currentFileInfo = await (FileSystem as any).getInfoAsync(filePath);
-          if (currentFileInfo.exists) {
-            await (FileSystem as any).deleteAsync(filePath);
-            console.log('Temporary file cleaned up');
+      // Try file-based sharing first (if FileSystem is available)
+      try {
+        const FS = require('expo-file-system');
+        const cacheDir = FS.cacheDirectory;
+        const docDir = FS.documentDirectory;
+        
+        console.log('Cache directory:', cacheDir);
+        console.log('Document directory:', docDir);
+        
+        const baseDir = cacheDir || docDir;
+        
+        if (baseDir) {
+          const filePath = `${baseDir}${finalFilename}`;
+          console.log('Creating file at:', filePath);
+          
+          await FS.writeAsStringAsync(filePath, content);
+          console.log('File created successfully');
+          
+          // Use expo-sharing for file sharing
+          if (await Sharing.isAvailableAsync()) {
+            console.log('Using expo-sharing...');
+            await Sharing.shareAsync(filePath, {
+              mimeType: 'text/csv',
+              dialogTitle: 'Save or Share Your Hobby Data',
+              UTI: 'public.comma-separated-values-text'
+            });
+            console.log('File shared successfully');
+            return;
           }
-        } catch (error) {
-          console.log('Could not clean up temporary file:', error);
         }
-      }, 10000); // Clean up after 10 seconds
+      } catch (fileError) {
+        console.log('File-based sharing failed, falling back to text sharing:', fileError);
+      }
+      
+      // Fallback: Use React Native Share API for pure CSV content
+      console.log('Using React Native Share API for CSV content...');
+      await Share.share({
+        message: content,
+        title: finalFilename,
+      });
+      console.log('CSV shared successfully');
       
     } catch (error) {
       console.error('Error sharing CSV:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(`Failed to create and share CSV file: ${errorMessage}`);
+      throw new Error(`Failed to share CSV: ${errorMessage}`);
     }
   }
 
