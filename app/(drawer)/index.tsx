@@ -1,8 +1,9 @@
-﻿import { useActivityTracking } from '@/hooks/use-activity-tracking';
+﻿import ExportButton from '@/components/export-button';
+import { useActivityTracking } from '@/hooks/use-activity-tracking';
 import { useCompletionStats } from '@/hooks/use-completion-stats';
 import { useInstallationDate } from '@/hooks/use-installation-date';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function HomePage() {
   const { getMostRecentActivity, formatActivityMessage, loading: activityLoading } = useActivityTracking();
@@ -13,7 +14,13 @@ export default function HomePage() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <Text style={styles.welcomeText}>Welcome to Hobbyist</Text>
+              <View style={styles.drawerHeader}>
+                <Image 
+                  source={require('@/assets/images/icon.png')} 
+                  style={styles.drawerIcon}
+                  resizeMode="contain"
+                />
+              </View>
       
       {/* Hobbyist Since Section */}
       <View style={styles.installationSection}>
@@ -72,6 +79,12 @@ export default function HomePage() {
           </View>
         </View>
       </View>
+
+      {/* Export Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Export Your Data</Text>
+        <ExportButton />
+      </View>
     </ScrollView>
   );
 }
@@ -104,6 +117,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+    drawerHeader: {
+    padding: 5,
+    paddingTop: 0,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    marginBottom: 10,
+  },
+  drawerIcon: {
+    width: 70,
+    height: 70,
   },
   sectionTitle: {
     fontSize: 20,

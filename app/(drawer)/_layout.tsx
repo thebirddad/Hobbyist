@@ -1,8 +1,8 @@
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { router } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
-import React, { useCallback, useMemo } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -15,6 +15,8 @@ function CustomDrawerContent(props: any) {
   const colorScheme = useColorScheme();
   const tintColor = Colors[colorScheme ?? 'light'].tint;
   const { hobbies, canAddHobby, loading } = useHobbyStorage();
+  const [isHobbiesExpanded, setIsHobbiesExpanded] = useState(true);
+  const [isGamingExpanded, setIsGamingExpanded] = useState(true);
 
   // Check if there's at least one Game hobby
   const hasGameHobby = useMemo(() => {
@@ -74,8 +76,18 @@ function CustomDrawerContent(props: any) {
         
         {hobbies.length > 0 ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>My Hobbies</Text>
-            {hobbies.map((hobby) => (
+            <TouchableOpacity 
+              style={styles.sectionHeader}
+              onPress={() => setIsHobbiesExpanded(!isHobbiesExpanded)}
+            >
+              <Text style={styles.sectionTitle}>My Hobbies</Text>
+              <IconSymbol 
+                name={isHobbiesExpanded ? "chevron.down" : "chevron.right"} 
+                size={16} 
+                color="#666" 
+              />
+            </TouchableOpacity>
+            {isHobbiesExpanded && hobbies.map((hobby) => (
               <DrawerItem
                 key={hobby.id}
                 label={hobby.name}
@@ -98,36 +110,50 @@ function CustomDrawerContent(props: any) {
         
         {hasGameHobby ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Gaming</Text>
-            <DrawerItem
-              label="Currently Playing"
-              onPress={() => router.push('/playing')}
-              icon={({ color, size }) => (
-                <IconSymbol name="play.circle.fill" size={size} color={color} />
-              )}
-              activeTintColor={tintColor}
-              inactiveTintColor="#666"
-            />
-            
-            <DrawerItem
-              label="Game Library"
-              onPress={() => router.push('/library')}
-              icon={({ color, size }) => (
-                <IconSymbol name="list.bullet" size={size} color={color} />
-              )}
-              activeTintColor={tintColor}
-              inactiveTintColor="#666"
-            />
-            
-            <DrawerItem
-              label="Consoles"
-              onPress={() => router.push('/consoles')}
-              icon={({ color, size }) => (
-                <IconSymbol name="gamecontroller.fill" size={size} color={color} />
-              )}
-              activeTintColor={tintColor}
-              inactiveTintColor="#666"
-            />
+            <TouchableOpacity 
+              style={styles.sectionHeader}
+              onPress={() => setIsGamingExpanded(!isGamingExpanded)}
+            >
+              <Text style={styles.sectionTitle}>Gaming</Text>
+              <IconSymbol 
+                name={isGamingExpanded ? "chevron.down" : "chevron.right"} 
+                size={16} 
+                color="#666" 
+              />
+            </TouchableOpacity>
+            {isGamingExpanded && (
+              <>
+                <DrawerItem
+                  label="Currently Playing"
+                  onPress={() => router.push('/playing')}
+                  icon={({ color, size }) => (
+                    <IconSymbol name="play.circle.fill" size={size} color={color} />
+                  )}
+                  activeTintColor={tintColor}
+                  inactiveTintColor="#666"
+                />
+                
+                <DrawerItem
+                  label="Game Library"
+                  onPress={() => router.push('/library')}
+                  icon={({ color, size }) => (
+                    <IconSymbol name="list.bullet" size={size} color={color} />
+                  )}
+                  activeTintColor={tintColor}
+                  inactiveTintColor="#666"
+                />
+                
+                <DrawerItem
+                  label="Consoles"
+                  onPress={() => router.push('/consoles')}
+                  icon={({ color, size }) => (
+                    <IconSymbol name="gamecontroller.fill" size={size} color={color} />
+                  )}
+                  activeTintColor={tintColor}
+                  inactiveTintColor="#666"
+                />
+              </>
+            )}
           </View>
         ) : null}
         
@@ -147,6 +173,9 @@ function CustomDrawerContent(props: any) {
       <View style={styles.drawerFooter}>
         <Text style={styles.footerText}>
           Your hobby companion
+        </Text>
+        <Text style={styles.copyrightText}>
+          © 2025
         </Text>
       </View>
     </SafeAreaView>
@@ -256,6 +285,12 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
   drawerFooter: {
     padding: 20,
     borderTopWidth: 1,
@@ -266,5 +301,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     fontStyle: 'italic',
+  },
+  copyrightText: {
+    fontSize: 10,
+    color: '#999',
+    marginTop: 4,
   },
 });
