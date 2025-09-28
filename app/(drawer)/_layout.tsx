@@ -16,6 +16,9 @@ function CustomDrawerContent(props: any) {
   const tintColor = Colors[colorScheme ?? 'light'].tint;
   const { hobbies, canAddHobby, loading } = useHobbyStorage();
 
+  // Check if there's at least one Game hobby
+  const hasGameHobby = hobbies.some(hobby => hobby.type === HobbyType.GAMES);
+
   const getHobbyIcon = (type: HobbyType) => {
     switch (type) {
       case HobbyType.GAMES:
@@ -87,38 +90,40 @@ function CustomDrawerContent(props: any) {
           </View>
         )}
         
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Legacy Gaming</Text>
-          <DrawerItem
-            label="Currently Playing"
-            onPress={() => router.push('/playing')}
-            icon={({ color, size }) => (
-              <IconSymbol name="play.circle.fill" size={size} color={color} />
-            )}
-            activeTintColor={tintColor}
-            inactiveTintColor="#666"
-          />
-          
-          <DrawerItem
-            label="Game Library"
-            onPress={() => router.push('/library')}
-            icon={({ color, size }) => (
-              <IconSymbol name="list.bullet" size={size} color={color} />
-            )}
-            activeTintColor={tintColor}
-            inactiveTintColor="#666"
-          />
-          
-          <DrawerItem
-            label="Consoles"
-            onPress={() => router.push('/consoles')}
-            icon={({ color, size }) => (
-              <IconSymbol name="gamecontroller.fill" size={size} color={color} />
-            )}
-            activeTintColor={tintColor}
-            inactiveTintColor="#666"
-          />
-        </View>
+        {hasGameHobby && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Gaming</Text>
+            <DrawerItem
+              label="Currently Playing"
+              onPress={() => router.push('/playing')}
+              icon={({ color, size }) => (
+                <IconSymbol name="play.circle.fill" size={size} color={color} />
+              )}
+              activeTintColor={tintColor}
+              inactiveTintColor="#666"
+            />
+            
+            <DrawerItem
+              label="Game Library"
+              onPress={() => router.push('/library')}
+              icon={({ color, size }) => (
+                <IconSymbol name="list.bullet" size={size} color={color} />
+              )}
+              activeTintColor={tintColor}
+              inactiveTintColor="#666"
+            />
+            
+            <DrawerItem
+              label="Consoles"
+              onPress={() => router.push('/consoles')}
+              icon={({ color, size }) => (
+                <IconSymbol name="gamecontroller.fill" size={size} color={color} />
+              )}
+              activeTintColor={tintColor}
+              inactiveTintColor="#666"
+            />
+          </View>
+        )}
       </DrawerContentScrollView>
       
       <View style={styles.drawerFooter}>

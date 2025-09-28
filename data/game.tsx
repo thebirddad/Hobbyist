@@ -8,6 +8,7 @@ export interface Game {
   dateAdded: string;
   dateCompleted?: string;
   thumbnail?: string; // URI to the game's thumbnail image
+  tags?: string[]; // max 5 tags
 }
 
 export enum GameStatus {

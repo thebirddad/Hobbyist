@@ -63,6 +63,10 @@ export default function HomePage() {
             <Text style={styles.statLabel}>Books In Progress</Text>
           </View>
           <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{stats.showsInProgress}</Text>
+            <Text style={styles.statLabel}>Shows In Progress</Text>
+          </View>
+          <View style={styles.statItem}>
             <Text style={styles.statNumber}>{stats.totalHobbies}</Text>
             <Text style={styles.statLabel}>Total Hobbies</Text>
           </View>

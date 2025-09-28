@@ -12,6 +12,7 @@ import {
 import { Game, GameStatus } from '../data/game';
 import { useConsoleStorage } from '../hooks/use-console-storage';
 import { GameImagePicker } from './game-image-picker';
+import { TagInput } from './tag-input';
 
 interface GameFormProps {
   visible: boolean;
@@ -39,6 +40,7 @@ export const GameForm: React.FC<GameFormProps> = ({
   const [timeToBeat, setTimeToBeat] = useState('');
   const [hoursPlayed, setHoursPlayed] = useState('');
   const [thumbnail, setThumbnail] = useState<string | undefined>(undefined);
+  const [tags, setTags] = useState<string[]>([]);
 
   // Selection state
   const [showPlatformPicker, setShowPlatformPicker] = useState(false);
@@ -54,6 +56,7 @@ export const GameForm: React.FC<GameFormProps> = ({
       setTimeToBeat(initialGame.timeToBeat?.toString() || '');
       setHoursPlayed(initialGame.hoursPlayed?.toString() || '');
       setThumbnail(initialGame.thumbnail);
+      setTags(initialGame.tags || []);
     } else {
       console.log('🖼️ GameForm initializing for new game');
       resetForm();
@@ -67,6 +70,7 @@ export const GameForm: React.FC<GameFormProps> = ({
     setTimeToBeat('');
     setHoursPlayed('');
     setThumbnail(undefined);
+    setTags([]);
     setShowPlatformPicker(false);
     setShowStatusPicker(false);
   };
@@ -98,6 +102,7 @@ export const GameForm: React.FC<GameFormProps> = ({
         timeToBeat: timeToBeatNum,
         hoursPlayed: hoursPlayedNum,
         thumbnail,
+        tags: tags.length > 0 ? tags : undefined,
       };
       console.log('🖼️ Updating game with thumbnail:', updatedGame.thumbnail);
       onGameUpdated(updatedGame);
@@ -110,6 +115,7 @@ export const GameForm: React.FC<GameFormProps> = ({
         hoursPlayed: hoursPlayedNum,
         dateCompleted: status === GameStatus.COMPLETED ? new Date().toISOString() : undefined,
         thumbnail,
+        tags: tags.length > 0 ? tags : undefined,
       };
       console.log('🖼️ Adding new game with thumbnail:', newGame.thumbnail);
       onGameAdded(newGame);
@@ -117,7 +123,7 @@ export const GameForm: React.FC<GameFormProps> = ({
     }
     
     onClose();
-  }, [title, platform, status, timeToBeat, hoursPlayed, thumbnail, isEditing, initialGame, onGameAdded, onGameUpdated, onClose]);
+  }, [title, platform, status, timeToBeat, hoursPlayed, thumbnail, tags, isEditing, initialGame, onGameAdded, onGameUpdated, onClose]);
 
   const statusOptions = [
     { key: GameStatus.WANT_TO_PLAY, label: 'Want to Play' },
@@ -159,6 +165,7 @@ export const GameForm: React.FC<GameFormProps> = ({
           {/* Platform Selection */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Platform</Text>
+            <Text style={styles.subLabel}>Add more consoles in the 'Consoles' menu option</Text>
             {isEditing ? (
               <View style={[styles.pickerButton, styles.readOnlyInput]}>
                 <Text style={styles.readOnlyText}>{platform}</Text>
@@ -262,6 +269,16 @@ export const GameForm: React.FC<GameFormProps> = ({
             />
           </View>
 
+          {/* Tags */}
+          <View style={styles.inputGroup}>
+            <TagInput
+              tags={tags}
+              onTagsChange={setTags}
+              placeholder="Add tag (e.g., RPG, Action)..."
+              maxTags={5}
+            />
+          </View>
+
           {/* Game Thumbnail */}
           <View style={styles.inputGroup}>
             <GameImagePicker
@@ -338,6 +355,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginBottom: 8,
+  },
+  subLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 8,
+    fontStyle: 'italic',
   },
   textInput: {
     backgroundColor: '#fff',

@@ -8,6 +8,7 @@ export interface CompletionStats {
   moviesWatched: number;
   gamesInProgress: number;
   booksInProgress: number;
+  showsInProgress: number;
   totalHobbies: number;
 }
 
@@ -19,6 +20,7 @@ export const useCompletionStats = () => {
     moviesWatched: 0,
     gamesInProgress: 0,
     booksInProgress: 0,
+    showsInProgress: 0,
     totalHobbies: 0,
   });
 
@@ -28,6 +30,7 @@ export const useCompletionStats = () => {
     let moviesWatched = 0;
     let gamesInProgress = 0;
     let booksInProgress = 0;
+    let showsInProgress = 0;
 
     hobbies.forEach((hobby) => {
       switch (hobby.type) {
@@ -53,6 +56,9 @@ export const useCompletionStats = () => {
           moviesWatched += hobby.items.filter(
             (item: any) => item.status === TvFilmStatus.WATCHED
           ).length;
+          showsInProgress += hobby.items.filter(
+            (item: any) => item.status === TvFilmStatus.WATCHING
+          ).length;
           break;
 
         // Custom items don't have status, so we don't count them
@@ -68,13 +74,18 @@ export const useCompletionStats = () => {
       moviesWatched,
       gamesInProgress,
       booksInProgress,
+      showsInProgress,
       totalHobbies: hobbies.length,
     };
   };
 
-  useEffect(() => {
+  const refreshStats = () => {
     const newStats = calculateStats();
     setStats(newStats);
+  };
+
+  useEffect(() => {
+    refreshStats();
   }, [hobbies]);
 
   return {

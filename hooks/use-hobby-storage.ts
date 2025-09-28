@@ -6,6 +6,23 @@ import { useEffect, useState } from 'react';
 const HOBBIES_STORAGE_KEY = 'hobbies_data';
 const MAX_HOBBIES = 7;
 
+// Global listeners for hobby updates
+const hobbyListeners: Array<() => void> = [];
+
+export const addHobbyListener = (listener: () => void) => {
+  hobbyListeners.push(listener);
+  return () => {
+    const index = hobbyListeners.indexOf(listener);
+    if (index > -1) {
+      hobbyListeners.splice(index, 1);
+    }
+  };
+};
+
+const notifyHobbyListeners = () => {
+  hobbyListeners.forEach(listener => listener());
+};
+
 export const useHobbyStorage = () => {
   const [hobbies, setHobbies] = useState<Hobby[]>([]);
   const [loading, setLoading] = useState(true);
@@ -13,6 +30,16 @@ export const useHobbyStorage = () => {
   // Load hobbies from storage on mount
   useEffect(() => {
     loadHobbies();
+  }, []);
+
+  // Listen for hobby changes from other components
+  useEffect(() => {
+    const unsubscribe = addHobbyListener(() => {
+      // Reload hobbies when notified of changes
+      loadHobbies();
+    });
+
+    return unsubscribe;
   }, []);
 
   const loadHobbies = async () => {
@@ -34,6 +61,8 @@ export const useHobbyStorage = () => {
       const jsonData = JSON.stringify(hobbiesToSave);
       await AsyncStorage.setItem(HOBBIES_STORAGE_KEY, jsonData);
       setHobbies(hobbiesToSave);
+      // Notify all listeners that hobbies have been updated
+      notifyHobbyListeners();
     } catch (error) {
       console.error('Failed to save hobbies:', error);
     }

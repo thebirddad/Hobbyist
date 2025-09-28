@@ -166,6 +166,19 @@ export const GameList: React.FC<GameListProps> = ({
                 </View>
               )}
               
+              {item.tags && item.tags.length > 0 && (
+                <View style={styles.gameRow}>
+                  <Text style={styles.gameLabel}>Tags:</Text>
+                  <View style={styles.tagsContainer}>
+                    {item.tags.map((tag, index) => (
+                      <View key={index} style={styles.tag}>
+                        <Text style={styles.tagText}>{tag}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+              
               <View style={styles.gameRow}>
                 <Text style={styles.gameLabel}>Added:</Text>
                 <Text style={styles.gameValue}>
@@ -375,5 +388,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     textAlign: 'center',
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginLeft: 8,
+  },
+  tag: {
+    backgroundColor: '#e3f2fd',
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: '#1976d2',
+  },
+  tagText: {
+    fontSize: 10,
+    color: '#1976d2',
+    fontWeight: '500',
   },
 });

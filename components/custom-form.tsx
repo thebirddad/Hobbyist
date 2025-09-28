@@ -1,4 +1,5 @@
 import { GameImagePicker } from '@/components/game-image-picker';
+import { TagInput } from '@/components/tag-input';
 import { CustomItem } from '@/data/hobby';
 import React, { useCallback, useState } from 'react';
 import {
@@ -31,11 +32,13 @@ export const CustomForm: React.FC<CustomFormProps> = ({
 }) => {
   const [name, setName] = useState(initialItem?.name || '');
   const [thumbnail, setThumbnail] = useState(initialItem?.thumbnail || '');
+  const [tags, setTags] = useState<string[]>(initialItem?.tags || []);
 
   const resetForm = useCallback(() => {
     if (mode === 'add') {
       setName('');
       setThumbnail('');
+      setTags([]);
     }
   }, [mode]);
 
@@ -48,6 +51,7 @@ export const CustomForm: React.FC<CustomFormProps> = ({
     const itemData: Omit<CustomItem, 'id' | 'dateAdded'> = {
       name: name.trim(),
       thumbnail: thumbnail || undefined,
+      tags: tags.length > 0 ? tags : undefined,
     };
 
     onSubmit(itemData);
@@ -93,6 +97,15 @@ export const CustomForm: React.FC<CustomFormProps> = ({
                 onChangeText={setName}
                 placeholder="Enter item name..."
                 placeholderTextColor="#999"
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <TagInput
+                tags={tags}
+                onTagsChange={setTags}
+                placeholder="Add tag (e.g., Collection, Project)..."
+                maxTags={5}
               />
             </View>
 

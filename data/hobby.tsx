@@ -45,6 +45,7 @@ export interface GameItem {
   dateAdded: string;
   dateCompleted?: string;
   thumbnail?: string;
+  tags?: string[]; // max 5 tags
 }
 
 export enum GameStatus {
@@ -65,6 +66,7 @@ export interface BookItem {
   dateAdded: string;
   dateCompleted?: string;
   thumbnail?: string;
+  tags?: string[]; // max 5 tags
 }
 
 export enum BookStatus {
@@ -85,11 +87,13 @@ export interface TvFilmItem {
   dateAdded: string;
   dateWatched?: string;
   thumbnail?: string;
+  tags?: string[]; // max 5 tags
 }
 
 export enum TvFilmStatus {
   WANT_TO_WATCH = 'Want to Watch',
-  WATCHED = 'Watched'
+  WATCHED = 'Watched',
+  WATCHING = 'Currently Watching',
 }
 
 // Keep MovieStatus for backward compatibility
@@ -102,4 +106,5 @@ export interface CustomItem {
   name: string;
   dateAdded: string;
   thumbnail?: string;
+  tags?: string[]; // max 5 tags
 }

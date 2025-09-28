@@ -1,4 +1,5 @@
 import { GameImagePicker } from '@/components/game-image-picker';
+import { TagInput } from '@/components/tag-input';
 import { BookItem, BookStatus } from '@/data/hobby';
 
 import React, { useCallback, useState } from 'react';
@@ -37,6 +38,7 @@ export const BookForm: React.FC<BookFormProps> = ({
   const [pagesRead, setPagesRead] = useState(initialBook?.pagesRead?.toString() || '');
   const [thumbnail, setThumbnail] = useState(initialBook?.thumbnail || '');
   const [dateCompleted, setDateCompleted] = useState(initialBook?.dateCompleted || '');
+  const [tags, setTags] = useState<string[]>(initialBook?.tags || []);
   const [showStatusPicker, setShowStatusPicker] = useState(false);
 
   const bookStatusOptions = [
@@ -55,6 +57,7 @@ export const BookForm: React.FC<BookFormProps> = ({
       setPagesRead('');
       setThumbnail('');
       setDateCompleted('');
+      setTags([]);
     }
     setShowStatusPicker(false);
   }, [mode]);
@@ -83,6 +86,7 @@ export const BookForm: React.FC<BookFormProps> = ({
       dateCompleted: status === BookStatus.COMPLETED && !dateCompleted 
         ? new Date().toISOString() 
         : dateCompleted || undefined,
+      tags: tags.length > 0 ? tags : undefined,
     };
 
     onSubmit(bookData);
@@ -199,6 +203,15 @@ export const BookForm: React.FC<BookFormProps> = ({
                 placeholder="Enter pages read..."
                 placeholderTextColor="#999"
                 keyboardType="numeric"
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <TagInput
+                tags={tags}
+                onTagsChange={setTags}
+                placeholder="Add tag (e.g., Fiction, Mystery)..."
+                maxTags={5}
               />
             </View>
 

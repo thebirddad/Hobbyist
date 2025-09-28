@@ -5,6 +5,7 @@ import { GameList } from '@/components/game-list';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { TvFilmForm } from '@/components/tv-film-form';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Hobby, HobbyType } from '@/data/hobby';
 import { useHobbyStorage } from '@/hooks/use-hobby-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -100,22 +101,6 @@ export default function HobbyDetailScreen() {
     );
   };
 
-  const getAddItemButtonText = () => {
-    if (!hobby) return 'Add Item';
-    switch (hobby.type) {
-      case HobbyType.GAMES:
-        return 'Add Game';
-      case HobbyType.BOOKS:
-        return 'Add Book';
-      case HobbyType.TV_FILM:
-        return 'Add TV/Film';
-      case HobbyType.CUSTOM:
-        return 'Add Item';
-      default:
-        return 'Add Item';
-    }
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -133,9 +118,14 @@ export default function HobbyDetailScreen() {
 
     return (
       <View style={styles.content}>
-        <ThemedText type="title" style={styles.hobbyTitle}>
-          {hobby.name}
-        </ThemedText>
+        <View style={styles.hobbyTitleContainer}>
+          <ThemedText type="title" style={styles.hobbyTitle}>
+            {hobby.name}
+          </ThemedText>
+          <TouchableOpacity onPress={handleDeleteHobby} style={styles.deleteHobbyButton}>
+            <IconSymbol name="trash" size={18} color="#dc3545" />
+          </TouchableOpacity>
+        </View>
         
         <ThemedText style={styles.hobbyInfo}>
           Type: {hobby.type}
@@ -164,7 +154,7 @@ export default function HobbyDetailScreen() {
             </View>
             {hobby.items.length > 0 ? (
               <GameList 
-                games={hobby.items} 
+                games={[...hobby.items].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime())} 
                 onDeleteGame={() => {}}
                 onUpdateGame={() => {}}
                 onEditGame={() => {}}
@@ -192,7 +182,7 @@ export default function HobbyDetailScreen() {
             </View>
             {hobby.items.length > 0 ? (
               <View>
-                {hobby.items.map((book: any) => (
+                {[...hobby.items].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).map((book: any) => (
                   <TouchableOpacity 
                     key={book.id} 
                     style={styles.itemCard} 
@@ -220,6 +210,15 @@ export default function HobbyDetailScreen() {
                             Progress: {book.pagesRead || 0} / {book.totalPages} pages
                           </ThemedText>
                         )}
+                        {book.tags && book.tags.length > 0 && (
+                          <View style={styles.tagsContainer}>
+                            {book.tags.map((tag: string, index: number) => (
+                              <View key={index} style={styles.tag}>
+                                <ThemedText style={styles.tagText}>{tag}</ThemedText>
+                              </View>
+                            ))}
+                          </View>
+                        )}
                         <ThemedText style={styles.editHint}>Tap to edit</ThemedText>
                       </View>
                     </View>
@@ -244,12 +243,12 @@ export default function HobbyDetailScreen() {
                 style={styles.addButton} 
                 onPress={() => setShowAddItemModal(true)}
               >
-                <ThemedText style={styles.addButtonText}>+ Add Movie</ThemedText>
+                <ThemedText style={styles.addButtonText}>+ Add TV/Film</ThemedText>
               </TouchableOpacity>
             </View>
             {hobby.items.length > 0 ? (
               <View>
-                {hobby.items.map((movie: any) => (
+                {[...hobby.items].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).map((movie: any) => (
                   <TouchableOpacity 
                     key={movie.id} 
                     style={styles.itemCard} 
@@ -271,11 +270,21 @@ export default function HobbyDetailScreen() {
                           </TouchableOpacity>
                         </View>
                         {movie.director && <ThemedText style={styles.itemSubtitle}>Directed by {movie.director}</ThemedText>}
+                        {movie.currentSeason && <ThemedText style={styles.itemSubtitle}>Season: {movie.currentSeason}</ThemedText>}
                         <ThemedText style={styles.itemStatus}>Status: {movie.status}</ThemedText>
                         {movie.rating && (
                           <ThemedText style={styles.itemRating}>
                             Rating: {'★'.repeat(movie.rating)}{'☆'.repeat(5 - movie.rating)}
                           </ThemedText>
+                        )}
+                        {movie.tags && movie.tags.length > 0 && (
+                          <View style={styles.tagsContainer}>
+                            {movie.tags.map((tag: string, index: number) => (
+                              <View key={index} style={styles.tag}>
+                                <ThemedText style={styles.tagText}>{tag}</ThemedText>
+                              </View>
+                            ))}
+                          </View>
                         )}
                         <ThemedText style={styles.editHint}>Tap to edit</ThemedText>
                       </View>
@@ -306,7 +315,7 @@ export default function HobbyDetailScreen() {
             </View>
             {hobby.items.length > 0 ? (
               <View>
-                {hobby.items.map((item: any) => (
+                {[...hobby.items].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).map((item: any) => (
                   <TouchableOpacity 
                     key={item.id} 
                     style={styles.itemCard} 
@@ -330,6 +339,15 @@ export default function HobbyDetailScreen() {
                         <ThemedText style={styles.itemDate}>
                           Added: {new Date(item.dateAdded).toLocaleDateString()}
                         </ThemedText>
+                        {item.tags && item.tags.length > 0 && (
+                          <View style={styles.tagsContainer}>
+                            {item.tags.map((tag: string, index: number) => (
+                              <View key={index} style={styles.tag}>
+                                <ThemedText style={styles.tagText}>{tag}</ThemedText>
+                              </View>
+                            ))}
+                          </View>
+                        )}
                         <ThemedText style={styles.editHint}>Tap to edit</ThemedText>
                       </View>
                     </View>
@@ -344,11 +362,7 @@ export default function HobbyDetailScreen() {
           </View>
         )}
 
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteHobby}>
-          <ThemedText style={styles.deleteButtonText}>
-            Delete Hobby
-          </ThemedText>
-        </TouchableOpacity>
+
       </View>
     );
   };
@@ -478,9 +492,30 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
   },
+  hobbyTitleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
   hobbyTitle: {
     textAlign: 'center',
-    marginBottom: 10,
+    marginRight: 10,
+  },
+  deleteHobbyButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   hobbyInfo: {
     fontSize: 16,
@@ -510,18 +545,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     paddingVertical: 20,
   },
-  deleteButton: {
-    backgroundColor: '#dc3545',
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 40,
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -618,5 +642,25 @@ const styles = StyleSheet.create({
     color: '#999',
     fontStyle: 'italic',
     marginTop: 4,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 8,
+    marginBottom: 4,
+    gap: 6,
+  },
+  tag: {
+    backgroundColor: '#e3f2fd',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: '#1976d2',
+  },
+  tagText: {
+    fontSize: 11,
+    color: '#1976d2',
+    fontWeight: '500',
   },
 });

@@ -1,4 +1,5 @@
 import { GameImagePicker } from '@/components/game-image-picker';
+import { TagInput } from '@/components/tag-input';
 import { TvFilmItem, TvFilmStatus } from '@/data/hobby';
 import React, { useCallback, useState } from 'react';
 import {
@@ -36,11 +37,13 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
   const [currentSeason, setCurrentSeason] = useState(initialTvFilmItem?.currentSeason || '');
   const [thumbnail, setThumbnail] = useState(initialTvFilmItem?.thumbnail || '');
   const [dateWatched, setDateWatched] = useState(initialTvFilmItem?.dateWatched || '');
+  const [tags, setTags] = useState<string[]>(initialTvFilmItem?.tags || []);
   const [showStatusPicker, setShowStatusPicker] = useState(false);
 
   const tvFilmStatusOptions = [
     { key: TvFilmStatus.WANT_TO_WATCH, label: 'Want to Watch' },
     { key: TvFilmStatus.WATCHED, label: 'Watched' },
+    { key: TvFilmStatus.WATCHING, label: 'Currently Watching' },
   ];
 
   const resetForm = useCallback(() => {
@@ -52,6 +55,7 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
       setCurrentSeason('');
       setThumbnail('');
       setDateWatched('');
+      setTags([]);
     }
     setShowStatusPicker(false);
   }, [mode]);
@@ -78,6 +82,7 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
       dateWatched: status === TvFilmStatus.WATCHED && !dateWatched 
         ? new Date().toISOString() 
         : dateWatched || undefined,
+      tags: tags.length > 0 ? tags : undefined,
     };
 
     onSubmit(tvFilmData);
@@ -173,8 +178,10 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
                 style={styles.input}
                 value={currentSeason}
                 onChangeText={setCurrentSeason}
-                placeholder="e.g., Season 3, S3E5, etc..."
+                placeholder="e.g., 3, 5, 12..."
                 placeholderTextColor="#999"
+                keyboardType="numeric"
+                maxLength={3}
               />
             </View>
 
@@ -217,6 +224,15 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
             <View style={styles.formGroup}>
               <Text style={styles.label}>Rating (1-5 stars)</Text>
               <StarRatingSelector />
+            </View>
+
+            <View style={styles.formGroup}>
+              <TagInput
+                tags={tags}
+                onTagsChange={setTags}
+                placeholder="Add tag (e.g., Action, Comedy)..."
+                maxTags={5}
+              />
             </View>
 
             <View style={styles.formGroup}>
