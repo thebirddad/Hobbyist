@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Modal,
@@ -32,7 +32,7 @@ export const GameForm: React.FC<GameFormProps> = ({
   const isEditing = !!initialGame;
   
   const { getConsoleNames } = useConsoleStorage();
-  const availablePlatforms = getConsoleNames();
+  const availablePlatforms = useMemo(() => getConsoleNames(), [getConsoleNames]);
   
   const [title, setTitle] = useState('');
   const [platform, setPlatform] = useState(availablePlatforms[0] || 'PC');
@@ -40,13 +40,7 @@ export const GameForm: React.FC<GameFormProps> = ({
   const [timeToBeat, setTimeToBeat] = useState('');
   const [hoursPlayed, setHoursPlayed] = useState('');
   const [thumbnail, setThumbnail] = useState<string | undefined>(undefined);
-  const [tags, setTags] = useState<string[]>(() => {
-    const initialTags = initialGame?.tags || [];
-    const currentPlatform = initialGame?.platform || availablePlatforms[0] || 'PC';
-    // Ensure 'Game' and platform tags are always present
-    const filteredTags = initialTags.filter(tag => tag !== 'Game' && tag !== currentPlatform);
-    return ['Game', currentPlatform, ...filteredTags];
-  });
+  const [tags, setTags] = useState<string[]>(['Game', 'PC']);
 
   // Selection state
   const [showPlatformPicker, setShowPlatformPicker] = useState(false);
@@ -69,9 +63,18 @@ export const GameForm: React.FC<GameFormProps> = ({
       setTags(['Game', initialGame.platform, ...filteredTags]);
     } else {
       console.log('🖼️ GameForm initializing for new game');
-      resetForm();
+      const defaultPlatform = availablePlatforms[0] || 'PC';
+      setTitle('');
+      setPlatform(defaultPlatform);
+      setStatus(GameStatus.WANT_TO_PLAY);
+      setTimeToBeat('');
+      setHoursPlayed('');
+      setThumbnail(undefined);
+      setTags(['Game', defaultPlatform]);
+      setShowPlatformPicker(false);
+      setShowStatusPicker(false);
     }
-  }, [initialGame]);
+  }, [initialGame, availablePlatforms]);
 
   // Update tags when platform changes
   useEffect(() => {
@@ -79,13 +82,14 @@ export const GameForm: React.FC<GameFormProps> = ({
       // Remove any existing platform tags and add the new one
       const filteredTags = prevTags.filter(tag => 
         tag !== 'Game' && 
-        !availablePlatforms.includes(tag)
+        tag !== platform && 
+        !['PC', 'PlayStation 5', 'Xbox Series X', 'Nintendo Switch'].includes(tag)
       );
       return ['Game', platform, ...filteredTags];
     });
-  }, [platform, availablePlatforms]);
+  }, [platform]);
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     const defaultPlatform = availablePlatforms[0] || 'PC';
     setTitle('');
     setPlatform(defaultPlatform);
@@ -96,7 +100,7 @@ export const GameForm: React.FC<GameFormProps> = ({
     setTags(['Game', defaultPlatform]);
     setShowPlatformPicker(false);
     setShowStatusPicker(false);
-  };
+  }, [availablePlatforms]);
 
   const handleSubmit = useCallback(() => {
     if (!isEditing && !title.trim()) {
