@@ -13,9 +13,12 @@ import { Alert, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 're
 
 export default function HobbyDetailScreen() {
   const { hobbyId, hobbyName } = useLocalSearchParams<{ hobbyId: string; hobbyName: string }>();
-  const { hobbies, deleteHobby, addItemToHobby } = useHobbyStorage();
+  const { hobbies, deleteHobby, addItemToHobby, updateItemInHobby, deleteItemFromHobby } = useHobbyStorage();
   const [hobby, setHobby] = useState<Hobby | null>(null);
   const [showAddItemModal, setShowAddItemModal] = useState(false);
+  const [showEditItemModal, setShowEditItemModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -23,7 +26,7 @@ export default function HobbyDetailScreen() {
       const foundHobby = hobbies.find(h => h.id === hobbyId);
       setHobby(foundHobby || null);
     }
-  }, [hobbyId, hobbies]);
+  }, [hobbyId, hobbies, refreshKey]);
 
   const handleDeleteHobby = () => {
     Alert.alert(
@@ -50,13 +53,51 @@ export default function HobbyDetailScreen() {
       try {
         await addItemToHobby(hobbyId, itemData);
         setShowAddItemModal(false);
-        // Refresh the hobby data
-        const updatedHobby = hobbies.find(h => h.id === hobbyId);
-        setHobby(updatedHobby || null);
+        // Force refresh
+        setRefreshKey(prev => prev + 1);
       } catch (error) {
         Alert.alert('Error', 'Failed to add item to hobby');
       }
     }
+  };
+
+  const handleEditItem = (item: any) => {
+    setEditingItem(item);
+    setShowEditItemModal(true);
+  };
+
+  const handleUpdateItem = async (itemData: any) => {
+    if (hobbyId && editingItem) {
+      try {
+        await updateItemInHobby(hobbyId, editingItem.id, itemData);
+        setShowEditItemModal(false);
+        setEditingItem(null);
+        // Force refresh
+        setRefreshKey(prev => prev + 1);
+      } catch (error) {
+        Alert.alert('Error', 'Failed to update item');
+      }
+    }
+  };
+
+  const handleDeleteItem = (item: any) => {
+    Alert.alert(
+      'Delete Item',
+      `Are you sure you want to delete "${item.title || item.name}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            if (hobbyId) {
+              await deleteItemFromHobby(hobbyId, item.id);
+              setRefreshKey(prev => prev + 1);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const getAddItemButtonText = () => {
@@ -152,19 +193,26 @@ export default function HobbyDetailScreen() {
             {hobby.items.length > 0 ? (
               <View>
                 {hobby.items.map((book: any) => (
-                  <TouchableOpacity key={book.id} style={styles.itemCard} onPress={() => {
-                    Alert.alert(
-                      book.title,
-                      `Author: ${book.author || 'Unknown'}\nStatus: ${book.status}\nProgress: ${book.pagesRead || 0} / ${book.totalPages || 'Unknown'} pages\nAdded: ${new Date(book.dateAdded).toLocaleDateString()}`,
-                      [{ text: 'OK' }]
-                    );
-                  }}>
+                  <TouchableOpacity 
+                    key={book.id} 
+                    style={styles.itemCard} 
+                    onPress={() => handleEditItem(book)}
+                    onLongPress={() => handleDeleteItem(book)}
+                  >
                     <View style={styles.itemContent}>
                       {book.thumbnail && (
                         <Image source={{ uri: book.thumbnail }} style={styles.itemThumbnail} />
                       )}
                       <View style={styles.itemInfo}>
-                        <ThemedText style={styles.itemTitle}>{book.title}</ThemedText>
+                        <View style={styles.itemHeader}>
+                          <ThemedText style={styles.itemTitle}>{book.title}</ThemedText>
+                          <TouchableOpacity
+                            onPress={() => handleDeleteItem(book)}
+                            style={styles.deleteItemButton}
+                          >
+                            <ThemedText style={styles.deleteItemButtonText}>×</ThemedText>
+                          </TouchableOpacity>
+                        </View>
                         {book.author && <ThemedText style={styles.itemSubtitle}>by {book.author}</ThemedText>}
                         <ThemedText style={styles.itemStatus}>Status: {book.status}</ThemedText>
                         {book.totalPages && (
@@ -172,6 +220,7 @@ export default function HobbyDetailScreen() {
                             Progress: {book.pagesRead || 0} / {book.totalPages} pages
                           </ThemedText>
                         )}
+                        <ThemedText style={styles.editHint}>Tap to edit</ThemedText>
                       </View>
                     </View>
                   </TouchableOpacity>
@@ -201,19 +250,26 @@ export default function HobbyDetailScreen() {
             {hobby.items.length > 0 ? (
               <View>
                 {hobby.items.map((movie: any) => (
-                  <TouchableOpacity key={movie.id} style={styles.itemCard} onPress={() => {
-                    Alert.alert(
-                      movie.title,
-                      `Director: ${movie.director || 'Unknown'}\nStatus: ${movie.status}\nRating: ${movie.rating ? '★'.repeat(movie.rating) + '☆'.repeat(5 - movie.rating) : 'Not rated'}\nAdded: ${new Date(movie.dateAdded).toLocaleDateString()}`,
-                      [{ text: 'OK' }]
-                    );
-                  }}>
+                  <TouchableOpacity 
+                    key={movie.id} 
+                    style={styles.itemCard} 
+                    onPress={() => handleEditItem(movie)}
+                    onLongPress={() => handleDeleteItem(movie)}
+                  >
                     <View style={styles.itemContent}>
                       {movie.thumbnail && (
                         <Image source={{ uri: movie.thumbnail }} style={styles.itemThumbnail} />
                       )}
                       <View style={styles.itemInfo}>
-                        <ThemedText style={styles.itemTitle}>{movie.title}</ThemedText>
+                        <View style={styles.itemHeader}>
+                          <ThemedText style={styles.itemTitle}>{movie.title}</ThemedText>
+                          <TouchableOpacity
+                            onPress={() => handleDeleteItem(movie)}
+                            style={styles.deleteItemButton}
+                          >
+                            <ThemedText style={styles.deleteItemButtonText}>×</ThemedText>
+                          </TouchableOpacity>
+                        </View>
                         {movie.director && <ThemedText style={styles.itemSubtitle}>Directed by {movie.director}</ThemedText>}
                         <ThemedText style={styles.itemStatus}>Status: {movie.status}</ThemedText>
                         {movie.rating && (
@@ -221,6 +277,7 @@ export default function HobbyDetailScreen() {
                             Rating: {'★'.repeat(movie.rating)}{'☆'.repeat(5 - movie.rating)}
                           </ThemedText>
                         )}
+                        <ThemedText style={styles.editHint}>Tap to edit</ThemedText>
                       </View>
                     </View>
                   </TouchableOpacity>
@@ -250,22 +307,30 @@ export default function HobbyDetailScreen() {
             {hobby.items.length > 0 ? (
               <View>
                 {hobby.items.map((item: any) => (
-                  <TouchableOpacity key={item.id} style={styles.itemCard} onPress={() => {
-                    Alert.alert(
-                      item.name,
-                      `Added: ${new Date(item.dateAdded).toLocaleDateString()}`,
-                      [{ text: 'OK' }]
-                    );
-                  }}>
+                  <TouchableOpacity 
+                    key={item.id} 
+                    style={styles.itemCard} 
+                    onPress={() => handleEditItem(item)}
+                    onLongPress={() => handleDeleteItem(item)}
+                  >
                     <View style={styles.itemContent}>
                       {item.thumbnail && (
                         <Image source={{ uri: item.thumbnail }} style={styles.itemThumbnail} />
                       )}
                       <View style={styles.itemInfo}>
-                        <ThemedText style={styles.itemTitle}>{item.name}</ThemedText>
+                        <View style={styles.itemHeader}>
+                          <ThemedText style={styles.itemTitle}>{item.name}</ThemedText>
+                          <TouchableOpacity
+                            onPress={() => handleDeleteItem(item)}
+                            style={styles.deleteItemButton}
+                          >
+                            <ThemedText style={styles.deleteItemButtonText}>×</ThemedText>
+                          </TouchableOpacity>
+                        </View>
                         <ThemedText style={styles.itemDate}>
                           Added: {new Date(item.dateAdded).toLocaleDateString()}
                         </ThemedText>
+                        <ThemedText style={styles.editHint}>Tap to edit</ThemedText>
                       </View>
                     </View>
                   </TouchableOpacity>
@@ -332,12 +397,73 @@ export default function HobbyDetailScreen() {
     }
   };
 
+  const renderEditItemModal = () => {
+    if (!hobby || !showEditItemModal || !editingItem) return null;
+
+    switch (hobby.type) {
+      case HobbyType.GAMES:
+        return (
+          <GameForm
+            visible={showEditItemModal}
+            onClose={() => {
+              setShowEditItemModal(false);
+              setEditingItem(null);
+            }}
+            onGameAdded={handleUpdateItem}
+            initialGame={editingItem}
+          />
+        );
+      case HobbyType.BOOKS:
+        return (
+          <BookForm
+            visible={showEditItemModal}
+            onClose={() => {
+              setShowEditItemModal(false);
+              setEditingItem(null);
+            }}
+            onSubmit={handleUpdateItem}
+            initialBook={editingItem}
+            mode="edit"
+          />
+        );
+      case HobbyType.MOVIES:
+        return (
+          <MovieForm
+            visible={showEditItemModal}
+            onClose={() => {
+              setShowEditItemModal(false);
+              setEditingItem(null);
+            }}
+            onSubmit={handleUpdateItem}
+            initialMovie={editingItem}
+            mode="edit"
+          />
+        );
+      case HobbyType.CUSTOM:
+        return (
+          <CustomForm
+            visible={showEditItemModal}
+            onClose={() => {
+              setShowEditItemModal(false);
+              setEditingItem(null);
+            }}
+            onSubmit={handleUpdateItem}
+            initialItem={editingItem}
+            mode="edit"
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <ThemedView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {renderHobbyContent()}
       </ScrollView>
       {renderAddItemModal()}
+      {renderEditItemModal()}
     </ThemedView>
   );
 }
@@ -467,5 +593,30 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 80,
     justifyContent: 'center',
+  },
+  itemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  deleteItemButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#dc3545',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteItemButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  editHint: {
+    fontSize: 12,
+    color: '#999',
+    fontStyle: 'italic',
+    marginTop: 4,
   },
 });
