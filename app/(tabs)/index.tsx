@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { GameAccordion } from '../../components/game-accordion';
 import { GameForm } from '../../components/game-form';
-import { GameList } from '../../components/game-list';
+import { GameStats } from '../../components/game-stats';
 import { Game } from '../../data/game';
 import { useGameStorage } from '../../hooks/use-game-storage';
 
@@ -42,18 +43,23 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>All Games</Text>
+        <Text style={styles.title}>Game Library</Text>
         <Text style={styles.subtitle}>
           {games.length} game{games.length !== 1 ? 's' : ''} tracked
         </Text>
       </View>
 
-      <GameList 
-        games={games} 
-        onDeleteGame={deleteGame} 
-        onUpdateGame={updateGame}
-        onEditGame={handleEditGame}
-      />
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <GameStats games={games} />
+        
+        <GameAccordion
+          games={games}
+          onDeleteGame={deleteGame}
+          onUpdateGame={updateGame}
+          onEditGame={handleEditGame}
+          defaultExpanded="playing"
+        />
+      </ScrollView>
 
       <TouchableOpacity
         style={styles.fab}
@@ -132,5 +138,9 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 24,
     fontWeight: '600',
+  },
+  content: {
+    flex: 1,
+    paddingTop: 8,
   },
 });

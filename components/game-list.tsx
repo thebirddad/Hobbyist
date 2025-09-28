@@ -205,24 +205,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContainer: {
-    padding: 16,
-    paddingBottom: 100, // Space for floating action button
+    padding: 12,
+    paddingBottom: 20, // Reduced padding for accordion use
   },
   gameItem: {
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e0e0e0',
-    marginBottom: 16,
-    padding: 16,
+    marginBottom: 12,
+    padding: 12,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 1,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   gameHeader: {
     flexDirection: 'row',

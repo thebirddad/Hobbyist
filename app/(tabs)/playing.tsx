@@ -7,20 +7,19 @@ import { GameList } from '../../components/game-list';
 import { Game, GameStatus } from '../../data/game';
 import { useGameStorage } from '../../hooks/use-game-storage';
 
-export default function CompletedScreen() {
+export default function PlayingScreen() {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const { games, loading, addGame, updateGame, deleteGame } = useGameStorage();
 
-  // Filter games for completed
-  const completedGames = games.filter(game => game.status === GameStatus.COMPLETED);
+  // Filter games for currently playing
+  const playingGames = games.filter(game => game.status === GameStatus.PLAYING);
 
   const handleAddGame = async (gameData: Parameters<typeof addGame>[0]) => {
-    // Force status to COMPLETED for completed games
+    // Force status to PLAYING for currently playing
     await addGame({
       ...gameData,
-      status: GameStatus.COMPLETED,
-      dateCompleted: new Date().toISOString(),
+      status: GameStatus.PLAYING,
     });
   };
 
@@ -42,7 +41,7 @@ export default function CompletedScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#4CAF50" />
-        <Text style={styles.loadingText}>Loading completed games...</Text>
+        <Text style={styles.loadingText}>Loading currently playing games...</Text>
       </View>
     );
   }
@@ -50,19 +49,19 @@ export default function CompletedScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Completed</Text>
+        <Text style={styles.title}>Currently Playing</Text>
         <Text style={styles.subtitle}>
-          {completedGames.length} game{completedGames.length !== 1 ? 's' : ''} completed
+          {playingGames.length} game{playingGames.length !== 1 ? 's' : ''} in progress
         </Text>
       </View>
 
       <GameList 
-        games={completedGames} 
+        games={playingGames} 
         onDeleteGame={deleteGame}
         onUpdateGame={updateGame}
         onEditGame={handleEditGame}
-        emptyTitle="No completed games yet"
-        emptySubtitle="Mark games as completed to see them here!"
+        emptyTitle="No games currently playing"
+        emptySubtitle="Add games you're actively playing!"
       />
 
       <TouchableOpacity
