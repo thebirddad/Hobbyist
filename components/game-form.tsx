@@ -9,7 +9,8 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { Game, GameStatus, PLATFORMS, Platform } from '../data/game';
+import { Game, GameStatus } from '../data/game';
+import { useConsoleStorage } from '../hooks/use-console-storage';
 
 interface GameFormProps {
   visible: boolean;
@@ -28,8 +29,11 @@ export const GameForm: React.FC<GameFormProps> = ({
 }) => {
   const isEditing = !!initialGame;
   
+  const { getConsoleNames } = useConsoleStorage();
+  const availablePlatforms = getConsoleNames();
+  
   const [title, setTitle] = useState('');
-  const [platform, setPlatform] = useState<Platform>('PC');
+  const [platform, setPlatform] = useState(availablePlatforms[0] || 'PC');
   const [status, setStatus] = useState<GameStatus>(GameStatus.WANT_TO_PLAY);
   const [timeToBeat, setTimeToBeat] = useState('');
   const [hoursPlayed, setHoursPlayed] = useState('');
@@ -42,7 +46,7 @@ export const GameForm: React.FC<GameFormProps> = ({
   useEffect(() => {
     if (initialGame) {
       setTitle(initialGame.title);
-      setPlatform(initialGame.platform as Platform);
+      setPlatform(initialGame.platform);
       setStatus(initialGame.status);
       setTimeToBeat(initialGame.timeToBeat?.toString() || '');
       setHoursPlayed(initialGame.hoursPlayed?.toString() || '');
@@ -53,7 +57,7 @@ export const GameForm: React.FC<GameFormProps> = ({
 
   const resetForm = () => {
     setTitle('');
-    setPlatform('PC');
+    setPlatform(availablePlatforms[0] || 'PC');
     setStatus(GameStatus.WANT_TO_PLAY);
     setTimeToBeat('');
     setHoursPlayed('');
@@ -159,7 +163,7 @@ export const GameForm: React.FC<GameFormProps> = ({
                 
                 {showPlatformPicker && (
                   <View style={styles.pickerOptions}>
-                    {PLATFORMS.map((p) => (
+                    {availablePlatforms.map((p) => (
                       <TouchableOpacity
                         key={p}
                         style={[

@@ -16,16 +16,5 @@ export enum GameStatus {
   DROPPED = 'Dropped'
 }
 
-export const PLATFORMS = [
-  'PC',
-  'PlayStation 5',
-  'PlayStation 4',
-  'Xbox Series X/S',
-  'Xbox One',
-  'Nintendo Switch',
-  'iOS',
-  'Android',
-  'Other'
-] as const;
-
-export type Platform = typeof PLATFORMS[number];
+// Platforms are now managed dynamically through the console storage hook
+// See hooks/use-console-storage.ts for platform management
