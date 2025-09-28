@@ -44,7 +44,7 @@ export const GameImagePicker: React.FC<GameImagePickerProps> = ({
     setIsLoading(true);
     try {
       const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [3, 4], // Portrait aspect ratio for game covers
         quality: 0.8,
@@ -64,7 +64,7 @@ export const GameImagePicker: React.FC<GameImagePickerProps> = ({
     setIsLoading(true);
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [3, 4], // Portrait aspect ratio for game covers
         quality: 0.8,
