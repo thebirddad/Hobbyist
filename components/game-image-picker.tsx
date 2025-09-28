@@ -15,7 +15,7 @@ interface GameImagePickerProps {
   imageUri?: string;
   onImageSelected: (uri: string) => void;
   onImageRemoved: () => void;
-  itemType?: 'Game' | 'Book' | 'Movie' | 'Item';
+  itemType?: 'Game' | 'Book' | 'Movie' | 'TV/Film' | 'Item';
   label?: string;
 }
 

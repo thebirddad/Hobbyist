@@ -1,4 +1,4 @@
-import { BaseHobby, BookStatus, GameStatus, Hobby, MovieStatus } from '@/data/hobby';
+import { BaseHobby, BookStatus, GameStatus, Hobby, TvFilmStatus } from '@/data/hobby';
 import { addActivityToStorage } from '@/utils/activity-manager';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
@@ -144,12 +144,12 @@ export const useHobbyStorage = () => {
       const isNowCompleted = 
         newStatus === GameStatus.COMPLETED ||
         newStatus === BookStatus.COMPLETED ||
-        newStatus === MovieStatus.WATCHED;
+        newStatus === TvFilmStatus.WATCHED;
         
       const wasNotCompletedBefore = 
         oldStatus !== GameStatus.COMPLETED &&
         oldStatus !== BookStatus.COMPLETED &&
-        oldStatus !== MovieStatus.WATCHED;
+        oldStatus !== TvFilmStatus.WATCHED;
 
       if (isNowCompleted && wasNotCompletedBefore) {
         await addActivityToStorage({

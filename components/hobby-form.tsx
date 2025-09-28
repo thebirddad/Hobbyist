@@ -96,7 +96,7 @@ export const HobbyForm: React.FC<HobbyFormProps> = ({ onHobbyCreated }) => {
   const typeOptions = [
     { value: HobbyType.GAMES, label: 'Games', description: 'Track video games with platforms, hours, and completion status' },
     { value: HobbyType.BOOKS, label: 'Books', description: 'Track books with pages read and reading progress' },
-    { value: HobbyType.MOVIES, label: 'Movies', description: 'Track movies with ratings and watch status' },
+    { value: HobbyType.TV_FILM, label: 'TV/Film', description: 'Track movies and TV shows with ratings, seasons, and watch status' },
     { value: HobbyType.CUSTOM, label: 'Custom', description: 'Simple tracking with just name and image' },
   ];
 

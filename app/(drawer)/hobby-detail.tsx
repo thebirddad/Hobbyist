@@ -2,7 +2,6 @@ import { BookForm } from '@/components/book-form';
 import { CustomForm } from '@/components/custom-form';
 import { GameForm } from '@/components/game-form';
 import { GameList } from '@/components/game-list';
-import { MovieForm } from '@/components/movie-form';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Hobby, HobbyType } from '@/data/hobby';
@@ -107,8 +106,8 @@ export default function HobbyDetailScreen() {
         return 'Add Game';
       case HobbyType.BOOKS:
         return 'Add Book';
-      case HobbyType.MOVIES:
-        return 'Add Movie';
+      case HobbyType.TV_FILM:
+        return 'Add TV/Film';
       case HobbyType.CUSTOM:
         return 'Add Item';
       default:
@@ -234,11 +233,11 @@ export default function HobbyDetailScreen() {
           </View>
         )}
 
-        {hobby.type === HobbyType.MOVIES && (
+        {hobby.type === HobbyType.TV_FILM && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <ThemedText type="subtitle" style={styles.sectionTitle}>
-                Movies Collection
+                TV/Film Collection
               </ThemedText>
               <TouchableOpacity 
                 style={styles.addButton} 
@@ -285,7 +284,7 @@ export default function HobbyDetailScreen() {
               </View>
             ) : (
               <ThemedText style={styles.emptyText}>
-                No movies added yet. Tap "Add Movie" to get started!
+                No TV shows or movies added yet. Tap "Add TV/Film" to get started!
               </ThemedText>
             )}
           </View>
@@ -374,9 +373,9 @@ export default function HobbyDetailScreen() {
             mode="add"
           />
         );
-      case HobbyType.MOVIES:
+      case HobbyType.TV_FILM:
         return (
-          <MovieForm
+          <TvFilmForm
             visible={showAddItemModal}
             onClose={() => setShowAddItemModal(false)}
             onSubmit={handleAddItem}
@@ -426,16 +425,16 @@ export default function HobbyDetailScreen() {
             mode="edit"
           />
         );
-      case HobbyType.MOVIES:
+      case HobbyType.TV_FILM:
         return (
-          <MovieForm
+          <TvFilmForm
             visible={showEditItemModal}
             onClose={() => {
               setShowEditItemModal(false);
               setEditingItem(null);
             }}
             onSubmit={handleUpdateItem}
-            initialMovie={editingItem}
+            initialTvFilmItem={editingItem}
             mode="edit"
           />
         );

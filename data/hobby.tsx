@@ -8,7 +8,7 @@ export interface BaseHobby {
 export enum HobbyType {
   GAMES = 'Games',
   BOOKS = 'Books', 
-  MOVIES = 'Movies',
+  TV_FILM = 'TV/Film',
   CUSTOM = 'Custom'
 }
 
@@ -22,9 +22,9 @@ export interface BookHobby extends BaseHobby {
   items: BookItem[];
 }
 
-export interface MovieHobby extends BaseHobby {
-  type: HobbyType.MOVIES;
-  items: MovieItem[];
+export interface TvFilmHobby extends BaseHobby {
+  type: HobbyType.TV_FILM;
+  items: TvFilmItem[];
 }
 
 export interface CustomHobby extends BaseHobby {
@@ -32,7 +32,7 @@ export interface CustomHobby extends BaseHobby {
   items: CustomItem[];
 }
 
-export type Hobby = GameHobby | BookHobby | MovieHobby | CustomHobby;
+export type Hobby = GameHobby | BookHobby | TvFilmHobby | CustomHobby;
 
 // Game item structure (similar to existing Game interface)
 export interface GameItem {
@@ -74,22 +74,27 @@ export enum BookStatus {
   DROPPED = 'Dropped'
 }
 
-// Movie item structure
-export interface MovieItem {
+// TV/Film item structure
+export interface TvFilmItem {
   id: string;
   title: string;
   director?: string;
-  status: MovieStatus;
+  status: TvFilmStatus;
   rating?: number; // 1-5 stars
+  currentSeason?: string; // For TV shows
   dateAdded: string;
   dateWatched?: string;
   thumbnail?: string;
 }
 
-export enum MovieStatus {
+export enum TvFilmStatus {
   WANT_TO_WATCH = 'Want to Watch',
   WATCHED = 'Watched'
 }
+
+// Keep MovieStatus for backward compatibility
+export const MovieStatus = TvFilmStatus;
+export type MovieItem = TvFilmItem;
 
 // Custom item structure (minimal)
 export interface CustomItem {
