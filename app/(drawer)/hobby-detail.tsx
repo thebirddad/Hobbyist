@@ -9,7 +9,7 @@ import { Hobby, HobbyType } from '@/data/hobby';
 import { useHobbyStorage } from '@/hooks/use-hobby-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function HobbyDetailScreen() {
   const { hobbyId, hobbyName } = useLocalSearchParams<{ hobbyId: string; hobbyName: string }>();

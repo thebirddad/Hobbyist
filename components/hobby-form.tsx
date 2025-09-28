@@ -3,7 +3,7 @@ import { ThemedView } from '@/components/themed-view';
 import { BaseHobby, HobbyType } from '@/data/hobby';
 import { useHobbyStorage } from '@/hooks/use-hobby-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Alert,
     Platform,
@@ -20,11 +20,26 @@ interface HobbyFormProps {
 export const HobbyForm: React.FC<HobbyFormProps> = ({ onHobbyCreated }) => {
   const [name, setName] = useState('');
   const [selectedType, setSelectedType] = useState<HobbyType>(HobbyType.GAMES);
+  const [nameManuallySet, setNameManuallySet] = useState(false);
   const [dateStarted, setDateStarted] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const { addHobby, canAddHobby, getRemainingHobbySlots, MAX_HOBBIES } = useHobbyStorage();
+
+  // Auto-populate name based on selected type (unless user manually set it)
+  useEffect(() => {
+    if (!nameManuallySet) {
+      setName(selectedType);
+    }
+  }, [selectedType, nameManuallySet]);
+
+  // Set initial name on component mount
+  useEffect(() => {
+    if (!name && !nameManuallySet) {
+      setName(selectedType);
+    }
+  }, []);
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(Platform.OS === 'ios');
@@ -67,6 +82,7 @@ export const HobbyForm: React.FC<HobbyFormProps> = ({ onHobbyCreated }) => {
       setName('');
       setSelectedType(HobbyType.GAMES);
       setDateStarted(new Date());
+      setNameManuallySet(false);
       
       Alert.alert('Success', 'Hobby created successfully!');
       onHobbyCreated?.();
@@ -111,7 +127,10 @@ export const HobbyForm: React.FC<HobbyFormProps> = ({ onHobbyCreated }) => {
         <TextInput
           style={styles.input}
           value={name}
-          onChangeText={setName}
+          onChangeText={(text) => {
+            setName(text);
+            setNameManuallySet(true);
+          }}
           placeholder="Enter hobby name..."
           placeholderTextColor="#999"
           editable={canAddHobby()}
@@ -151,7 +170,16 @@ export const HobbyForm: React.FC<HobbyFormProps> = ({ onHobbyCreated }) => {
               selectedType === option.value && styles.typeOptionSelected,
               !canAddHobby() && styles.disabled
             ]}
-            onPress={() => canAddHobby() && setSelectedType(option.value)}
+            onPress={() => {
+              if (canAddHobby()) {
+                setSelectedType(option.value);
+                // If name hasn't been manually modified, update it to match the new type
+                if (!nameManuallySet || name === selectedType) {
+                  setName(option.value);
+                  setNameManuallySet(false);
+                }
+              }
+            }}
             disabled={!canAddHobby()}
           >
             <View style={styles.typeOptionHeader}>

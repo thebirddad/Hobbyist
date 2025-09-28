@@ -1,6 +1,37 @@
-import { BaseHobby, Hobby } from '@/data/hobby';
+import { BaseHobby, BookStatus, GameStatus, Hobby, MovieStatus } from '@/data/hobby';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
+
+interface Activity {
+  id: string;
+  type: 'added' | 'completed' | 'updated';
+  itemTitle: string;
+  hobbyName: string;
+  hobbyType: string;
+  status?: string;
+  timestamp: string;
+}
+
+const ACTIVITIES_STORAGE_KEY = 'activities_data';
+const MAX_ACTIVITIES = 50;
+
+const addActivityToStorage = async (activity: Omit<Activity, 'id' | 'timestamp'>) => {
+  try {
+    const storedActivities = await AsyncStorage.getItem(ACTIVITIES_STORAGE_KEY);
+    const activities: Activity[] = storedActivities ? JSON.parse(storedActivities) : [];
+    
+    const newActivity: Activity = {
+      ...activity,
+      id: Date.now().toString(),
+      timestamp: new Date().toISOString(),
+    };
+
+    const updatedActivities = [newActivity, ...activities].slice(0, MAX_ACTIVITIES);
+    await AsyncStorage.setItem(ACTIVITIES_STORAGE_KEY, JSON.stringify(updatedActivities));
+  } catch (error) {
+    console.error('Failed to save activity:', error);
+  }
+};
 
 const HOBBIES_STORAGE_KEY = 'hobbies_data';
 const MAX_HOBBIES = 7;
@@ -84,38 +115,89 @@ export const useHobbyStorage = () => {
 
   const addItemToHobby = async (hobbyId: string, item: any) => {
     console.log('🎯 Adding item to hobby:', hobbyId, 'item:', item.title || item.name);
-    const updatedHobbies = hobbies.map(hobby => {
-      if (hobby.id === hobbyId) {
+    const hobby = hobbies.find(h => h.id === hobbyId);
+    if (!hobby) return;
+
+    const updatedHobbies = hobbies.map(h => {
+      if (h.id === hobbyId) {
         const newItem = {
           ...item,
           id: Date.now().toString(),
           dateAdded: new Date().toISOString(),
         };
         return {
-          ...hobby,
-          items: [...hobby.items, newItem]
+          ...h,
+          items: [...h.items, newItem]
         } as Hobby;
       }
-      return hobby;
+      return h;
     });
     await saveHobbies(updatedHobbies);
+
+    // Track activity
+    const itemTitle = item.title || item.name;
+    const statusLabel = item.status || '';
+    await addActivityToStorage({
+      type: 'added',
+      itemTitle,
+      hobbyName: hobby.name,
+      hobbyType: hobby.type,
+      status: statusLabel,
+    });
   };
 
   const updateItemInHobby = async (hobbyId: string, itemId: string, updates: any) => {
     console.log('🎯 Updating item in hobby:', hobbyId, 'item:', itemId);
-    const updatedHobbies = hobbies.map(hobby => {
-      if (hobby.id === hobbyId) {
-        const updatedItems = hobby.items.map(item => {
+    const hobby = hobbies.find(h => h.id === hobbyId);
+    const existingItem = hobby?.items.find(item => item.id === itemId);
+    
+    const updatedHobbies = hobbies.map(h => {
+      if (h.id === hobbyId) {
+        const updatedItems = h.items.map(item => {
           if (item.id === itemId) {
             return { ...item, ...updates };
           }
           return item;
         });
-        return { ...hobby, items: updatedItems } as Hobby;
+        return { ...h, items: updatedItems } as Hobby;
       }
-      return hobby;
+      return h;
     });
     await saveHobbies(updatedHobbies);
+
+    // Track completion activity if status changed to completed
+    if (hobby && existingItem) {
+      const itemTitle = (existingItem as any).title || (existingItem as any).name;
+      const oldStatus = (existingItem as any).status;
+      const newStatus = updates.status;
+      
+      const isNowCompleted = 
+        newStatus === GameStatus.COMPLETED ||
+        newStatus === BookStatus.COMPLETED ||
+        newStatus === MovieStatus.WATCHED;
+        
+      const wasNotCompletedBefore = 
+        oldStatus !== GameStatus.COMPLETED &&
+        oldStatus !== BookStatus.COMPLETED &&
+        oldStatus !== MovieStatus.WATCHED;
+
+      if (isNowCompleted && wasNotCompletedBefore) {
+        await addActivityToStorage({
+          type: 'completed',
+          itemTitle,
+          hobbyName: hobby.name,
+          hobbyType: hobby.type,
+        });
+      } else if (newStatus && newStatus !== oldStatus) {
+        await addActivityToStorage({
+          type: 'updated',
+          itemTitle,
+          hobbyName: hobby.name,
+          hobbyType: hobby.type,
+          status: newStatus,
+        });
+      }
+    }
   };
 
   const deleteItemFromHobby = async (hobbyId: string, itemId: string) => {
