@@ -10,9 +10,10 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Game } from '@/data/game';
 import { Hobby, HobbyType } from '@/data/hobby';
 import { useHobbyStorage } from '@/hooks/use-hobby-storage';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, Image, Modal, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Keyboard, Modal, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 
 export default function HobbyDetailScreen() {
   const { hobbyId, hobbyName } = useLocalSearchParams<{ hobbyId: string; hobbyName: string }>();
@@ -27,6 +28,8 @@ export default function HobbyDetailScreen() {
   const [showEditHobbyModal, setShowEditHobbyModal] = useState(false);
   const [editHobbyName, setEditHobbyName] = useState('');
   const [editHobbyDate, setEditHobbyDate] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date()); // Always start with valid current date
   const router = useRouter();
 
   useEffect(() => {
@@ -103,7 +106,17 @@ export default function HobbyDetailScreen() {
   const handleEditHobby = () => {
     if (hobby) {
       setEditHobbyName(hobby.name);
-      setEditHobbyDate(formatDateForInput(hobby.dateStarted));
+      
+      // Try to parse the existing date, fallback to current date if invalid
+      let date = new Date(hobby.dateStarted);
+      if (isNaN(date.getTime())) {
+        // If the stored date is invalid, use current date as fallback
+        date = new Date();
+        console.log('Invalid date found, using current date as fallback');
+      }
+      
+      setSelectedDate(date);
+      setEditHobbyDate(date.toLocaleDateString());
       setShowEditHobbyModal(true);
     }
   };
@@ -120,7 +133,7 @@ export default function HobbyDetailScreen() {
     try {
       await updateHobby(hobbyId, {
         name: trimmedName,
-        dateStarted: editHobbyDate
+        dateStarted: selectedDate.toISOString().split('T')[0] // Save as YYYY-MM-DD format
       });
       
       setShowEditHobbyModal(false);
@@ -135,12 +148,35 @@ export default function HobbyDetailScreen() {
 
   const formatDateForInput = (dateString: string) => {
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      // If invalid date, return current date in YYYY-MM-DD format
+      return new Date().toISOString().split('T')[0];
+    }
     return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD format
   };
 
   const formatDateFromInput = (dateString: string) => {
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return 'Invalid Date';
+    }
     return date.toLocaleDateString();
+  };
+
+  const handleDateChange = (event: any, date?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    
+    if (date && event.type !== 'dismissed') {
+      setSelectedDate(date);
+      setEditHobbyDate(date.toLocaleDateString());
+    }
+  };
+
+  const showDatePickerModal = () => {
+    Keyboard.dismiss(); // Dismiss keyboard before showing date picker
+    setShowDatePicker(true);
   };
 
   const handleAddItem = async (itemData: any) => {
@@ -657,9 +693,14 @@ export default function HobbyDetailScreen() {
         animationType="fade"
         onRequestClose={() => setShowEditHobbyModal(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.editHobbyModal}>
-            <ThemedText style={styles.editHobbyTitle}>Edit Hobby</ThemedText>
+        <TouchableWithoutFeedback onPress={() => {
+          Keyboard.dismiss();
+          setShowEditHobbyModal(false);
+        }}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+              <View style={styles.editHobbyModal}>
+                <ThemedText style={styles.editHobbyTitle}>Edit Hobby</ThemedText>
             
             <ThemedText style={styles.editHobbyLabel}>Hobby Name</ThemedText>
             <TextInput
@@ -668,15 +709,42 @@ export default function HobbyDetailScreen() {
               onChangeText={setEditHobbyName}
               placeholder="Enter hobby name"
               autoFocus={true}
+              returnKeyType="done"
+              onSubmitEditing={() => Keyboard.dismiss()}
             />
             
             <ThemedText style={styles.editHobbyLabel}>Date Started</ThemedText>
-            <TextInput
-              style={styles.editHobbyInput}
-              value={editHobbyDate}
-              onChangeText={setEditHobbyDate}
-              placeholder="YYYY-MM-DD"
-            />
+            <TouchableOpacity
+              style={styles.datePickerButton}
+              onPress={showDatePickerModal}
+            >
+              <ThemedText style={styles.datePickerText}>
+                {editHobbyDate || 'Select Date'}
+              </ThemedText>
+              <IconSymbol name="calendar" size={16} color="#007AFF" />
+            </TouchableOpacity>
+            
+            {showDatePicker && (
+              <>
+                <DateTimePicker
+                  value={selectedDate}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={handleDateChange}
+                  maximumDate={new Date()}
+                />
+                {Platform.OS === 'ios' && (
+                  <View style={styles.datePickerActions}>
+                    <TouchableOpacity
+                      style={styles.datePickerDoneButton}
+                      onPress={() => setShowDatePicker(false)}
+                    >
+                      <ThemedText style={styles.datePickerDoneText}>Done</ThemedText>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </>
+            )}
             
             <View style={styles.editHobbyButtonContainer}>
               <TouchableOpacity
@@ -696,9 +764,11 @@ export default function HobbyDetailScreen() {
                   Save
                 </ThemedText>
               </TouchableOpacity>
-            </View>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
       
       {/* Tag Filter Modal */}
@@ -975,6 +1045,38 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 15,
     backgroundColor: '#f9f9f9',
+  },
+  datePickerButton: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 15,
+    backgroundColor: '#f9f9f9',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  datePickerText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  datePickerActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 10,
+    marginBottom: 15,
+  },
+  datePickerDoneButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  datePickerDoneText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
   },
   editHobbyButtonContainer: {
     flexDirection: 'row',
