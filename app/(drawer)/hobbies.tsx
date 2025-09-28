@@ -8,8 +8,8 @@ export default function HobbiesScreen() {
   const router = useRouter();
 
   const handleHobbyCreated = () => {
-    // Navigate back to home to refresh the drawer
-    router.replace('/(drawer)');
+    // Navigate back and force refresh by going to index then back
+    router.push('/(drawer)');
   };
 
   return (

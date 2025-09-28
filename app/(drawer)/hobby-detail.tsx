@@ -1,6 +1,10 @@
 import { GameList } from '@/components/game-list';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { GameForm } from '@/components/game-form';
+import { BookForm } from '@/components/book-form';
+import { MovieForm } from '@/components/movie-form';
+import { CustomForm } from '@/components/custom-form';
 import { Hobby, HobbyType } from '@/data/hobby';
 import { useHobbyStorage } from '@/hooks/use-hobby-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -9,8 +13,9 @@ import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-nat
 
 export default function HobbyDetailScreen() {
   const { hobbyId, hobbyName } = useLocalSearchParams<{ hobbyId: string; hobbyName: string }>();
-  const { hobbies, deleteHobby } = useHobbyStorage();
+  const { hobbies, deleteHobby, addItemToHobby } = useHobbyStorage();
   const [hobby, setHobby] = useState<Hobby | null>(null);
+  const [showAddItemModal, setShowAddItemModal] = useState(false);
   const router = useRouter();
 
   useEffect(() => {

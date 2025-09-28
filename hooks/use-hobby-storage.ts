@@ -73,7 +73,7 @@ export const useHobbyStorage = () => {
       }
       return hobby;
     });
-    await saveHobbies(updatedHobbies);
+    await saveHobbies(updatedHobbies as Hobby[]);
   };
 
   const deleteHobby = async (id: string) => {
