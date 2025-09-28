@@ -1,11 +1,11 @@
 import React from 'react';
 import {
-    Alert,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { Game, GameStatus } from '../data/game';
 
@@ -18,15 +18,14 @@ interface GameListProps {
   emptySubtitle?: string;
 }
 
-export const GameList: React.FC<GameListProps> = ({ 
-  games, 
-  onDeleteGame, 
+export const GameList: React.FC<GameListProps> = ({
+  games,
+  onDeleteGame,
   onUpdateGame,
   onEditGame,
   emptyTitle = "No games added yet",
   emptySubtitle = "Tap the \"+\" button to add your first game!"
 }) => {
-
   const getStatusColor = (status: GameStatus) => {
     switch (status) {
       case GameStatus.WANT_TO_PLAY:
@@ -74,122 +73,126 @@ export const GameList: React.FC<GameListProps> = ({
     }
   };
 
-  const renderGameItem = ({ item }: { item: Game }) => (
-    <TouchableOpacity 
-      style={styles.gameItem} 
-      onPress={() => handleTilePress(item)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.gameItemContent}>
-        {item.thumbnail && (
-          <View style={styles.thumbnailContainer}>
-            <Image
-              source={{ uri: item.thumbnail }}
-              style={styles.thumbnail}
-              resizeMode="cover"
-            />
-          </View>
-        )}
-        
-        <View style={styles.gameInfoContainer}>
-          <View style={styles.gameHeader}>
-            <Text style={styles.gameTitle}>{item.title}</Text>
-            <TouchableOpacity
-              onPress={() => handleDeleteGame(item)}
-              style={styles.deleteButton}
-            >
-              <Text style={styles.deleteButtonText}>×</Text>
-            </TouchableOpacity>
-          </View>
-        
-          <View style={styles.gameDetails}>
-            <View style={styles.gameRow}>
-              <Text style={styles.gameLabel}>Platform:</Text>
-              <Text style={styles.gameValue}>{item.platform}</Text>
-            </View>
-            
-            <View style={styles.gameRow}>
-              <Text style={styles.gameLabel}>Status:</Text>
-              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-                <Text style={styles.statusText}>{getStatusLabel(item.status)}</Text>
-              </View>
-            </View>
-            
-            {item.timeToBeat && (
-              <View style={styles.gameRow}>
-                <Text style={styles.gameLabel}>Time to Beat:</Text>
-                <Text style={styles.gameValue}>{item.timeToBeat}h</Text>
-              </View>
-            )}
-            
-            {item.hoursPlayed && (
-              <View style={styles.gameRow}>
-                <Text style={styles.gameLabel}>Hours Played:</Text>
-                <Text style={styles.gameValue}>{item.hoursPlayed}h</Text>
-              </View>
-            )}
-
-            {onUpdateGame && (
-              <View style={styles.quickActions}>
-                <Text style={styles.quickActionsLabel}>Quick Actions:</Text>
-                <View style={styles.actionButtons}>
-                  {item.status !== GameStatus.WANT_TO_PLAY && (
-                    <TouchableOpacity
-                      style={[styles.actionButton, { backgroundColor: '#6B7280' }]}
-                      onPress={() => onUpdateGame(item.id, { status: GameStatus.WANT_TO_PLAY })}
-                    >
-                      <Text style={styles.actionButtonText}>Wishlist</Text>
-                    </TouchableOpacity>
-                  )}
-                  {item.status !== GameStatus.PLAYING && (
-                    <TouchableOpacity
-                      style={[styles.actionButton, { backgroundColor: '#10B981' }]}
-                      onPress={() => onUpdateGame(item.id, { status: GameStatus.PLAYING })}
-                    >
-                      <Text style={styles.actionButtonText}>Playing</Text>
-                    </TouchableOpacity>
-                  )}
-                  {item.status !== GameStatus.COMPLETED && (
-                    <TouchableOpacity
-                      style={[styles.actionButton, { backgroundColor: '#3B82F6' }]}
-                      onPress={() => onUpdateGame(item.id, { 
-                        status: GameStatus.COMPLETED,
-                        dateCompleted: new Date().toISOString()
-                      })}
-                    >
-                      <Text style={styles.actionButtonText}>Completed</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </View>
-            )}
-            
-            <View style={styles.gameRow}>
-              <Text style={styles.gameLabel}>Added:</Text>
-              <Text style={styles.gameValue}>
-                {new Date(item.dateAdded).toLocaleDateString()}
-              </Text>
-            </View>
-
-            {item.dateCompleted && (
-              <View style={styles.gameRow}>
-                <Text style={styles.gameLabel}>Completed:</Text>
-                <Text style={styles.gameValue}>
-                  {new Date(item.dateCompleted).toLocaleDateString()}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {onEditGame && (
-            <View style={styles.editHint}>
-              <Text style={styles.editHintText}>Tap to edit</Text>
+  const renderGameItem = ({ item }: { item: Game }) => {
+    console.log(`🖼️ Rendering game "${item.title}" with thumbnail:`, item.thumbnail);
+    
+    return (
+      <TouchableOpacity 
+        style={styles.gameItem} 
+        onPress={() => handleTilePress(item)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.gameItemContent}>
+          {item.thumbnail && (
+            <View style={styles.thumbnailContainer}>
+              <Image
+                source={{ uri: item.thumbnail }}
+                style={styles.thumbnail}
+                resizeMode="cover"
+              />
             </View>
           )}
+          
+          <View style={styles.gameInfoContainer}>
+            <View style={styles.gameHeader}>
+              <Text style={styles.gameTitle}>{item.title}</Text>
+              <TouchableOpacity
+                onPress={() => handleDeleteGame(item)}
+                style={styles.deleteButton}
+              >
+                <Text style={styles.deleteButtonText}>×</Text>
+              </TouchableOpacity>
+            </View>
+        
+            <View style={styles.gameDetails}>
+              <View style={styles.gameRow}>
+                <Text style={styles.gameLabel}>Platform:</Text>
+                <Text style={styles.gameValue}>{item.platform}</Text>
+              </View>
+              
+              <View style={styles.gameRow}>
+                <Text style={styles.gameLabel}>Status:</Text>
+                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+                  <Text style={styles.statusText}>{getStatusLabel(item.status)}</Text>
+                </View>
+              </View>
+              
+              {item.timeToBeat && (
+                <View style={styles.gameRow}>
+                  <Text style={styles.gameLabel}>Time to Beat:</Text>
+                  <Text style={styles.gameValue}>{item.timeToBeat}h</Text>
+                </View>
+              )}
+              
+              {item.hoursPlayed && (
+                <View style={styles.gameRow}>
+                  <Text style={styles.gameLabel}>Hours Played:</Text>
+                  <Text style={styles.gameValue}>{item.hoursPlayed}h</Text>
+                </View>
+              )}
+
+              {onUpdateGame && (
+                <View style={styles.quickActions}>
+                  <Text style={styles.quickActionsLabel}>Quick Actions:</Text>
+                  <View style={styles.actionButtons}>
+                    {item.status !== GameStatus.WANT_TO_PLAY && (
+                      <TouchableOpacity
+                        style={[styles.actionButton, { backgroundColor: '#6B7280' }]}
+                        onPress={() => onUpdateGame(item.id, { status: GameStatus.WANT_TO_PLAY })}
+                      >
+                        <Text style={styles.actionButtonText}>Wishlist</Text>
+                      </TouchableOpacity>
+                    )}
+                    {item.status !== GameStatus.PLAYING && (
+                      <TouchableOpacity
+                        style={[styles.actionButton, { backgroundColor: '#10B981' }]}
+                        onPress={() => onUpdateGame(item.id, { status: GameStatus.PLAYING })}
+                      >
+                        <Text style={styles.actionButtonText}>Playing</Text>
+                      </TouchableOpacity>
+                    )}
+                    {item.status !== GameStatus.COMPLETED && (
+                      <TouchableOpacity
+                        style={[styles.actionButton, { backgroundColor: '#3B82F6' }]}
+                        onPress={() => onUpdateGame(item.id, { 
+                          status: GameStatus.COMPLETED,
+                          dateCompleted: new Date().toISOString()
+                        })}
+                      >
+                        <Text style={styles.actionButtonText}>Completed</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+              )}
+              
+              <View style={styles.gameRow}>
+                <Text style={styles.gameLabel}>Added:</Text>
+                <Text style={styles.gameValue}>
+                  {new Date(item.dateAdded).toLocaleDateString()}
+                </Text>
+              </View>
+
+              {item.dateCompleted && (
+                <View style={styles.gameRow}>
+                  <Text style={styles.gameLabel}>Completed:</Text>
+                  <Text style={styles.gameValue}>
+                    {new Date(item.dateCompleted).toLocaleDateString()}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {onEditGame && (
+              <View style={styles.editHint}>
+                <Text style={styles.editHintText}>Tap to edit</Text>
+              </View>
+            )}
+          </View>
         </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   if (games.length === 0) {
     return (
@@ -221,7 +224,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: 12,
-    paddingBottom: 20, // Reduced padding for accordion use
+    paddingBottom: 20,
   },
   gameItem: {
     backgroundColor: '#fff',
@@ -238,6 +241,24 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
+  },
+  gameItemContent: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  thumbnailContainer: {
+    width: 60,
+    height: 80,
+    borderRadius: 6,
+    overflow: 'hidden',
+    backgroundColor: '#f0f0f0',
+  },
+  thumbnail: {
+    width: '100%',
+    height: '100%',
+  },
+  gameInfoContainer: {
+    flex: 1,
   },
   gameHeader: {
     flexDirection: 'row',
@@ -354,23 +375,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     textAlign: 'center',
-  },
-  gameItemContent: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  thumbnailContainer: {
-    width: 60,
-    height: 80,
-    borderRadius: 6,
-    overflow: 'hidden',
-    backgroundColor: '#f0f0f0',
-  },
-  thumbnail: {
-    width: '100%',
-    height: '100%',
-  },
-  gameInfoContainer: {
-    flex: 1,
   },
 });
