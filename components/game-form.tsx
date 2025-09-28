@@ -88,6 +88,8 @@ export const GameForm: React.FC<GameFormProps> = ({
       return;
     }
 
+    console.log('🖼️ Form submission - thumbnail value:', thumbnail);
+    
     if (isEditing && initialGame && onGameUpdated) {
       const updatedGame: Game = {
         ...initialGame,
@@ -95,6 +97,7 @@ export const GameForm: React.FC<GameFormProps> = ({
         hoursPlayed: hoursPlayedNum,
         thumbnail,
       };
+      console.log('🖼️ Updating game with thumbnail:', updatedGame.thumbnail);
       onGameUpdated(updatedGame);
     } else if (onGameAdded) {
       const newGame: Omit<Game, 'id' | 'dateAdded'> = {
@@ -106,6 +109,7 @@ export const GameForm: React.FC<GameFormProps> = ({
         dateCompleted: status === GameStatus.COMPLETED ? new Date().toISOString() : undefined,
         thumbnail,
       };
+      console.log('🖼️ Adding new game with thumbnail:', newGame.thumbnail);
       onGameAdded(newGame);
       resetForm();
     }
