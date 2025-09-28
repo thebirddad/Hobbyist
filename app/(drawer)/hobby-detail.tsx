@@ -152,16 +152,29 @@ export default function HobbyDetailScreen() {
             {hobby.items.length > 0 ? (
               <View>
                 {hobby.items.map((book: any) => (
-                  <View key={book.id} style={styles.itemCard}>
-                    <ThemedText style={styles.itemTitle}>{book.title}</ThemedText>
-                    {book.author && <ThemedText style={styles.itemSubtitle}>by {book.author}</ThemedText>}
-                    <ThemedText style={styles.itemStatus}>Status: {book.status}</ThemedText>
-                    {book.totalPages && (
-                      <ThemedText style={styles.itemProgress}>
-                        Progress: {book.pagesRead || 0} / {book.totalPages} pages
-                      </ThemedText>
-                    )}
-                  </View>
+                  <TouchableOpacity key={book.id} style={styles.itemCard} onPress={() => {
+                    Alert.alert(
+                      book.title,
+                      `Author: ${book.author || 'Unknown'}\nStatus: ${book.status}\nProgress: ${book.pagesRead || 0} / ${book.totalPages || 'Unknown'} pages\nAdded: ${new Date(book.dateAdded).toLocaleDateString()}`,
+                      [{ text: 'OK' }]
+                    );
+                  }}>
+                    <View style={styles.itemContent}>
+                      {book.thumbnail && (
+                        <Image source={{ uri: book.thumbnail }} style={styles.itemThumbnail} />
+                      )}
+                      <View style={styles.itemInfo}>
+                        <ThemedText style={styles.itemTitle}>{book.title}</ThemedText>
+                        {book.author && <ThemedText style={styles.itemSubtitle}>by {book.author}</ThemedText>}
+                        <ThemedText style={styles.itemStatus}>Status: {book.status}</ThemedText>
+                        {book.totalPages && (
+                          <ThemedText style={styles.itemProgress}>
+                            Progress: {book.pagesRead || 0} / {book.totalPages} pages
+                          </ThemedText>
+                        )}
+                      </View>
+                    </View>
+                  </TouchableOpacity>
                 ))}
               </View>
             ) : (
@@ -188,16 +201,29 @@ export default function HobbyDetailScreen() {
             {hobby.items.length > 0 ? (
               <View>
                 {hobby.items.map((movie: any) => (
-                  <View key={movie.id} style={styles.itemCard}>
-                    <ThemedText style={styles.itemTitle}>{movie.title}</ThemedText>
-                    {movie.director && <ThemedText style={styles.itemSubtitle}>Directed by {movie.director}</ThemedText>}
-                    <ThemedText style={styles.itemStatus}>Status: {movie.status}</ThemedText>
-                    {movie.rating && (
-                      <ThemedText style={styles.itemRating}>
-                        Rating: {'★'.repeat(movie.rating)}{'☆'.repeat(5 - movie.rating)}
-                      </ThemedText>
-                    )}
-                  </View>
+                  <TouchableOpacity key={movie.id} style={styles.itemCard} onPress={() => {
+                    Alert.alert(
+                      movie.title,
+                      `Director: ${movie.director || 'Unknown'}\nStatus: ${movie.status}\nRating: ${movie.rating ? '★'.repeat(movie.rating) + '☆'.repeat(5 - movie.rating) : 'Not rated'}\nAdded: ${new Date(movie.dateAdded).toLocaleDateString()}`,
+                      [{ text: 'OK' }]
+                    );
+                  }}>
+                    <View style={styles.itemContent}>
+                      {movie.thumbnail && (
+                        <Image source={{ uri: movie.thumbnail }} style={styles.itemThumbnail} />
+                      )}
+                      <View style={styles.itemInfo}>
+                        <ThemedText style={styles.itemTitle}>{movie.title}</ThemedText>
+                        {movie.director && <ThemedText style={styles.itemSubtitle}>Directed by {movie.director}</ThemedText>}
+                        <ThemedText style={styles.itemStatus}>Status: {movie.status}</ThemedText>
+                        {movie.rating && (
+                          <ThemedText style={styles.itemRating}>
+                            Rating: {'★'.repeat(movie.rating)}{'☆'.repeat(5 - movie.rating)}
+                          </ThemedText>
+                        )}
+                      </View>
+                    </View>
+                  </TouchableOpacity>
                 ))}
               </View>
             ) : (
@@ -224,12 +250,25 @@ export default function HobbyDetailScreen() {
             {hobby.items.length > 0 ? (
               <View>
                 {hobby.items.map((item: any) => (
-                  <View key={item.id} style={styles.itemCard}>
-                    <ThemedText style={styles.itemTitle}>{item.name}</ThemedText>
-                    <ThemedText style={styles.itemDate}>
-                      Added: {new Date(item.dateAdded).toLocaleDateString()}
-                    </ThemedText>
-                  </View>
+                  <TouchableOpacity key={item.id} style={styles.itemCard} onPress={() => {
+                    Alert.alert(
+                      item.name,
+                      `Added: ${new Date(item.dateAdded).toLocaleDateString()}`,
+                      [{ text: 'OK' }]
+                    );
+                  }}>
+                    <View style={styles.itemContent}>
+                      {item.thumbnail && (
+                        <Image source={{ uri: item.thumbnail }} style={styles.itemThumbnail} />
+                      )}
+                      <View style={styles.itemInfo}>
+                        <ThemedText style={styles.itemTitle}>{item.name}</ThemedText>
+                        <ThemedText style={styles.itemDate}>
+                          Added: {new Date(item.dateAdded).toLocaleDateString()}
+                        </ThemedText>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
                 ))}
               </View>
             ) : (
@@ -412,5 +451,21 @@ const styles = StyleSheet.create({
   itemDate: {
     fontSize: 12,
     color: '#999',
+  },
+  itemContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  itemThumbnail: {
+    width: 60,
+    height: 80,
+    borderRadius: 6,
+    marginRight: 12,
+    backgroundColor: '#f0f0f0',
+  },
+  itemInfo: {
+    flex: 1,
+    minHeight: 80,
+    justifyContent: 'center',
   },
 });
