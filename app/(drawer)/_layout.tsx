@@ -19,9 +19,19 @@ function CustomDrawerContent(props: any) {
         <View style={styles.drawerHeader}>
           <IconSymbol name="gamecontroller.fill" size={40} color={tintColor} />
           <Text style={[styles.drawerTitle, { color: tintColor }]}>
-            Game Tracker
+            Hobbyist
           </Text>
         </View>
+        
+        <DrawerItem
+          label="Home"
+          onPress={() => router.push('/')}
+          icon={({ color, size }) => (
+            <IconSymbol name="house.fill" size={size} color={color} />
+          )}
+          activeTintColor={tintColor}
+          inactiveTintColor="#666"
+        />
         
         <DrawerItem
           label="Currently Playing"
@@ -35,7 +45,7 @@ function CustomDrawerContent(props: any) {
         
         <DrawerItem
           label="Game Library"
-          onPress={() => router.push('/')}
+          onPress={() => router.push('/library')}
           icon={({ color, size }) => (
             <IconSymbol name="list.bullet" size={size} color={color} />
           )}
@@ -56,7 +66,7 @@ function CustomDrawerContent(props: any) {
       
       <View style={styles.drawerFooter}>
         <Text style={styles.footerText}>
-          Track your gaming journey
+          Your hobby companion
         </Text>
       </View>
     </SafeAreaView>
@@ -80,6 +90,13 @@ export default function DrawerLayout() {
       }}
     >
       <Drawer.Screen
+        name="index"
+        options={{
+          drawerLabel: 'Home',
+          title: 'Hobbyist',
+        }}
+      />
+      <Drawer.Screen
         name="playing"
         options={{
           drawerLabel: 'Currently Playing',
@@ -87,7 +104,7 @@ export default function DrawerLayout() {
         }}
       />
       <Drawer.Screen
-        name="index"
+        name="library"
         options={{
           drawerLabel: 'Game Library',
           title: 'Game Library',
