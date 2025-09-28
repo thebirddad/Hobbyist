@@ -1,7 +1,6 @@
 import React from 'react';
 import {
     Alert,
-    FlatList,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -189,14 +188,15 @@ export const GameList: React.FC<GameListProps> = ({
   }
 
   return (
-    <FlatList
-      data={games}
-      keyExtractor={(item) => item.id}
-      renderItem={renderGameItem}
-      style={styles.container}
-      contentContainerStyle={styles.listContainer}
-      showsVerticalScrollIndicator={false}
-    />
+    <View style={styles.container}>
+      <View style={styles.listContainer}>
+        {games.map((item) => (
+          <View key={item.id}>
+            {renderGameItem({ item })}
+          </View>
+        ))}
+      </View>
+    </View>
   );
 };
 
