@@ -10,7 +10,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { Console, useConsoleStorage } from '../../hooks/use-console-storage';
 import { useGameStorage } from '../../hooks/use-game-storage';
 
@@ -209,7 +209,7 @@ export default function ConsolesScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Console Management</Text>
         <Text style={styles.subtitle}>
@@ -254,7 +254,7 @@ export default function ConsolesScreen() {
         initialName={editingConsole?.name || ''}
         title="Edit Console"
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -1,26 +1,19 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+import { GameAccordion } from '../../components/game-accordion';
 import { GameForm } from '../../components/game-form';
-import { GameList } from '../../components/game-list';
-import { Game, GameStatus } from '../../data/game';
+import { GameStats } from '../../components/game-stats';
+import { Game } from '../../data/game';
 import { useGameStorage } from '../../hooks/use-game-storage';
 
-export default function PlayingScreen() {
+export default function HomeScreen() {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const { games, loading, addGame, updateGame, deleteGame } = useGameStorage();
 
-  // Filter games for currently playing
-  const playingGames = games.filter(game => game.status === GameStatus.PLAYING);
-
   const handleAddGame = async (gameData: Parameters<typeof addGame>[0]) => {
-    // Force status to PLAYING for currently playing
-    await addGame({
-      ...gameData,
-      status: GameStatus.PLAYING,
-    });
+    await addGame(gameData);
   };
 
   const handleUpdateGame = async (game: Game) => {
@@ -41,28 +34,31 @@ export default function PlayingScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#4CAF50" />
-        <Text style={styles.loadingText}>Loading currently playing games...</Text>
+        <Text style={styles.loadingText}>Loading your games...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Currently Playing</Text>
+        <Text style={styles.title}>Game Library</Text>
         <Text style={styles.subtitle}>
-          {playingGames.length} game{playingGames.length !== 1 ? 's' : ''} in progress
+          {games.length} game{games.length !== 1 ? 's' : ''} tracked
         </Text>
       </View>
 
-      <GameList 
-        games={playingGames} 
-        onDeleteGame={deleteGame}
-        onUpdateGame={updateGame}
-        onEditGame={handleEditGame}
-        emptyTitle="No games currently playing"
-        emptySubtitle="Add games you're actively playing!"
-      />
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <GameStats games={games} />
+        
+        <GameAccordion
+          games={games}
+          onDeleteGame={deleteGame}
+          onUpdateGame={updateGame}
+          onEditGame={handleEditGame}
+          defaultExpanded="playing"
+        />
+      </ScrollView>
 
       <TouchableOpacity
         style={styles.fab}
@@ -79,7 +75,7 @@ export default function PlayingScreen() {
         onGameUpdated={editingGame ? handleUpdateGame : undefined}
         initialGame={editingGame || undefined}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -141,5 +137,9 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 24,
     fontWeight: '600',
+  },
+  content: {
+    flex: 1,
+    paddingTop: 8,
   },
 });
