@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { Game, GameStatus } from '../data/game';
 import { useConsoleStorage } from '../hooks/use-console-storage';
@@ -117,7 +117,7 @@ export const GameForm: React.FC<GameFormProps> = ({
     }
     
     onClose();
-  }, [title, platform, status, timeToBeat, hoursPlayed, isEditing, initialGame, onGameAdded, onGameUpdated, onClose]);
+  }, [title, platform, status, timeToBeat, hoursPlayed, thumbnail, isEditing, initialGame, onGameAdded, onGameUpdated, onClose]);
 
   const statusOptions = [
     { key: GameStatus.WANT_TO_PLAY, label: 'Want to Play' },

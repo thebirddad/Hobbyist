@@ -1,6 +1,6 @@
+import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 
 export const ImagePickerDebugTool: React.FC = () => {
   const [lastSelectedUri, setLastSelectedUri] = useState<string>('');
