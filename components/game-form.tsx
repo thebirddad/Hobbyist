@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Game, GameStatus } from '../data/game';
 import { useConsoleStorage } from '../hooks/use-console-storage';
+import { GameImagePicker } from './game-image-picker';
 
 interface GameFormProps {
   visible: boolean;
@@ -37,6 +38,7 @@ export const GameForm: React.FC<GameFormProps> = ({
   const [status, setStatus] = useState<GameStatus>(GameStatus.WANT_TO_PLAY);
   const [timeToBeat, setTimeToBeat] = useState('');
   const [hoursPlayed, setHoursPlayed] = useState('');
+  const [thumbnail, setThumbnail] = useState<string | undefined>(undefined);
 
   // Selection state
   const [showPlatformPicker, setShowPlatformPicker] = useState(false);
@@ -50,6 +52,7 @@ export const GameForm: React.FC<GameFormProps> = ({
       setStatus(initialGame.status);
       setTimeToBeat(initialGame.timeToBeat?.toString() || '');
       setHoursPlayed(initialGame.hoursPlayed?.toString() || '');
+      setThumbnail(initialGame.thumbnail);
     } else {
       resetForm();
     }
@@ -61,6 +64,7 @@ export const GameForm: React.FC<GameFormProps> = ({
     setStatus(GameStatus.WANT_TO_PLAY);
     setTimeToBeat('');
     setHoursPlayed('');
+    setThumbnail(undefined);
     setShowPlatformPicker(false);
     setShowStatusPicker(false);
   };
@@ -89,6 +93,7 @@ export const GameForm: React.FC<GameFormProps> = ({
         ...initialGame,
         timeToBeat: timeToBeatNum,
         hoursPlayed: hoursPlayedNum,
+        thumbnail,
       };
       onGameUpdated(updatedGame);
     } else if (onGameAdded) {
@@ -99,6 +104,7 @@ export const GameForm: React.FC<GameFormProps> = ({
         timeToBeat: timeToBeatNum,
         hoursPlayed: hoursPlayedNum,
         dateCompleted: status === GameStatus.COMPLETED ? new Date().toISOString() : undefined,
+        thumbnail,
       };
       onGameAdded(newGame);
       resetForm();
@@ -247,6 +253,16 @@ export const GameForm: React.FC<GameFormProps> = ({
               onChangeText={setHoursPlayed}
               placeholder="0"
               keyboardType="numeric"
+            />
+          </View>
+
+          {/* Game Thumbnail */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Game Thumbnail</Text>
+            <GameImagePicker
+              imageUri={thumbnail}
+              onImageSelected={setThumbnail}
+              onImageRemoved={() => setThumbnail(undefined)}
             />
           </View>
         </ScrollView>

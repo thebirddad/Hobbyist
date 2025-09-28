@@ -7,6 +7,7 @@ export interface Game {
   hoursPlayed?: number;
   dateAdded: string;
   dateCompleted?: string;
+  thumbnail?: string; // URI to the game's thumbnail image
 }
 
 export enum GameStatus {
