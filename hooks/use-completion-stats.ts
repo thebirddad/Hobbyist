@@ -1,4 +1,5 @@
 import { BookStatus, GameStatus, HobbyType, TvFilmStatus } from '@/data/hobby';
+import { useEffect, useState } from 'react';
 import { useHobbyStorage } from './use-hobby-storage';
 
 export interface CompletionStats {
@@ -12,8 +13,16 @@ export interface CompletionStats {
 
 export const useCompletionStats = () => {
   const { hobbies } = useHobbyStorage();
+  const [stats, setStats] = useState<CompletionStats>({
+    gamesCompleted: 0,
+    booksRead: 0,
+    moviesWatched: 0,
+    gamesInProgress: 0,
+    booksInProgress: 0,
+    totalHobbies: 0,
+  });
 
-  const getCompletionStats = (): CompletionStats => {
+  const calculateStats = (): CompletionStats => {
     let gamesCompleted = 0;
     let booksRead = 0;
     let moviesWatched = 0;
@@ -63,7 +72,12 @@ export const useCompletionStats = () => {
     };
   };
 
+  useEffect(() => {
+    const newStats = calculateStats();
+    setStats(newStats);
+  }, [hobbies]);
+
   return {
-    getCompletionStats,
+    stats,
   };
 };

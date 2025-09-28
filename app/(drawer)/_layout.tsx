@@ -14,7 +14,7 @@ import { useHobbyStorage } from '@/hooks/use-hobby-storage';
 function CustomDrawerContent(props: any) {
   const colorScheme = useColorScheme();
   const tintColor = Colors[colorScheme ?? 'light'].tint;
-  const { hobbies, canAddHobby } = useHobbyStorage();
+  const { hobbies, canAddHobby, loading } = useHobbyStorage();
 
   const getHobbyIcon = (type: HobbyType) => {
     switch (type) {
@@ -22,7 +22,7 @@ function CustomDrawerContent(props: any) {
         return 'gamecontroller.fill';
       case HobbyType.BOOKS:
         return 'book.fill';
-      case HobbyType.MOVIES:
+      case HobbyType.TV_FILM:
         return 'tv.fill';
       case HobbyType.CUSTOM:
         return 'star.fill';

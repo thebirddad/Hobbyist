@@ -6,11 +6,10 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function HomePage() {
   const { getMostRecentActivity, formatActivityMessage, loading: activityLoading } = useActivityTracking();
-  const { getCompletionStats } = useCompletionStats();
+  const { stats } = useCompletionStats();
   const { formattedInstallationDate, loading: installationLoading } = useInstallationDate();
   
   const recentActivity = getMostRecentActivity();
-  const stats = getCompletionStats();
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>

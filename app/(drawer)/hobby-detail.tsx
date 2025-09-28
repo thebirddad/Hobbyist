@@ -4,6 +4,7 @@ import { GameForm } from '@/components/game-form';
 import { GameList } from '@/components/game-list';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { TvFilmForm } from '@/components/tv-film-form';
 import { Hobby, HobbyType } from '@/data/hobby';
 import { useHobbyStorage } from '@/hooks/use-hobby-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
