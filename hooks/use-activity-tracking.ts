@@ -1,34 +1,14 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Activity, addActivityListener, addActivityToStorage, getActivitiesFromStorage } from '@/utils/activity-manager';
 import { useEffect, useState } from 'react';
-
-export interface Activity {
-  id: string;
-  type: 'added' | 'completed' | 'updated';
-  itemTitle: string;
-  hobbyName: string;
-  hobbyType: string;
-  status?: string;
-  timestamp: string;
-}
-
-const ACTIVITIES_STORAGE_KEY = 'activities_data';
-const MAX_ACTIVITIES = 50; // Keep last 50 activities
 
 export const useActivityTracking = () => {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadActivities();
-  }, []);
-
   const loadActivities = async () => {
     try {
-      const storedActivities = await AsyncStorage.getItem(ACTIVITIES_STORAGE_KEY);
-      if (storedActivities) {
-        const parsedActivities = JSON.parse(storedActivities);
-        setActivities(parsedActivities);
-      }
+      const storedActivities = await getActivitiesFromStorage();
+      setActivities(storedActivities);
     } catch (error) {
       console.error('Failed to load activities:', error);
     } finally {
@@ -36,26 +16,19 @@ export const useActivityTracking = () => {
     }
   };
 
-  const saveActivities = async (activitiesToSave: Activity[]) => {
-    try {
-      const jsonData = JSON.stringify(activitiesToSave);
-      await AsyncStorage.setItem(ACTIVITIES_STORAGE_KEY, jsonData);
-      setActivities(activitiesToSave);
-    } catch (error) {
-      console.error('Failed to save activities:', error);
-    }
-  };
+  useEffect(() => {
+    loadActivities();
+    
+    // Listen for activity updates
+    const unsubscribe = addActivityListener(() => {
+      loadActivities();
+    });
+
+    return unsubscribe;
+  }, []);
 
   const addActivity = async (activity: Omit<Activity, 'id' | 'timestamp'>) => {
-    const newActivity: Activity = {
-      ...activity,
-      id: Date.now().toString(),
-      timestamp: new Date().toISOString(),
-    };
-
-    // Add to beginning of array and limit to MAX_ACTIVITIES
-    const updatedActivities = [newActivity, ...activities].slice(0, MAX_ACTIVITIES);
-    await saveActivities(updatedActivities);
+    await addActivityToStorage(activity);
   };
 
   const getMostRecentActivity = (): Activity | null => {
