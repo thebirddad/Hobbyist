@@ -1,6 +1,5 @@
 import { BookItem, CustomItem, GameItem, Hobby, HobbyType, TvFilmItem } from '@/data/hobby';
-import * as Sharing from 'expo-sharing';
-import { Share } from 'react-native';
+import { Share, Alert } from 'react-native';
 
 export interface ExportOptions {
   includeHobbyInfo: boolean;
@@ -344,55 +343,21 @@ export class HobbyExportService {
   }
 
   /**
-   * Share CSV content using React Native Share API - guaranteed to work on iOS
+   * Share CSV content - creates a single CSV file with timestamp filename
    */
   static async shareCSV(filename: string, content: string): Promise<void> {
     const timestamp = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-    const finalFilename = `${timestamp}_${filename}`;
+    const csvFilename = `${timestamp}.csv`; // Simple timestamp filename
     
     try {
-      console.log('Attempting to share CSV with React Native Share API...');
+      console.log('Sharing CSV content...');
       
-      // Try file-based sharing first (if FileSystem is available)
-      try {
-        const FS = require('expo-file-system');
-        const cacheDir = FS.cacheDirectory;
-        const docDir = FS.documentDirectory;
-        
-        console.log('Cache directory:', cacheDir);
-        console.log('Document directory:', docDir);
-        
-        const baseDir = cacheDir || docDir;
-        
-        if (baseDir) {
-          const filePath = `${baseDir}${finalFilename}`;
-          console.log('Creating file at:', filePath);
-          
-          await FS.writeAsStringAsync(filePath, content);
-          console.log('File created successfully');
-          
-          // Use expo-sharing for file sharing
-          if (await Sharing.isAvailableAsync()) {
-            console.log('Using expo-sharing...');
-            await Sharing.shareAsync(filePath, {
-              mimeType: 'text/csv',
-              dialogTitle: 'Save or Share Your Hobby Data',
-              UTI: 'public.comma-separated-values-text'
-            });
-            console.log('File shared successfully');
-            return;
-          }
-        }
-      } catch (fileError) {
-        console.log('File-based sharing failed, falling back to text sharing:', fileError);
-      }
-      
-      // Fallback: Use React Native Share API for pure CSV content
-      console.log('Using React Native Share API for CSV content...');
+      // Use simple Share API - iOS will recognize the CSV content and suggest proper filename
       await Share.share({
         message: content,
-        title: finalFilename,
+        title: csvFilename, // This suggests the filename to iOS
       });
+      
       console.log('CSV shared successfully');
       
     } catch (error) {
@@ -442,5 +407,254 @@ export class HobbyExportService {
       itemsByType,
       completedItems
     };
+  }
+
+  /**
+   * Import CSV data and convert to hobbies
+   */
+  static async importFromCSV(): Promise<Hobby[]> {
+    return new Promise((resolve, reject) => {
+      Alert.prompt(
+        'Import Hobby Data',
+        'Paste your CSV data here:',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+            onPress: () => reject(new Error('Import cancelled'))
+          },
+          {
+            text: 'Import',
+            onPress: (csvText?: string) => {
+              try {
+                if (!csvText || csvText.trim() === '') {
+                  throw new Error('No CSV data provided');
+                }
+                const hobbies = this.parseCSVToHobbies(csvText.trim());
+                resolve(hobbies);
+              } catch (error) {
+                reject(error);
+              }
+            }
+          }
+        ],
+        'plain-text'
+      );
+    });
+  }
+
+  /**
+   * Parse CSV text and convert to hobby objects
+   */
+  private static parseCSVToHobbies(csvText: string): Hobby[] {
+    const lines = csvText.split('\n').filter(line => line.trim() !== '');
+    
+    if (lines.length < 2) {
+      throw new Error('CSV must have at least a header and one data row');
+    }
+
+    const headers = this.parseCSVRow(lines[0]);
+    const hobbyMap = new Map<string, Hobby>();
+
+    // Process each data row
+    for (let i = 1; i < lines.length; i++) {
+      const row = this.parseCSVRow(lines[i]);
+      
+      if (row.length !== headers.length) {
+        console.warn(`Row ${i + 1} has ${row.length} columns, expected ${headers.length}. Skipping.`);
+        continue;
+      }
+
+      try {
+        const hobbyData = this.createHobbyFromCSVRow(headers, row);
+        if (hobbyData) {
+          const { hobbyKey, hobby, item } = hobbyData;
+          
+          if (!hobbyMap.has(hobbyKey)) {
+            hobbyMap.set(hobbyKey, hobby);
+          }
+          
+          if (item) {
+            const existingHobby = hobbyMap.get(hobbyKey)!;
+            if (!existingHobby.items) {
+              existingHobby.items = [];
+            }
+            existingHobby.items.push(item);
+          }
+        }
+      } catch (error) {
+        console.warn(`Error processing row ${i + 1}:`, error);
+      }
+    }
+
+    return Array.from(hobbyMap.values());
+  }
+
+  /**
+   * Parse a single CSV row, handling quoted values
+   */
+  private static parseCSVRow(row: string): string[] {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    let i = 0;
+
+    while (i < row.length) {
+      const char = row[i];
+      
+      if (char === '"') {
+        if (inQuotes && row[i + 1] === '"') {
+          // Escaped quote
+          current += '"';
+          i += 2;
+        } else {
+          // Toggle quote state
+          inQuotes = !inQuotes;
+          i++;
+        }
+      } else if (char === ',' && !inQuotes) {
+        // End of field
+        result.push(current.trim());
+        current = '';
+        i++;
+      } else {
+        current += char;
+        i++;
+      }
+    }
+    
+    // Add the last field
+    result.push(current.trim());
+    return result;
+  }
+
+  /**
+   * Create hobby and item from CSV row data
+   */
+  private static createHobbyFromCSVRow(headers: string[], row: string[]): {
+    hobbyKey: string;
+    hobby: Hobby;
+    item?: any;
+  } | null {
+    const data: Record<string, string> = {};
+    headers.forEach((header, index) => {
+      data[header] = row[index] || '';
+    });
+
+    const hobbyName = data['Hobby Name'];
+    const hobbyType = data['Hobby Type'] as HobbyType;
+    const hobbyDateStarted = data['Hobby Date Started'];
+
+    if (!hobbyName || !hobbyType) {
+      return null;
+    }
+
+    const hobbyKey = `${hobbyName}-${hobbyType}`;
+    const hobby: Hobby = {
+      id: this.generateId(),
+      name: hobbyName,
+      type: hobbyType,
+      dateStarted: hobbyDateStarted,
+      items: []
+    };
+
+    // Create item if there's item data
+    const itemTitle = data['Item Title/Name'];
+    if (itemTitle) {
+      const itemId = data['Item ID'] || this.generateId();
+      const item = this.createItemFromCSVData(hobbyType, itemId, data);
+      return { hobbyKey, hobby, item };
+    }
+
+    return { hobbyKey, hobby };
+  }
+
+  /**
+   * Create specific item type from CSV data
+   */
+  private static createItemFromCSVData(hobbyType: HobbyType, itemId: string, data: Record<string, string>): any {
+    const baseItem = {
+      id: itemId,
+      dateAdded: data['Date Added'] || new Date().toISOString().split('T')[0],
+      tags: data['Tags'] ? data['Tags'].split(';').map(tag => tag.trim()).filter(tag => tag) : [],
+      thumbnail: data['Has Thumbnail'] === 'Yes' ? 'placeholder' : undefined
+    };
+
+    switch (hobbyType) {
+      case HobbyType.GAMES:
+        return {
+          ...baseItem,
+          title: data['Item Title/Name'],
+          platform: data['Platform/Author/Director'],
+          status: data['Item Status'] || 'Not Started',
+          timeToBeat: data['Progress Info'] ? this.extractTimeFromProgress(data['Progress Info']) : undefined,
+          hoursPlayed: data['Progress Info'] ? this.extractHoursPlayedFromProgress(data['Progress Info']) : undefined,
+          dateCompleted: data['Date Completed/Watched'] || undefined
+        } as GameItem;
+
+      case HobbyType.BOOKS:
+        return {
+          ...baseItem,
+          title: data['Item Title/Name'],
+          author: data['Platform/Author/Director'],
+          status: data['Item Status'] || 'Not Started',
+          totalPages: data['Progress Info'] ? this.extractTotalFromProgress(data['Progress Info']) : undefined,
+          pagesRead: data['Progress Info'] ? this.extractReadFromProgress(data['Progress Info']) : undefined,
+          dateCompleted: data['Date Completed/Watched'] || undefined
+        } as BookItem;
+
+      case HobbyType.TV_FILM:
+        return {
+          ...baseItem,
+          title: data['Item Title/Name'],
+          director: data['Platform/Author/Director'],
+          status: data['Item Status'] || 'Not Started',
+          rating: data['Rating/Stars'] ? parseInt(data['Rating/Stars']) : undefined,
+          currentSeason: data['Progress Info'] ? data['Progress Info'].replace('Season ', '') : undefined,
+          dateWatched: data['Date Completed/Watched'] || undefined
+        } as TvFilmItem;
+
+      case HobbyType.CUSTOM:
+        return {
+          ...baseItem,
+          name: data['Item Title/Name']
+        } as CustomItem;
+
+      default:
+        return {
+          ...baseItem,
+          name: data['Item Title/Name']
+        };
+    }
+  }
+
+  /**
+   * Helper methods to extract progress info
+   */
+  private static extractTimeFromProgress(progress: string): number | undefined {
+    const match = progress.match(/(\d+)\/(\d+|\?)\s*hrs/);
+    return match ? parseInt(match[2] === '?' ? match[1] : match[2]) : undefined;
+  }
+
+  private static extractHoursPlayedFromProgress(progress: string): number | undefined {
+    const match = progress.match(/(\d+)\/(\d+|\?)\s*hrs/);
+    return match ? parseInt(match[1]) : undefined;
+  }
+
+  private static extractTotalFromProgress(progress: string): number | undefined {
+    const match = progress.match(/(\d+)\/(\d+|\?)\s*pages/);
+    return match ? parseInt(match[2] === '?' ? match[1] : match[2]) : undefined;
+  }
+
+  private static extractReadFromProgress(progress: string): number | undefined {
+    const match = progress.match(/(\d+)\/(\d+|\?)\s*pages/);
+    return match ? parseInt(match[1]) : undefined;
+  }
+
+  /**
+   * Generate a unique ID
+   */
+  private static generateId(): string {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
 }

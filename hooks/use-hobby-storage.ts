@@ -210,6 +210,7 @@ export const useHobbyStorage = () => {
     updateItemInHobby,
     deleteItemFromHobby,
     refreshHobbies: loadHobbies,
+    saveHobbies, // Export saveHobbies for import functionality
     canAddHobby,
     getRemainingHobbySlots,
     MAX_HOBBIES
