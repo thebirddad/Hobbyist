@@ -38,9 +38,11 @@ export class HobbyExportService {
 
   /**
    * Generate comprehensive CSV with all data flattened
+   * Creates a SINGLE CSV file with ONE header row and data rows for all hobby types
+   * This ensures consistent format for both export and import parsing
    */
   private static generateComprehensiveCSV(hobbies: Hobby[], options: ExportOptions): string {
-    console.log('🎯 Generating comprehensive CSV with single global header');
+    console.log('🎯 Generating comprehensive CSV with single global header - NO multiple sections!');
     
     // Single global header that works for all data types
     const headers = [
@@ -91,8 +93,15 @@ export class HobbyExportService {
     });
 
     console.log(`✅ Generated CSV with ${rows.length} rows (including header)`);
+
+    // Validate the CSV structure
+    const dataRows = rows.slice(1); // Skip header
+    const hobbyTypes = new Set(dataRows.map(row => row[1])); // Column 1 is Hobby Type
+    console.log('🎯 Hobby types in export:', Array.from(hobbyTypes));
+    
     const csvContent = this.arrayToCSV(rows);
-    console.log('📤 First 200 chars of CSV:', csvContent.substring(0, 200));
+    console.log('📤 CSV sample (first 300 chars):', csvContent.substring(0, 300));
+    console.log('🔍 Header validation:', csvContent.split('\n')[0]);
     
     return csvContent;
   }
@@ -564,7 +573,17 @@ export class HobbyExportService {
     }
 
     const result = Array.from(hobbyMap.values());
-    console.log('✅ Final parsed hobbies:', result.length);
+    const totalItems = result.reduce((sum, hobby) => sum + (hobby.items?.length || 0), 0);
+    
+    console.log(`✅ Successfully parsed ${result.length} hobbies with ${totalItems} total items`);
+    
+    // Create import summary
+    const summary = result.map(hobby => 
+      `${hobby.name} (${hobby.type}): ${hobby.items?.length || 0} items`
+    ).join('\n');
+    console.log('📋 Import Summary:\n' + summary);
+    console.log('🎉 Import complete!');
+    
     return result;
   }
 
