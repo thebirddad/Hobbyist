@@ -1,4 +1,4 @@
-import { HobbyForm } from '@/components/hobby-form';
+import { HobbyForm } from '@/components/forms/hobby-form';
 import { ThemedView } from '@/components/themed-view';
 import { useRouter } from 'expo-router';
 import React from 'react';

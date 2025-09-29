@@ -1,7 +1,6 @@
-import { BookForm } from '@/components/book-form';
-import { CustomForm } from '@/components/custom-form';
-import { GameForm } from '@/components/game-form';
-import { GameList } from '@/components/game-list';
+import { BookForm } from '@/components/forms/book-form';
+import { CustomForm } from '@/components/forms/custom-form';
+import { GameForm } from '@/components/forms/game-form';
 import { TagFilterModal } from '@/components/tag-filter-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -15,7 +14,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Image, Keyboard, Modal, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 
 export default function HobbyDetailScreen() {
-  const { hobbyId, hobbyName } = useLocalSearchParams<{ hobbyId: string; hobbyName: string }>();
+  const { hobbyId } = useLocalSearchParams<{ hobbyId: string; hobbyName: string }>();
   const { hobbies, deleteHobby, updateHobby, addItemToHobby, updateItemInHobby, deleteItemFromHobby } = useHobbyStorage();
   const [hobby, setHobby] = useState<Hobby | null>(null);
   const [showAddItemModal, setShowAddItemModal] = useState(false);
@@ -242,17 +241,15 @@ export default function HobbyDetailScreen() {
     if (!hobbyId || !hobby || hobby.type !== HobbyType.GAMES) return;
     
     try {
-      // Find the game to toggle
+      
       const gameToUpdate = hobby.items.find((item: Game) => item.id === gameId) as Game;
       if (!gameToUpdate) return;
       
-      // Update the game's collapsed state
       await updateItemInHobby(hobbyId, gameId, {
         ...gameToUpdate,
         collapsed: !gameToUpdate.collapsed
       });
       
-      // Force refresh to show the updated state
       setRefreshKey(prev => prev + 1);
     } catch (error) {
       console.error('Error toggling collapse state:', error);
@@ -358,11 +355,12 @@ export default function HobbyDetailScreen() {
         </View>
 
         {hobby.type === HobbyType.GAMES && (
-          <View style={styles.gameSection}>
+         
+          <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionTitleContainer}>
                 <ThemedText type="subtitle" style={styles.sectionTitle}>
-                  Games Collection
+                  {hobby.name} Collection
                 </ThemedText>
                 {selectedFilterTags.length > 0 && (
                   <ThemedText style={styles.filterIndicator}>
@@ -373,12 +371,7 @@ export default function HobbyDetailScreen() {
               <View style={styles.headerButtons}>
                 <TouchableOpacity 
                   style={[styles.filterButton, selectedFilterTags.length > 0 && styles.filterButtonActive]} 
-                  onPress={() => {
-                    console.log('🏷️ Filter button pressed');
-                    const availableTags = getAllTags();
-                    console.log('🏷️ Available tags for filter:', availableTags);
-                    setShowTagFilter(true);
-                  }}
+                  onPress={() => setShowTagFilter(true)}
                 >
                   <ThemedText style={[styles.filterButtonText, selectedFilterTags.length > 0 && styles.filterButtonTextActive]}>
                     🏷️ Filter{selectedFilterTags.length > 0 && ` (${selectedFilterTags.length})`}
@@ -388,25 +381,70 @@ export default function HobbyDetailScreen() {
                   style={styles.addButton} 
                   onPress={() => setShowAddItemModal(true)}
                 >
-                  <ThemedText style={styles.addButtonText}>+ Add Game</ThemedText>
+                  <ThemedText style={styles.addButtonText}>+ Add {hobby.name}</ThemedText>
                 </TouchableOpacity>
               </View>
             </View>
-
-            
             {getFilteredGameItems().length > 0 ? (
-              <GameList 
-                games={[...getFilteredGameItems()].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime())} 
-                onDeleteGame={handleDeleteItem}
-                onUpdateGame={() => {}}
-                onToggleCollapse={handleToggleCollapse}
-                onEditGame={handleEditItem}
-              />
+              <View>
+                {[...getFilteredGameItems()].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).map((game: any) => (
+                  <TouchableOpacity 
+                    key={game.id}   
+                    style={styles.itemCard} 
+                    onLongPress={() => handleEditItem(game)}
+                  >
+                    <View style={styles.itemContent}>
+                      {game.thumbnail && (
+                        <Image source={{ uri: game.thumbnail }} style={styles.itemThumbnail} />
+                      )}
+                      <View style={styles.itemInfo}>
+                        <View style={styles.itemHeader}>
+                          <ThemedText style={styles.itemTitle}>{game.title}</ThemedText>
+                        </View>
+                         <View style={styles.gameRow}>
+                          <ThemedText style={styles.gameLabel}>Platform:</ThemedText>
+                          <ThemedText style={styles.gameValue}>{game.platform}</ThemedText>
+                        </View>
+                        <ThemedText style={styles.itemStatus}>Status: {game.status}</ThemedText>
+                          
+                        {game.totalPages && (
+                          <ThemedText style={styles.itemProgress}>
+                            Progress: {game.pagesRead || 0} / {game.totalPages} pages
+                          </ThemedText>
+                        )}
+
+                         {game.timeToBeat && (
+                          <View style={styles.gameRow}>
+                            <ThemedText style={styles.gameLabel}>Time to Beat:</ThemedText>
+                            <ThemedText style={styles.gameValue}>{game.timeToBeat}h</ThemedText>
+                          </View>
+                        )}
+                        {game.hoursPlayed && (
+                          <View style={styles.gameRow}>
+                            <ThemedText style={styles.gameLabel}>Hours Played:</ThemedText>
+                            <ThemedText style={styles.gameValue}>{game.hoursPlayed}h</ThemedText>
+                          </View>
+                        )}
+                        {game.tags && game.tags.length > 0 && (
+                          <View style={styles.tagsContainer}>
+                            {game.tags.map((tag: string, index: number) => (
+                              <View key={index} style={styles.tag}>
+                                <ThemedText style={styles.tagText}>{tag}</ThemedText>
+                              </View>
+                            ))}
+                          </View>
+                        )}
+                        <ThemedText style={styles.editHint}>Hold to edit game</ThemedText>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
             ) : (
               <ThemedText style={styles.emptyText}>
                 {(selectedFilterTags.length > 0 || searchText.trim()) 
-                  ? "No games match your search or filters. Try adjusting your criteria." 
-                  : "No games added yet. Tap 'Add Game' to get started!"}
+                  ? "No books match your search or filters. Try adjusting your criteria." 
+                  : "No books added yet. Tap 'Add Book' to get started!"}
               </ThemedText>
             )}
           </View>
@@ -448,8 +486,7 @@ export default function HobbyDetailScreen() {
                   <TouchableOpacity 
                     key={book.id} 
                     style={styles.itemCard} 
-                    onPress={() => handleEditItem(book)}
-                    onLongPress={() => handleDeleteItem(book)}
+                    onLongPress={() => handleEditItem(book)}
                   >
                     <View style={styles.itemContent}>
                       {book.thumbnail && (
@@ -458,12 +495,6 @@ export default function HobbyDetailScreen() {
                       <View style={styles.itemInfo}>
                         <View style={styles.itemHeader}>
                           <ThemedText style={styles.itemTitle}>{book.title}</ThemedText>
-                          <TouchableOpacity
-                            onPress={() => handleDeleteItem(book)}
-                            style={styles.deleteItemButton}
-                          >
-                            <ThemedText style={styles.deleteItemButtonText}>×</ThemedText>
-                          </TouchableOpacity>
                         </View>
                         {book.author && <ThemedText style={styles.itemSubtitle}>by {book.author}</ThemedText>}
                         <ThemedText style={styles.itemStatus}>Status: {book.status}</ThemedText>
@@ -990,6 +1021,29 @@ const styles = StyleSheet.create({
     color: '#4a90e2',
     fontWeight: '500',
     marginBottom: 4,
+  },
+  gameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  gameLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+    flex: 1,
+  },
+  gameValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+    textAlign: 'right',
+    color: '#333',
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   itemProgress: {
     fontSize: 14,

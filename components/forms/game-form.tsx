@@ -1,3 +1,7 @@
+import { GameImagePicker } from '@/components/game-image-picker';
+import { TagInput } from '@/components/tag-input';
+import { Game, GameStatus } from '@/data/hobby';
+import { useConsoleStorage } from '@/hooks/use-console-storage';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -9,10 +13,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Game, GameStatus } from '../data/hobby';
-import { useConsoleStorage } from '../hooks/use-console-storage';
-import { GameImagePicker } from './game-image-picker';
-import { TagInput } from './tag-input';
 
 interface GameFormProps {
   visible: boolean;
