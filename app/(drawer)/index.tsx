@@ -19,53 +19,6 @@ export default function HomePage() {
   const [isVibesExpanded, setIsVibesExpanded] = useState(true);
   const [isProgressExpanded, setIsProgressExpanded] = useState(true);
 
-  const getTagEmoji = (tag: string): string => {
-    const tagLower = tag.toLowerCase();
-    
-    // Gaming related
-    if (tagLower.includes('game') || tagLower.includes('gaming')) return '🎮';
-    if (tagLower.includes('pc') || tagLower.includes('computer')) return '💻';
-    if (tagLower.includes('playstation') || tagLower.includes('ps')) return '🎮';
-    if (tagLower.includes('xbox')) return '🎮';
-    if (tagLower.includes('nintendo') || tagLower.includes('switch')) return '🎮';
-    if (tagLower.includes('horror')) return '👻';
-    if (tagLower.includes('adventure')) return '🗺️';
-    if (tagLower.includes('rpg') || tagLower.includes('role')) return '⚔️';
-    if (tagLower.includes('action')) return '💥';
-    if (tagLower.includes('strategy')) return '🧠';
-    
-    // Books/Reading
-    if (tagLower.includes('book') || tagLower.includes('reading')) return '📚';
-    if (tagLower.includes('fantasy')) return '🐉';
-    if (tagLower.includes('sci-fi') || tagLower.includes('science')) return '🚀';
-    if (tagLower.includes('mystery')) return '🔍';
-    if (tagLower.includes('romance')) return '💕';
-    if (tagLower.includes('thriller')) return '😱';
-    
-    // TV/Film
-    if (tagLower.includes('film') || tagLower.includes('movie')) return '🎬';
-    if (tagLower.includes('tv') || tagLower.includes('show')) return '📺';
-    if (tagLower.includes('drama')) return '🎭';
-    if (tagLower.includes('comedy')) return '😂';
-    if (tagLower.includes('documentary')) return '🎥';
-    if (tagLower.includes('anime')) return '🎌';
-    
-    // Art/Creative
-    if (tagLower.includes('art') || tagLower.includes('painting')) return '🎨';
-    if (tagLower.includes('drawing')) return '✏️';
-    if (tagLower.includes('music')) return '🎵';
-    if (tagLower.includes('creative')) return '✨';
-    
-    // General categories
-    if (tagLower.includes('favorite') || tagLower.includes('favourite')) return '⭐';
-    if (tagLower.includes('completed')) return '✅';
-    if (tagLower.includes('collection')) return '📦';
-    if (tagLower.includes('retro') || tagLower.includes('classic')) return '🕹️';
-    
-    // Default emoji for unmatched tags
-    return '🏷️';
-  };
-
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
               <View style={styles.drawerHeader}>

@@ -1,14 +1,14 @@
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import {
-    ActionSheetIOS,
-    Alert,
-    Image,
-    Platform,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActionSheetIOS,
+  Alert,
+  Image,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { ImageSearchModal } from './image-search-modal';
 
@@ -114,18 +114,6 @@ export const GameImagePicker: React.FC<GameImagePickerProps> = ({
     setShowImageSearch(true);
   };
 
-  const getSearchQuery = () => {
-    if (itemType === 'Game') {
-      return 'game cover art';
-    } else if (itemType === 'Book') {
-      return 'book cover';
-    } else if (itemType === 'TV/Film') {
-      return 'movie poster';
-    } else {
-      return `${itemType.toLowerCase()} image`;
-    }
-  };
-
   const showImagePicker = async () => {
     const hasPermissions = await requestPermissions();
     if (!hasPermissions) return;
@@ -221,7 +209,6 @@ export const GameImagePicker: React.FC<GameImagePickerProps> = ({
         visible={showImageSearch}
         onClose={() => setShowImageSearch(false)}
         onImageSelected={onImageSelected}
-        initialQuery={getSearchQuery()}
         itemType={itemType}
       />
     </View>

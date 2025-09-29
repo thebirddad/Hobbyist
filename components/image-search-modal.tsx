@@ -44,10 +44,10 @@ export const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
   let SERPAPI_KEY: string | undefined;
   
   try {
-    const { SERPAPI_CONFIG } = require('../config/serpapi');
-    SERPAPI_KEY = SERPAPI_CONFIG?.API_KEY === 'YOUR_SERPAPI_KEY' ? undefined : SERPAPI_CONFIG?.API_KEY;
+    const { APP_CONFIG } = require('@/config/appConfig');
+    SERPAPI_KEY = APP_CONFIG?.VERSION === '0.0.0' ? undefined : APP_CONFIG?.API_KEY;
   } catch (error) {
-    console.log('No SerpApi config found, using fallback mode');
+    console.log('No App config found, using fallback mode');
     SERPAPI_KEY = undefined;
   }
 
@@ -230,9 +230,6 @@ export const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
               <Text style={styles.emptyStateText}>
                 Enter a search term and tap "Search" to find images
               </Text>
-              <Text style={styles.emptyStateSubtext}>
-                Using demo images. Add SerpApi key for real Google Images results.
-              </Text>
             </View>
           )}
 
@@ -260,7 +257,7 @@ export const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#007AFF" />
               <Text style={styles.loadingText}>
-                {SERPAPI_KEY === 'ec01683685b82e0e8f0846e42bf32786b91f8f5fed82677af6a20d7873e34a99' 
+                {SERPAPI_KEY !== undefined
                   ? 'Loading demo images...' 
                   : 'Searching Google Images...'}
               </Text>
