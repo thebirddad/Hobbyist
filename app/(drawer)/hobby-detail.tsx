@@ -238,6 +238,27 @@ export default function HobbyDetailScreen() {
     setShowEditItemModal(true);
   };
 
+  const handleToggleCollapse = async (gameId: string) => {
+    if (!hobbyId || !hobby || hobby.type !== HobbyType.GAMES) return;
+    
+    try {
+      // Find the game to toggle
+      const gameToUpdate = hobby.items.find((item: Game) => item.id === gameId) as Game;
+      if (!gameToUpdate) return;
+      
+      // Update the game's collapsed state
+      await updateItemInHobby(hobbyId, gameId, {
+        ...gameToUpdate,
+        collapsed: !gameToUpdate.collapsed
+      });
+      
+      // Force refresh to show the updated state
+      setRefreshKey(prev => prev + 1);
+    } catch (error) {
+      console.error('Error toggling collapse state:', error);
+    }
+  };
+
   const handleUpdateItem = async (itemData: any) => {
     if (hobbyId && editingItem) {
       try {
@@ -378,6 +399,7 @@ export default function HobbyDetailScreen() {
                 games={[...getFilteredGameItems()].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime())} 
                 onDeleteGame={handleDeleteItem}
                 onUpdateGame={() => {}}
+                onToggleCollapse={handleToggleCollapse}
                 onEditGame={handleEditItem}
               />
             ) : (
