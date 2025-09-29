@@ -124,7 +124,7 @@ function CustomDrawerContent(props: any) {
             {isGamingExpanded && (
               <>                
                 <DrawerItem
-                  label="Game Library"
+                  label="Game Stats"
                   onPress={() => router.push('/library')}
                   icon={({ color, size }) => (
                     <IconSymbol name="list.bullet" size={size} color={color} />
@@ -134,7 +134,7 @@ function CustomDrawerContent(props: any) {
                 />
                 
                 <DrawerItem
-                  label="Consoles"
+                  label="Manage Consoles"
                   onPress={() => router.push('/consoles')}
                   icon={({ color, size }) => (
                     <IconSymbol name="gamecontroller.fill" size={size} color={color} />

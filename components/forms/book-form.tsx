@@ -4,16 +4,16 @@ import { BookItem, BookStatus } from '@/data/hobby';
 
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface BookFormProps {
@@ -246,7 +246,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                   setTags(['Book', ...filteredTags]);
                 }}
                 placeholder="Add tag (e.g., Fiction, Mystery)..."
-                maxTags={5}
+                maxTags={10}
                 protectedTags={['Book']}
               />
             </View>
