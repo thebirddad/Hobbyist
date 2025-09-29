@@ -7,7 +7,7 @@ export interface BaseHobby {
 
 export enum HobbyType {
   GAMES = 'Games',
-  BOOKS = 'Books', 
+  BOOKS = 'Books',
   TV_FILM = 'TV/Film',
   CUSTOM = 'Custom'
 }
@@ -68,6 +68,7 @@ export interface BookItem {
   dateCompleted?: string;
   thumbnail?: string;
   tags?: string[]; // max 5 tags
+  collapsed?: boolean; // UI state, not stored in DB
 }
 
 export enum BookStatus {
@@ -89,6 +90,7 @@ export interface TvFilmItem {
   dateWatched?: string;
   thumbnail?: string;
   tags?: string[]; // max 5 tags
+  collapsed?: boolean; // UI state, not stored in DB
 }
 
 export enum TvFilmStatus {
@@ -108,4 +110,5 @@ export interface CustomItem {
   dateAdded: string;
   thumbnail?: string;
   tags?: string[]; // max 5 tags
+  collapsed?: boolean; // UI state, not stored in DB
 }
