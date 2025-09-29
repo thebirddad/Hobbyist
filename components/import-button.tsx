@@ -25,15 +25,15 @@ export default function ImportButton({ style }: ImportButtonProps) {
   const [isImporting, setIsImporting] = useState(false);
 
   const handleImport = async () => {
-    // Show import options
+    // Show import options with clear explanation
     Alert.alert(
       'Import Hobby Data',
-      'Choose how to import your data:',
+      'Import works by pasting CSV text (not file upload).\n\n⚠️ iOS Limitation: The text input may not handle multi-line CSV properly. If import fails, try smaller sections.\n\nChoose your import method:',
       [
         {
-          text: 'Paste CSV Data',
-          onPress: () => importFromText(),
-          style: 'default'
+          text: 'Replace All Data',
+          onPress: () => importFromText(false),
+          style: 'destructive'
         },
         {
           text: 'Merge with Existing',
@@ -134,7 +134,7 @@ export default function ImportButton({ style }: ImportButtonProps) {
             {isImporting ? 'Importing...' : 'Import Data'}
           </Text>
           <Text style={styles.importSubtitle}>
-            Restore from CSV backup
+            Paste CSV text (not file upload)
           </Text>
         </View>
         {isImporting && (

@@ -40,9 +40,12 @@ export class HobbyExportService {
    * Generate comprehensive CSV with all data flattened
    */
   private static generateComprehensiveCSV(hobbies: Hobby[], options: ExportOptions): string {
+    console.log('🎯 Generating comprehensive CSV with single global header');
+    
+    // Single global header that works for all data types
     const headers = [
       'Hobby Name',
-      'Hobby Type', 
+      'Hobby Type',  // This will always use the enum value (Games, Books, TV/Film, Custom)
       'Hobby Date Started',
       'Item ID',
       'Item Title/Name',
@@ -57,15 +60,18 @@ export class HobbyExportService {
     ];
 
     const rows: string[][] = [headers];
+    console.log('📋 CSV Headers:', headers);
 
     hobbies.forEach(hobby => {
+      console.log(`🎮 Processing hobby: ${hobby.name} (${hobby.type}) with ${hobby.items?.length || 0} items`);
       if (hobby.items && hobby.items.length > 0) {
         hobby.items.forEach(item => {
           const row = this.generateItemRow(hobby, item);
           rows.push(row);
         });
       } else {
-        // Hobby with no items
+        // Hobby with no items - add empty row
+        console.log(`📝 Adding empty row for hobby: ${hobby.name}`);
         rows.push([
           hobby.name,
           hobby.type,
@@ -84,7 +90,11 @@ export class HobbyExportService {
       }
     });
 
-    return this.arrayToCSV(rows);
+    console.log(`✅ Generated CSV with ${rows.length} rows (including header)`);
+    const csvContent = this.arrayToCSV(rows);
+    console.log('📤 First 200 chars of CSV:', csvContent.substring(0, 200));
+    
+    return csvContent;
   }
 
   /**
@@ -415,8 +425,8 @@ export class HobbyExportService {
   static async importFromCSV(): Promise<Hobby[]> {
     return new Promise((resolve, reject) => {
       Alert.prompt(
-        'Import Hobby Data',
-        'Paste your CSV data here:',
+        'Import Data - iOS Limitation',
+        'Due to iOS Alert limitations, paste your CSV data below.\n\nNote: If this fails, try importing smaller sections or contact support for alternative methods.',
         [
           {
             text: 'Cancel',
@@ -424,15 +434,32 @@ export class HobbyExportService {
             onPress: () => reject(new Error('Import cancelled'))
           },
           {
-            text: 'Import',
+            text: 'Try Import',
             onPress: (csvText?: string) => {
               try {
+                console.log('🔍 Import started with text length:', csvText?.length || 0);
+                
                 if (!csvText || csvText.trim() === '') {
-                  throw new Error('No CSV data provided');
+                  throw new Error('No CSV data provided - the text input was empty');
                 }
-                const hobbies = this.parseCSVToHobbies(csvText.trim());
+                
+                const cleanedText = csvText.trim();
+                console.log('📝 Cleaned CSV length:', cleanedText.length);
+                console.log('📝 First 200 characters:', cleanedText.substring(0, 200));
+                console.log('📝 Contains newlines:', cleanedText.includes('\n'));
+                console.log('📝 Contains carriage returns:', cleanedText.includes('\r'));
+                
+                // Check if this looks like a flattened CSV (common iOS issue)
+                if (!cleanedText.includes('\n') && !cleanedText.includes('\r') && cleanedText.length > 300) {
+                  throw new Error('Import failed: iOS Alert.prompt does not handle multi-line CSV properly. The CSV data appears to have been flattened into a single line.\n\nWorkaround options:\n1. Try importing smaller sections (one hobby at a time)\n2. Contact support for alternative import methods\n3. Manually re-enter your data\n\nThis is a known iOS limitation with text input fields.');
+                }
+                
+                const hobbies = this.parseCSVToHobbies(cleanedText);
+                console.log('✅ Parsed hobbies count:', hobbies.length);
                 resolve(hobbies);
               } catch (error) {
+                console.error('❌ Import error details:', error);
+                console.error('❌ Error message:', error instanceof Error ? error.message : 'Unknown error');
                 reject(error);
               }
             }
@@ -447,30 +474,77 @@ export class HobbyExportService {
    * Parse CSV text and convert to hobby objects
    */
   private static parseCSVToHobbies(csvText: string): Hobby[] {
-    const lines = csvText.split('\n').filter(line => line.trim() !== '');
+    console.log('🔄 Starting CSV parse...');
+    console.log('📝 Raw CSV length:', csvText.length);
+    console.log('📝 First 100 chars:', csvText.substring(0, 100));
+    
+    // First try normal line splitting
+    let lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
+    console.log('📄 Normal split - Total lines found:', lines.length);
+    
+    // If we only have 1 line but it's long, it might be a single-line CSV with spaces instead of newlines
+    if (lines.length === 1 && lines[0].length > 200) {
+      console.log('🔧 Detected single-line CSV, attempting to split by header pattern...');
+      
+      // Look for patterns that indicate row boundaries in single-line CSV
+      // Look for the header pattern followed by data patterns
+      const singleLine = lines[0];
+      
+      // Try to find where the header ends and data begins
+      // Pattern: after "Has Thumbnail" should come the first data row
+      const headerEndPattern = /Has Thumbnail\s+/;
+      const match = singleLine.match(headerEndPattern);
+      
+      if (match) {
+        const headerEnd = match.index! + match[0].length;
+        const header = singleLine.substring(0, headerEnd).trim();
+        const dataSection = singleLine.substring(headerEnd).trim();
+        
+        console.log('📋 Extracted header:', header.substring(0, 100));
+        console.log('� Extracted data section:', dataSection.substring(0, 100));
+        
+        // Split data section by hobby type patterns (Books,Books or Games,Games, etc.)
+        const dataRows = this.splitDataSection(dataSection);
+        
+        lines = [header, ...dataRows];
+        console.log('🔧 Reconstructed lines:', lines.length);
+      }
+    }
+    
+    console.log('📄 Final lines:', lines.map((line, i) => `${i}: ${line.substring(0, 50)}...`));
+    
+    if (lines.length < 1) {
+      throw new Error('CSV appears to be empty');
+    }
     
     if (lines.length < 2) {
-      throw new Error('CSV must have at least a header and one data row');
+      throw new Error('CSV must have at least a header and one data row. Found only ' + lines.length + ' line(s). This might be due to iOS Alert.prompt not preserving newlines. Try copying smaller sections of your CSV data.');
     }
 
     const headers = this.parseCSVRow(lines[0]);
+    console.log('📋 Headers found:', headers);
     const hobbyMap = new Map<string, Hobby>();
 
     // Process each data row
     for (let i = 1; i < lines.length; i++) {
+      console.log(`🔍 Processing row ${i + 1}:`, lines[i]);
       const row = this.parseCSVRow(lines[i]);
+      console.log(`📊 Parsed row ${i + 1}:`, row);
       
       if (row.length !== headers.length) {
-        console.warn(`Row ${i + 1} has ${row.length} columns, expected ${headers.length}. Skipping.`);
+        console.warn(`⚠️ Row ${i + 1} has ${row.length} columns, expected ${headers.length}. Skipping.`);
         continue;
       }
 
       try {
         const hobbyData = this.createHobbyFromCSVRow(headers, row);
+        console.log(`🎯 Hobby data for row ${i + 1}:`, hobbyData);
+        
         if (hobbyData) {
           const { hobbyKey, hobby, item } = hobbyData;
           
           if (!hobbyMap.has(hobbyKey)) {
+            console.log(`➕ Adding new hobby: ${hobbyKey}`);
             hobbyMap.set(hobbyKey, hobby);
           }
           
@@ -479,15 +553,19 @@ export class HobbyExportService {
             if (!existingHobby.items) {
               existingHobby.items = [];
             }
+            console.log(`📎 Adding item to ${hobbyKey}:`, item.title || item.name);
             existingHobby.items.push(item);
           }
         }
       } catch (error) {
-        console.warn(`Error processing row ${i + 1}:`, error);
+        console.error(`❌ Error processing row ${i + 1}:`, error);
+        throw new Error(`Failed to process row ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
 
-    return Array.from(hobbyMap.values());
+    const result = Array.from(hobbyMap.values());
+    console.log('✅ Final parsed hobbies:', result.length);
+    return result;
   }
 
   /**
@@ -498,6 +576,11 @@ export class HobbyExportService {
     let current = '';
     let inQuotes = false;
     let i = 0;
+
+    // Handle empty rows
+    if (!row || row.trim() === '') {
+      return [];
+    }
 
     while (i < row.length) {
       const char = row[i];
@@ -525,7 +608,99 @@ export class HobbyExportService {
     
     // Add the last field
     result.push(current.trim());
+    
+    console.log(`🔍 Parsed row into ${result.length} fields:`, result);
     return result;
+  }
+
+  /**
+   * Split a data section that has been flattened into a single line
+   */
+  private static splitDataSection(dataSection: string): string[] {
+    const rows: string[] = [];
+    
+    // Look for hobby patterns from your specific CSV:
+    // Books,Books,2025-09-28T22:59:44.474Z
+    // TV/Film,TV/Film,2025-09-28T22:59:47.840Z  
+    // Video Games,Games,2025-09-28T23:02:29.013Z
+    // Painting,Custom,2025-09-28T23:02:41.768Z
+    
+    // More specific pattern matching known hobby types
+    const patterns = [
+      /Books,Books,\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\./g,
+      /TV\/Film,TV\/Film,\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\./g,
+      /Video Games,Games,\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\./g,
+      /[^,]+,Custom,\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\./g
+    ];
+    
+    const matches: Array<{index: number, match: string}> = [];
+    
+    // Find all pattern matches
+    patterns.forEach(pattern => {
+      let match;
+      while ((match = pattern.exec(dataSection)) !== null) {
+        matches.push({index: match.index, match: match[0]});
+      }
+    });
+    
+    // Sort matches by position
+    matches.sort((a, b) => a.index - b.index);
+    
+    console.log('🔍 Found hobby patterns:', matches.length);
+    
+    if (matches.length === 0) {
+      // Fallback: try to split by common hobby names
+      const hobbyNames = ['Books', 'TV/Film', 'Video Games', 'Games', 'Custom'];
+      for (const name of hobbyNames) {
+        const parts = dataSection.split(name + ',' + name + ',');
+        if (parts.length > 1) {
+          console.log(`🔧 Split by ${name} pattern:`, parts.length);
+          // Reconstruct the rows
+          for (let i = 1; i < parts.length; i++) {
+            rows.push(name + ',' + name + ',' + parts[i].split(' ' + hobbyNames.find(n => parts[i].includes(n + ',' + n + ',')) || '')[0]);
+          }
+          break;
+        }
+      }
+    } else {
+      // Use pattern matches to split
+      let lastIndex = 0;
+      matches.forEach((match, i) => {
+        if (i > 0) {
+          const rowData = dataSection.substring(lastIndex, match.index).trim();
+          if (rowData) rows.push(rowData);
+        }
+        lastIndex = match.index;
+      });
+      
+      // Add the last row
+      const lastRow = dataSection.substring(lastIndex).trim();
+      if (lastRow) rows.push(lastRow);
+    }
+    
+    console.log('🔧 Split data into rows:', rows.length);
+    rows.forEach((row, i) => console.log(`Row ${i}:`, row.substring(0, 100)));
+    
+    return rows;
+  }
+
+  /**
+   * Map display names to HobbyType enum values
+   */
+  private static mapToHobbyType(typeString: string): HobbyType | null {
+    const typeMap: Record<string, HobbyType> = {
+      'Games': HobbyType.GAMES,
+      'Video Games': HobbyType.GAMES,
+      'Gaming': HobbyType.GAMES,
+      'Books': HobbyType.BOOKS,
+      'Reading': HobbyType.BOOKS,
+      'TV/Film': HobbyType.TV_FILM,
+      'Movies': HobbyType.TV_FILM,
+      'Television': HobbyType.TV_FILM,
+      'Custom': HobbyType.CUSTOM
+    };
+    
+    return typeMap[typeString] || null;
   }
 
   /**
@@ -542,10 +717,20 @@ export class HobbyExportService {
     });
 
     const hobbyName = data['Hobby Name'];
-    const hobbyType = data['Hobby Type'] as HobbyType;
+    const rawHobbyType = data['Hobby Type'];
+    const hobbyType = this.mapToHobbyType(rawHobbyType);
     const hobbyDateStarted = data['Hobby Date Started'];
 
+    console.log(`🔍 Processing hobby: name="${hobbyName}", rawType="${rawHobbyType}", mappedType="${hobbyType}"`);
+
+    // Skip completely empty rows
+    if (!hobbyName && !rawHobbyType) {
+      console.log('⏭️ Skipping empty row');
+      return null;
+    }
+
     if (!hobbyName || !hobbyType) {
+      console.warn(`❌ Invalid hobby data: name="${hobbyName}", type="${rawHobbyType}" (mapped to ${hobbyType})`);
       return null;
     }
 
