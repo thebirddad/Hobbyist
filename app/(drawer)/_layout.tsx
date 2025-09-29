@@ -122,17 +122,7 @@ function CustomDrawerContent(props: any) {
               />
             </TouchableOpacity>
             {isGamingExpanded && (
-              <>
-                <DrawerItem
-                  label="Currently Playing"
-                  onPress={() => router.push('/playing')}
-                  icon={({ color, size }) => (
-                    <IconSymbol name="play.circle.fill" size={size} color={color} />
-                  )}
-                  activeTintColor={tintColor}
-                  inactiveTintColor="#666"
-                />
-                
+              <>                
                 <DrawerItem
                   label="Game Library"
                   onPress={() => router.push('/library')}
@@ -210,13 +200,6 @@ export default function DrawerLayout() {
         options={{
           drawerLabel: 'Create Hobby',
           title: 'Create New Hobby',
-        }}
-      />
-      <Drawer.Screen
-        name="playing"
-        options={{
-          drawerLabel: 'Currently Playing',
-          title: 'Currently Playing',
         }}
       />
       <Drawer.Screen

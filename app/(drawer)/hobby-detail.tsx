@@ -91,8 +91,7 @@ export default function HobbyDetailScreen() {
         // Search in platform (games)
         if (item.platform?.toLowerCase().includes(searchLower)) return true;
         
-        // Search in description (custom items)
-        if (item.description?.toLowerCase().includes(searchLower)) return true;
+        // Custom items don't have a description field - their name is already checked above
         
         // Search in tags
         if (item.tags && Array.isArray(item.tags)) {
@@ -126,7 +125,14 @@ export default function HobbyDetailScreen() {
 
   const getFilteredCustomItems = () => {
     const filtered = getFilteredItems();
-    return filtered.filter((item: any) => item.description !== undefined && item.platform === undefined && item.author === undefined && item.director === undefined); // Custom items have description but not type-specific fields
+    return filtered.filter((item: any) => 
+      // Custom items have a 'name' field but not the type-specific fields that other items have
+      item.name !== undefined && 
+      item.platform === undefined && 
+      item.author === undefined && 
+      item.director === undefined &&
+      item.title === undefined  // Custom items use 'name' not 'title'
+    );
   };
 
   const handleDeleteHobby = () => {

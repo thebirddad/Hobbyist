@@ -1,4 +1,5 @@
 import { BookItem, CustomItem, GameItem, Hobby, HobbyType, TvFilmItem } from '@/data/hobby';
+import * as DocumentPicker from 'expo-document-picker';
 import { Alert, Share } from 'react-native';
 
 export interface ExportOptions {
@@ -429,13 +430,61 @@ export class HobbyExportService {
   }
 
   /**
-   * Import CSV data and convert to hobbies
+   * Import CSV data from file upload
+   */
+  static async importFromFile(): Promise<Hobby[]> {
+    try {
+      console.log('📁 Starting file import...');
+      
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['text/csv', 'text/comma-separated-values', 'text/plain'],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled || !result.assets || result.assets.length === 0) {
+        throw new Error('Import cancelled');
+      }
+
+      const file = result.assets[0];
+      console.log('📄 Selected file:', file.name, 'Size:', file.size, 'Type:', file.mimeType);
+
+      if (!file.uri) {
+        throw new Error('File URI not available');
+      }
+
+      // Read the file content using fetch (works with file URIs)
+      const response = await fetch(file.uri);
+      if (!response.ok) {
+        throw new Error(`Failed to read file: ${response.status} ${response.statusText}`);
+      }
+      
+      const csvContent = await response.text();
+      console.log('📥 File content length:', csvContent.length);
+      console.log('📥 First 200 chars:', csvContent.substring(0, 200));
+
+      if (!csvContent || csvContent.trim().length === 0) {
+        throw new Error('File appears to be empty');
+      }
+
+      // Parse the CSV content
+      const hobbies = this.parseCSVToHobbies(csvContent);
+      console.log('✅ Successfully imported from file:', hobbies.length, 'hobbies');
+      
+      return hobbies;
+    } catch (error) {
+      console.error('❌ File import error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Import CSV data and convert to hobbies - gives user choice between file upload and text input
    */
   static async importFromCSV(): Promise<Hobby[]> {
     return new Promise((resolve, reject) => {
-      Alert.prompt(
-        'Import Data - iOS Limitation',
-        'Due to iOS Alert limitations, paste your CSV data below.\n\nNote: If this fails, try importing smaller sections or contact support for alternative methods.',
+      Alert.alert(
+        'Import Hobby Data',
+        'Choose how you want to import your CSV data:',
         [
           {
             text: 'Cancel',
@@ -443,38 +492,65 @@ export class HobbyExportService {
             onPress: () => reject(new Error('Import cancelled'))
           },
           {
-            text: 'Try Import',
-            onPress: (csvText?: string) => {
+            text: 'Upload File',
+            onPress: async () => {
               try {
-                console.log('🔍 Import started with text length:', csvText?.length || 0);
-                
-                if (!csvText || csvText.trim() === '') {
-                  throw new Error('No CSV data provided - the text input was empty');
-                }
-                
-                const cleanedText = csvText.trim();
-                console.log('📝 Cleaned CSV length:', cleanedText.length);
-                console.log('📝 First 200 characters:', cleanedText.substring(0, 200));
-                console.log('📝 Contains newlines:', cleanedText.includes('\n'));
-                console.log('📝 Contains carriage returns:', cleanedText.includes('\r'));
-                
-                // Check if this looks like a flattened CSV (common iOS issue)
-                if (!cleanedText.includes('\n') && !cleanedText.includes('\r') && cleanedText.length > 300) {
-                  throw new Error('Import failed: iOS Alert.prompt does not handle multi-line CSV properly. The CSV data appears to have been flattened into a single line.\n\nWorkaround options:\n1. Try importing smaller sections (one hobby at a time)\n2. Contact support for alternative import methods\n3. Manually re-enter your data\n\nThis is a known iOS limitation with text input fields.');
-                }
-                
-                const hobbies = this.parseCSVToHobbies(cleanedText);
-                console.log('✅ Parsed hobbies count:', hobbies.length);
+                const hobbies = await this.importFromFile();
                 resolve(hobbies);
               } catch (error) {
-                console.error('❌ Import error details:', error);
-                console.error('❌ Error message:', error instanceof Error ? error.message : 'Unknown error');
                 reject(error);
               }
             }
+          },
+          {
+            text: 'Paste Text',
+            onPress: () => {
+              Alert.prompt(
+                'Import Data - Text Input',
+                'Paste your CSV data below.\n\nNote: Due to iOS limitations, this may not work with large files. File upload is recommended.',
+                [
+                  {
+                    text: 'Cancel',
+                    style: 'cancel',
+                    onPress: () => reject(new Error('Import cancelled'))
+                  },
+                  {
+                    text: 'Import',
+                    onPress: (csvText?: string) => {
+                      try {
+                        console.log('🔍 Text import started with length:', csvText?.length || 0);
+                        
+                        if (!csvText || csvText.trim() === '') {
+                          throw new Error('No CSV data provided - the text input was empty');
+                        }
+                        
+                        const cleanedText = csvText.trim();
+                        console.log('📝 Cleaned CSV length:', cleanedText.length);
+                        console.log('📝 First 200 characters:', cleanedText.substring(0, 200));
+                        console.log('📝 Contains newlines:', cleanedText.includes('\n'));
+                        console.log('📝 Contains carriage returns:', cleanedText.includes('\r'));
+                        
+                        // Check if this looks like a flattened CSV (common iOS issue)
+                        if (!cleanedText.includes('\n') && !cleanedText.includes('\r') && cleanedText.length > 300) {
+                          throw new Error('Import failed: iOS Alert.prompt does not handle multi-line CSV properly. The CSV data appears to have been flattened into a single line.\n\nWorkaround options:\n1. Try importing smaller sections (one hobby at a time)\n2. Contact support for alternative import methods\n3. Manually re-enter your data\n\nThis is a known iOS limitation with text input fields.');
+                        }
+                        
+                        const hobbies = this.parseCSVToHobbies(cleanedText);
+                        console.log('✅ Parsed hobbies count:', hobbies.length);
+                        resolve(hobbies);
+                      } catch (error) {
+                        console.error('❌ Import error details:', error);
+                        console.error('❌ Error message:', error instanceof Error ? error.message : 'Unknown error');
+                        reject(error);
+                      }
+                    }
+                  }
+                ],
+                'plain-text'
+              );
+            }
           }
-        ],
-        'plain-text'
+        ]
       );
     });
   }

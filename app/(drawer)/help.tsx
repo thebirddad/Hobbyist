@@ -157,7 +157,7 @@ export default function HelpScreen() {
             >
               <IconSymbol name="square.and.arrow.down" size={24} color={tintColor} />
               <ThemedText style={styles.quickActionTitle}>Import Data</ThemedText>
-              <ThemedText style={styles.quickActionDesc}>Paste CSV text to restore</ThemedText>
+              <ThemedText style={styles.quickActionDesc}>Upload file or paste CSV data</ThemedText>
             </TouchableOpacity>
           </View>
         </View>

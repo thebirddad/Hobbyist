@@ -1,23 +1,104 @@
-import React, { useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { GameAccordion } from '../../components/game-accordion';
 import { GameForm } from '../../components/game-form';
 import { GameStats } from '../../components/game-stats';
 import { Game } from '../../data/game';
-import { useGameStorage } from '../../hooks/use-game-storage';
+import { GameItem, HobbyType } from '../../data/hobby';
+import { useHobbyStorage } from '../../hooks/use-hobby-storage';
 
 export default function HomeScreen() {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
-  const { games, loading, addGame, updateGame, deleteGame } = useGameStorage();
+  const { hobbies, loading, updateItemInHobby, deleteItemFromHobby } = useHobbyStorage();
 
-  const handleAddGame = async (gameData: Parameters<typeof addGame>[0]) => {
-    await addGame(gameData);
+  // Get all games from all Game hobbies
+  const games = useMemo(() => {
+    const gameHobbies = hobbies.filter(hobby => hobby.type === HobbyType.GAMES);
+    const allGames: Game[] = [];
+    
+    gameHobbies.forEach(hobby => {
+      if (hobby.items) {
+        hobby.items.forEach((item: GameItem) => {
+          // Convert GameItem to Game format for compatibility
+          const game: Game & { _hobbyId: string } = {
+            id: item.id,
+            title: item.title,
+            platform: item.platform,
+            status: item.status,
+            timeToBeat: item.timeToBeat,
+            hoursPlayed: item.hoursPlayed,
+            dateAdded: item.dateAdded,
+            dateCompleted: item.dateCompleted,
+            thumbnail: item.thumbnail,
+            tags: item.tags,
+            // Add hobby reference for updates
+            _hobbyId: hobby.id
+          };
+          allGames.push(game);
+        });
+      }
+    });
+    
+    return allGames;
+  }, [hobbies]);
+
+  const handleAddGame = async (gameData: Omit<Game, 'id' | 'dateAdded'>) => {
+    Alert.alert(
+      'Add Game to Hobby',
+      'Games should be added through specific Game hobbies. Please go to your Game hobby and add the game there.',
+      [{ text: 'OK' }]
+    );
   };
 
-  const handleUpdateGame = async (game: Game) => {
-    await updateGame(game.id, game);
+  const handleUpdateGame = async (game: Game & { _hobbyId?: string }) => {
+    if (!game._hobbyId) {
+      Alert.alert('Error', 'Cannot update game: hobby not found');
+      return;
+    }
+    
+    // Convert back to GameItem format
+    const gameItem: GameItem = {
+      id: game.id,
+      title: game.title,
+      platform: game.platform,
+      status: game.status,
+      timeToBeat: game.timeToBeat,
+      hoursPlayed: game.hoursPlayed,
+      dateAdded: game.dateAdded,
+      dateCompleted: game.dateCompleted,
+      thumbnail: game.thumbnail,
+      tags: game.tags,
+    };
+    
+    await updateItemInHobby(game._hobbyId, game.id, gameItem);
+  };
+
+  // Adapter function for GameAccordion interface
+  const handleUpdateGameById = async (gameId: string, updates: Partial<Game>) => {
+    // Find the game in our games array to get the hobbyId
+    const gameWithHobby = games.find(g => g.id === gameId) as Game & { _hobbyId?: string };
+    if (!gameWithHobby || !gameWithHobby._hobbyId) {
+      Alert.alert('Error', 'Cannot update game: hobby not found');
+      return;
+    }
+
+    // Apply updates to the game
+    const updatedGame = { ...gameWithHobby, ...updates };
+    await handleUpdateGame(updatedGame);
+  };
+
+  const deleteGame = async (gameId: string) => {
+    // Find which hobby this game belongs to
+    const gameHobbies = hobbies.filter(hobby => hobby.type === HobbyType.GAMES);
+    for (const hobby of gameHobbies) {
+      if (hobby.items?.some((item: GameItem) => item.id === gameId)) {
+        await deleteItemFromHobby(hobby.id, gameId);
+        return;
+      }
+    }
+    Alert.alert('Error', 'Game not found in any hobby');
   };
 
   const handleEditGame = (game: Game) => {
@@ -44,7 +125,7 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Game Library</Text>
         <Text style={styles.subtitle}>
-          {games.length} game{games.length !== 1 ? 's' : ''} tracked
+          {games.length} game{games.length !== 1 ? 's' : ''} from your Game hobbies
         </Text>
       </View>
 
@@ -54,7 +135,7 @@ export default function HomeScreen() {
         <GameAccordion
           games={games}
           onDeleteGame={deleteGame}
-          onUpdateGame={updateGame}
+          onUpdateGame={handleUpdateGameById}
           onEditGame={handleEditGame}
           defaultExpanded="playing"
         />
@@ -62,19 +143,30 @@ export default function HomeScreen() {
 
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => setIsFormVisible(true)}
+        onPress={() => {
+          Alert.alert(
+            'Add Game',
+            'To add a new game, please go to a Game hobby and add it there.\n\nYou can create a new Game hobby or add to an existing one.',
+            [
+              { text: 'OK' }
+            ]
+          );
+        }}
         activeOpacity={0.8}
       >
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
 
-      <GameForm
-        visible={isFormVisible}
-        onClose={handleCloseForm}
-        onGameAdded={editingGame ? undefined : handleAddGame}
-        onGameUpdated={editingGame ? handleUpdateGame : undefined}
-        initialGame={editingGame || undefined}
-      />
+      {/* Game editing is handled through hobby detail pages now */}
+      {isFormVisible && (
+        <GameForm
+          visible={isFormVisible}
+          onClose={handleCloseForm}
+          onGameAdded={editingGame ? undefined : handleAddGame}
+          onGameUpdated={editingGame ? handleUpdateGame : undefined}
+          initialGame={editingGame || undefined}
+        />
+      )}
     </View>
   );
 }

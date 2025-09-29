@@ -1,15 +1,70 @@
 ﻿import { useActivityTracking } from '@/hooks/use-activity-tracking';
 import { useCompletionStats } from '@/hooks/use-completion-stats';
 import { useInstallationDate } from '@/hooks/use-installation-date';
-import React from 'react';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useTagStats } from '@/hooks/use-tag-stats';
+import React, { useState } from 'react';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function HomePage() {
   const { getMostRecentActivity, formatActivityMessage, loading: activityLoading } = useActivityTracking();
   const { stats } = useCompletionStats();
   const { formattedInstallationDate, loading: installationLoading } = useInstallationDate();
+  const { getTopTags } = useTagStats();
   
   const recentActivity = getMostRecentActivity();
+  const topTags = getTopTags(5);
+  
+  // State for collapsible sections
+  const [isRecentActivityExpanded, setIsRecentActivityExpanded] = useState(true);
+  const [isVibesExpanded, setIsVibesExpanded] = useState(true);
+  const [isProgressExpanded, setIsProgressExpanded] = useState(true);
+
+  const getTagEmoji = (tag: string): string => {
+    const tagLower = tag.toLowerCase();
+    
+    // Gaming related
+    if (tagLower.includes('game') || tagLower.includes('gaming')) return '🎮';
+    if (tagLower.includes('pc') || tagLower.includes('computer')) return '💻';
+    if (tagLower.includes('playstation') || tagLower.includes('ps')) return '🎮';
+    if (tagLower.includes('xbox')) return '🎮';
+    if (tagLower.includes('nintendo') || tagLower.includes('switch')) return '🎮';
+    if (tagLower.includes('horror')) return '👻';
+    if (tagLower.includes('adventure')) return '🗺️';
+    if (tagLower.includes('rpg') || tagLower.includes('role')) return '⚔️';
+    if (tagLower.includes('action')) return '💥';
+    if (tagLower.includes('strategy')) return '🧠';
+    
+    // Books/Reading
+    if (tagLower.includes('book') || tagLower.includes('reading')) return '📚';
+    if (tagLower.includes('fantasy')) return '🐉';
+    if (tagLower.includes('sci-fi') || tagLower.includes('science')) return '🚀';
+    if (tagLower.includes('mystery')) return '🔍';
+    if (tagLower.includes('romance')) return '💕';
+    if (tagLower.includes('thriller')) return '😱';
+    
+    // TV/Film
+    if (tagLower.includes('film') || tagLower.includes('movie')) return '🎬';
+    if (tagLower.includes('tv') || tagLower.includes('show')) return '📺';
+    if (tagLower.includes('drama')) return '🎭';
+    if (tagLower.includes('comedy')) return '😂';
+    if (tagLower.includes('documentary')) return '🎥';
+    if (tagLower.includes('anime')) return '🎌';
+    
+    // Art/Creative
+    if (tagLower.includes('art') || tagLower.includes('painting')) return '🎨';
+    if (tagLower.includes('drawing')) return '✏️';
+    if (tagLower.includes('music')) return '🎵';
+    if (tagLower.includes('creative')) return '✨';
+    
+    // General categories
+    if (tagLower.includes('favorite') || tagLower.includes('favourite')) return '⭐';
+    if (tagLower.includes('completed')) return '✅';
+    if (tagLower.includes('collection')) return '📦';
+    if (tagLower.includes('retro') || tagLower.includes('classic')) return '🕹️';
+    
+    // Default emoji for unmatched tags
+    return '🏷️';
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
@@ -29,54 +84,118 @@ export default function HomePage() {
       </View>
       
       {/* Recent Activity Section */}
+            {/* Recent Activity */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Recent Activity</Text>
-        <View style={styles.activityContainer}>
-          {!activityLoading && recentActivity ? (
-            <Text style={styles.activityText}>
-              {formatActivityMessage(recentActivity)}
-            </Text>
-          ) : (
-            <Text style={styles.noActivityText}>
-              No recent activity. Start adding items to your hobbies!
-            </Text>
-          )}
-        </View>
+        <TouchableOpacity
+          onPress={() => setIsRecentActivityExpanded(!isRecentActivityExpanded)}
+          style={styles.sectionHeader}
+        >
+          <Text style={styles.sectionTitle}>Recent Activity</Text>
+          <Text style={styles.expandIcon}>
+            {isRecentActivityExpanded ? '−' : '+'}
+          </Text>
+        </TouchableOpacity>
+        {isRecentActivityExpanded && (
+          <View style={styles.activityContainer}>
+            {activityLoading ? (
+              <Text style={styles.activityText}>Loading...</Text>
+            ) : recentActivity ? (
+              <Text style={styles.activityText}>
+                {formatActivityMessage(recentActivity)}
+              </Text>
+            ) : (
+              <Text style={styles.activityText}>No recent activity</Text>
+            )}
+          </View>
+        )}
+      </View>
+
+      {/* Vibes Section */}
+      <View style={styles.section}>
+        <TouchableOpacity
+          onPress={() => setIsVibesExpanded(!isVibesExpanded)}
+          style={styles.sectionHeader}
+        >
+          <View style={styles.sectionTitleContainer}>
+            <Text style={styles.sectionTitle}>Vibes</Text>
+            <Text style={styles.sectionSubtitle}>Here are your most popular tags</Text>
+          </View>
+          <Text style={styles.expandIcon}>
+            {isVibesExpanded ? '−' : '+'}
+          </Text>
+        </TouchableOpacity>
+        
+        {isVibesExpanded && (
+          <View style={styles.vibesContainer}>
+            {topTags.length > 0 ? (
+              topTags.map((tagStat, index) => (
+                <View key={tagStat.tag} style={styles.vibeItem}>
+                  <View style={styles.vibeRank}>
+                    <Text style={styles.vibeRankText}>#{index + 1}</Text>
+                  </View>
+                  <View style={styles.vibeContent}>
+                    <Text style={styles.vibeTag}>
+                      {getTagEmoji(tagStat.tag)} {tagStat.tag}
+                    </Text>
+                    <Text style={styles.vibeCount}>
+                      {tagStat.count} item{tagStat.count !== 1 ? 's' : ''}
+                    </Text>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.noVibesText}>
+                No tags found yet. Add tags to your items to see your vibes!
+              </Text>
+            )}
+          </View>
+        )}
       </View>
 
       {/* Completion Stats Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Your Progress</Text>
-        <View style={styles.statsGrid}>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{stats.gamesCompleted}</Text>
-            <Text style={styles.statLabel}>Games Completed</Text>
+        <TouchableOpacity
+          onPress={() => setIsProgressExpanded(!isProgressExpanded)}
+          style={styles.sectionHeader}
+        >
+          <Text style={styles.sectionTitle}>Your Progress</Text>
+          <Text style={styles.expandIcon}>
+            {isProgressExpanded ? '−' : '+'}
+          </Text>
+        </TouchableOpacity>
+        
+        {isProgressExpanded && (
+          <View style={styles.statsGrid}>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{stats.gamesCompleted}</Text>
+              <Text style={styles.statLabel}>Games Completed</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{stats.booksRead}</Text>
+              <Text style={styles.statLabel}>Books Read</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{stats.moviesWatched}</Text>
+              <Text style={styles.statLabel}>TV/Film Watched</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{stats.gamesInProgress}</Text>
+              <Text style={styles.statLabel}>Games In Progress</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{stats.booksInProgress}</Text>
+              <Text style={styles.statLabel}>Books In Progress</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{stats.showsInProgress}</Text>
+              <Text style={styles.statLabel}>Shows In Progress</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{stats.totalHobbies}</Text>
+              <Text style={styles.statLabel}>Total Hobbies</Text>
+            </View>
           </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{stats.booksRead}</Text>
-            <Text style={styles.statLabel}>Books Read</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{stats.moviesWatched}</Text>
-            <Text style={styles.statLabel}>TV/Film Watched</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{stats.gamesInProgress}</Text>
-            <Text style={styles.statLabel}>Games In Progress</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{stats.booksInProgress}</Text>
-            <Text style={styles.statLabel}>Books In Progress</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{stats.showsInProgress}</Text>
-            <Text style={styles.statLabel}>Shows In Progress</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{stats.totalHobbies}</Text>
-            <Text style={styles.statLabel}>Total Hobbies</Text>
-          </View>
-        </View>
+        )}
       </View>
 
     </ScrollView>
@@ -192,5 +311,81 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     fontWeight: '500',
+  },
+  sectionSubtitle: {
+    fontSize: 16,
+    color: '#888',
+    marginBottom: 15,
+    fontStyle: 'italic',
+  },
+  vibesContainer: {
+    gap: 12,
+  },
+  vibeItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 15,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4a90e2',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  vibeRank: {
+    backgroundColor: '#4a90e2',
+    borderRadius: 15,
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  vibeRankText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  vibeContent: {
+    flex: 1,
+  },
+  vibeTag: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 2,
+  },
+  vibeCount: {
+    fontSize: 14,
+    color: '#666',
+  },
+  noVibesText: {
+    fontSize: 16,
+    color: '#999',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    paddingVertical: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  sectionTitleContainer: {
+    flex: 1,
+  },
+  expandIcon: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#4a90e2',
+    width: 30,
+    textAlign: 'center',
   },
 });
