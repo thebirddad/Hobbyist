@@ -11,14 +11,16 @@ This app uses SerpApi to provide real Google Images search results for selecting
 - Copy your API key
 
 ### 2. Add Your Key
-Open `components/image-search-modal.tsx` and replace:
+Open `config/serpapi.ts` and replace:
 ```typescript
-const SERPAPI_KEY = 'ec01683685b82e0e8f0846e42bf32786b91f8f5fed82677af6a20d7873e34a99';
+API_KEY: 'YOUR_SERPAPI_KEY',
 ```
 With:
 ```typescript
-const SERPAPI_KEY = 'your_actual_api_key_here';
+API_KEY: 'your_actual_api_key_here',
 ```
+
+**Note:** The `config/` directory is in `.gitignore` to keep your API key secure and prevent it from being committed to version control.
 
 ### 3. That's It! 🎉
 You'll now get real Google Images results instead of demo images.
