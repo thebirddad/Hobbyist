@@ -31,6 +31,8 @@ export default function HobbyDetailScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date()); // Always start with valid current date
   const [searchText, setSearchText] = useState('');
+  const [isGameExpanded, setIsGameExpanded] = useState(true);
+  
   const router = useRouter();
 
   useEffect(() => {
