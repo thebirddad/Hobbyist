@@ -34,7 +34,7 @@ yarn-error.*
 .env*.local
 
 # config files with API keys
-config/
+config/serpapi.ts
 
 # typescript
 *.tsbuildinfo
