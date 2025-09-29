@@ -2,6 +2,9 @@ import React from 'react';
 import { Alert, Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import ClearDataButton from '@/components/clear-data-button';
+import ExportButton from '@/components/export-button';
+import ImportButton from '@/components/import-button';
 
 import { ThemedText } from '@/components/themed-text';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -55,8 +58,6 @@ export default function HelpScreen() {
           <ThemedText style={styles.title}>Help & Support</ThemedText>
           <ThemedText style={styles.subtitle}>We're here to help you succeed</ThemedText>
         </View>
-
-        
         <View style={styles.section}>
           <ThemedText style={styles.sectionTitle}>Handle Your Data</ThemedText>
           <ThemedText style={styles.description}>
@@ -68,7 +69,6 @@ export default function HelpScreen() {
             <ClearDataButton />
           </View>
         </View>
-        
         <View style={styles.section}>
           <ThemedText style={styles.sectionTitle}>Get in Touch</ThemedText>
           <ThemedText style={styles.description}>
@@ -92,6 +92,8 @@ export default function HelpScreen() {
           </View>
           <IconSymbol name="chevron.right" size={16} color={tintColor} />
         </TouchableOpacity>
+
+        
 
         <View style={styles.supportInfo}>
           <View style={styles.infoItem}>
