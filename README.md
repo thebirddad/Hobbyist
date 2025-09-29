@@ -1,50 +1,66 @@
-# Welcome to your Expo app 👋
+# Hobbyist - Your Personal Hobby Tracker �
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A comprehensive hobby tracking application built with [Expo](https://expo.dev) and React Native, designed to help you organize and monitor your progress across various hobbies and interests.
 
-## Get started
+## Overview
 
-1. Install dependencies
+Hobbyist is a powerful yet intuitive mobile application that serves as your personal companion for tracking hobby progress. Whether you're a gamer, bookworm, movie enthusiast, or have unique interests, Hobbyist provides the tools you need to stay organized and motivated.
 
-   ```bash
-   npm install
-   ```
+## Features
 
-2. Start the app
+### 🎮 **Game Tracking**
+- Track games across multiple platforms (PC, PlayStation, Xbox, Nintendo Switch)
+- Monitor completion status, hours played, and time to beat
+- Add custom thumbnails and tags for better organization
 
-   ```bash
-   npx expo start
-   ```
+### 📚 **Book Management**
+- Track reading progress with page counts and completion status
+- Organize by author, genre, and personal ratings
+- Monitor your reading goals and achievements
 
-In the output, you'll find options to open the app in a
+### 🎬 **TV & Film Tracking**
+- Keep track of movies and TV shows you want to watch or have completed
+- Rate and review your entertainment experiences
+- Track series progress and seasons
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### 🏷️ **Smart Organization**
+- Custom tagging system for all items
+- Advanced filtering and search capabilities
+- Visual progress analytics and insights
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 📊 **Progress Analytics**
+- Comprehensive statistics dashboard
+- Track completion rates across different hobby types
+- Visual insights into your hobby engagement patterns
 
-## Get a fresh project
+### 🎨 **Customization**
+- Create custom hobby categories beyond the built-in templates
+- Personalized item thumbnails with image search integration
+- Flexible data export and import functionality
 
-When you're ready, run:
+## Technical Stack
 
-```bash
-npm run reset-project
-```
+- **Framework**: Expo & React Native
+- **Language**: TypeScript
+- **Navigation**: Expo Router
+- **Storage**: AsyncStorage with custom hooks
+- **UI**: Native components with custom theming
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Development Status
 
-## Learn more
+This application is actively maintained and continuously improved based on user feedback and emerging requirements.
 
-To learn more about developing your project with Expo, look at the following resources:
+## Support & Contact
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+For technical support, feature requests, or general inquiries:
 
-## Join the community
+- **Primary Contact**: danielnelsondev@gmail.com  
+- **Support Email**: hobbyistappdevelopment@gmail.com
 
-Join our community of developers creating universal apps.
+## Getting Started
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Start the development server: `npx expo start`
+4. Scan the QR code with Expo Go or run on your preferred simulator
+
