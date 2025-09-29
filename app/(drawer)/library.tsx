@@ -1,11 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { GameAccordion } from '../../components/game-accordion';
-import { GameForm } from '../../components/game-form';
+import { GameForm } from '../../components/forms/game-form';
 import { GameStats } from '../../components/game-stats';
-import { Game } from '../../data/game';
-import { GameItem, HobbyType } from '../../data/hobby';
+import { Game, HobbyType } from '../../data/hobby';
 import { useHobbyStorage } from '../../hooks/use-hobby-storage';
 
 export default function HomeScreen() {
@@ -20,7 +18,7 @@ export default function HomeScreen() {
     
     gameHobbies.forEach(hobby => {
       if (hobby.items) {
-        hobby.items.forEach((item: GameItem) => {
+        hobby.items.forEach((item: Game) => {
           // Convert GameItem to Game format for compatibility
           const game: Game & { _hobbyId: string } = {
             id: item.id,
@@ -59,7 +57,7 @@ export default function HomeScreen() {
     }
     
     // Convert back to GameItem format
-    const gameItem: GameItem = {
+    const gameItem: Game = {
       id: game.id,
       title: game.title,
       platform: game.platform,
@@ -93,7 +91,7 @@ export default function HomeScreen() {
     // Find which hobby this game belongs to
     const gameHobbies = hobbies.filter(hobby => hobby.type === HobbyType.GAMES);
     for (const hobby of gameHobbies) {
-      if (hobby.items?.some((item: GameItem) => item.id === gameId)) {
+      if (hobby.items?.some((item: Game) => item.id === gameId)) {
         await deleteItemFromHobby(hobby.id, gameId);
         return;
       }
@@ -131,14 +129,7 @@ export default function HomeScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <GameStats games={games} />
-        
-        <GameAccordion
-          games={games}
-          onDeleteGame={deleteGame}
-          onUpdateGame={handleUpdateGameById}
-          onEditGame={handleEditGame}
-          defaultExpanded="playing"
-        />
+    
       </ScrollView>
 
       <TouchableOpacity

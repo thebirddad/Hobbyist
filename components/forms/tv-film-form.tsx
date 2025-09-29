@@ -3,16 +3,16 @@ import { TagInput } from '@/components/tag-input';
 import { TvFilmItem, TvFilmStatus } from '@/data/hobby';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface TvFilmFormProps {
@@ -266,7 +266,7 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
                   setTags(['Film', ...filteredTags]);
                 }}
                 placeholder="Add tag (e.g., Action, Comedy)..."
-                maxTags={5}
+                maxTags={10}
                 protectedTags={['Film']}
               />
             </View>

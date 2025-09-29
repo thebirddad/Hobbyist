@@ -19,53 +19,6 @@ export default function HomePage() {
   const [isVibesExpanded, setIsVibesExpanded] = useState(true);
   const [isProgressExpanded, setIsProgressExpanded] = useState(true);
 
-  const getTagEmoji = (tag: string): string => {
-    const tagLower = tag.toLowerCase();
-    
-    // Gaming related
-    if (tagLower.includes('game') || tagLower.includes('gaming')) return '🎮';
-    if (tagLower.includes('pc') || tagLower.includes('computer')) return '💻';
-    if (tagLower.includes('playstation') || tagLower.includes('ps')) return '🎮';
-    if (tagLower.includes('xbox')) return '🎮';
-    if (tagLower.includes('nintendo') || tagLower.includes('switch')) return '🎮';
-    if (tagLower.includes('horror')) return '👻';
-    if (tagLower.includes('adventure')) return '🗺️';
-    if (tagLower.includes('rpg') || tagLower.includes('role')) return '⚔️';
-    if (tagLower.includes('action')) return '💥';
-    if (tagLower.includes('strategy')) return '🧠';
-    
-    // Books/Reading
-    if (tagLower.includes('book') || tagLower.includes('reading')) return '📚';
-    if (tagLower.includes('fantasy')) return '🐉';
-    if (tagLower.includes('sci-fi') || tagLower.includes('science')) return '🚀';
-    if (tagLower.includes('mystery')) return '🔍';
-    if (tagLower.includes('romance')) return '💕';
-    if (tagLower.includes('thriller')) return '😱';
-    
-    // TV/Film
-    if (tagLower.includes('film') || tagLower.includes('movie')) return '🎬';
-    if (tagLower.includes('tv') || tagLower.includes('show')) return '📺';
-    if (tagLower.includes('drama')) return '🎭';
-    if (tagLower.includes('comedy')) return '😂';
-    if (tagLower.includes('documentary')) return '🎥';
-    if (tagLower.includes('anime')) return '🎌';
-    
-    // Art/Creative
-    if (tagLower.includes('art') || tagLower.includes('painting')) return '🎨';
-    if (tagLower.includes('drawing')) return '✏️';
-    if (tagLower.includes('music')) return '🎵';
-    if (tagLower.includes('creative')) return '✨';
-    
-    // General categories
-    if (tagLower.includes('favorite') || tagLower.includes('favourite')) return '⭐';
-    if (tagLower.includes('completed')) return '✅';
-    if (tagLower.includes('collection')) return '📦';
-    if (tagLower.includes('retro') || tagLower.includes('classic')) return '🕹️';
-    
-    // Default emoji for unmatched tags
-    return '🏷️';
-  };
-
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
               <View style={styles.drawerHeader}>
@@ -105,48 +58,6 @@ export default function HomePage() {
               </Text>
             ) : (
               <Text style={styles.activityText}>No recent activity</Text>
-            )}
-          </View>
-        )}
-      </View>
-
-      {/* Vibes Section */}
-      <View style={styles.section}>
-        <TouchableOpacity
-          onPress={() => setIsVibesExpanded(!isVibesExpanded)}
-          style={styles.sectionHeader}
-        >
-          <View style={styles.sectionTitleContainer}>
-            <Text style={styles.sectionTitle}>Vibes</Text>
-            <Text style={styles.sectionSubtitle}>Here are your most popular tags</Text>
-          </View>
-          <Text style={styles.expandIcon}>
-            {isVibesExpanded ? '−' : '+'}
-          </Text>
-        </TouchableOpacity>
-        
-        {isVibesExpanded && (
-          <View style={styles.vibesContainer}>
-            {topTags.length > 0 ? (
-              topTags.map((tagStat, index) => (
-                <View key={tagStat.tag} style={styles.vibeItem}>
-                  <View style={styles.vibeRank}>
-                    <Text style={styles.vibeRankText}>#{index + 1}</Text>
-                  </View>
-                  <View style={styles.vibeContent}>
-                    <Text style={styles.vibeTag}>
-                      {getTagEmoji(tagStat.tag)} {tagStat.tag}
-                    </Text>
-                    <Text style={styles.vibeCount}>
-                      {tagStat.count} item{tagStat.count !== 1 ? 's' : ''}
-                    </Text>
-                  </View>
-                </View>
-              ))
-            ) : (
-              <Text style={styles.noVibesText}>
-                No tags found yet. Add tags to your items to see your vibes!
-              </Text>
             )}
           </View>
         )}
@@ -194,6 +105,48 @@ export default function HomePage() {
               <Text style={styles.statNumber}>{stats.totalHobbies}</Text>
               <Text style={styles.statLabel}>Total Hobbies</Text>
             </View>
+          </View>
+        )}
+      </View>
+
+      {/* Vibes Section */}
+      <View style={styles.section}>
+        <TouchableOpacity
+          onPress={() => setIsVibesExpanded(!isVibesExpanded)}
+          style={styles.sectionHeader}
+        >
+          <View style={styles.sectionTitleContainer}>
+            <Text style={styles.sectionTitle}>Vibes</Text>
+            <Text style={styles.sectionSubtitle}>Here are your most popular tags</Text>
+          </View>
+          <Text style={styles.expandIcon}>
+            {isVibesExpanded ? '−' : '+'}
+          </Text>
+        </TouchableOpacity>
+        
+        {isVibesExpanded && (
+          <View style={styles.vibesContainer}>
+            {topTags.length > 0 ? (
+              topTags.map((tagStat, index) => (
+                <View key={tagStat.tag} style={styles.vibeItem}>
+                  <View style={styles.vibeRank}>
+                    <Text style={styles.vibeRankText}>#{index + 1}</Text>
+                  </View>
+                  <View style={styles.vibeContent}>
+                    <Text style={styles.vibeTag}>
+                     {tagStat.tag}
+                    </Text>
+                    <Text style={styles.vibeCount}>
+                      {tagStat.count} item{tagStat.count !== 1 ? 's' : ''}
+                    </Text>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.noVibesText}>
+                No tags found yet. Add tags to your items to see your vibes!
+              </Text>
+            )}
           </View>
         )}
       </View>
@@ -301,7 +254,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   statNumber: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#4a90e2',
     marginBottom: 5,
@@ -313,20 +266,20 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   sectionSubtitle: {
-    fontSize: 16,
+    fontSize: 12,
     color: '#888',
-    marginBottom: 15,
+    marginBottom: 8,
     fontStyle: 'italic',
   },
   vibesContainer: {
-    gap: 12,
+    gap: 6,
   },
   vibeItem: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f8f9fa',
-    borderRadius: 12,
-    padding: 15,
+    borderRadius: 8,
+    padding: 10,
     borderLeftWidth: 4,
     borderLeftColor: '#4a90e2',
     shadowColor: '#000',
@@ -341,8 +294,8 @@ const styles = StyleSheet.create({
   vibeRank: {
     backgroundColor: '#4a90e2',
     borderRadius: 15,
-    width: 30,
-    height: 30,
+    width: 25,
+    height: 25,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,

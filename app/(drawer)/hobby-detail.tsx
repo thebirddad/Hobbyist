@@ -1,14 +1,12 @@
-import { BookForm } from '@/components/book-form';
-import { CustomForm } from '@/components/custom-form';
-import { GameForm } from '@/components/game-form';
-import { GameList } from '@/components/game-list';
+import { BookForm } from '@/components/forms/book-form';
+import { CustomForm } from '@/components/forms/custom-form';
+import { GameForm } from '@/components/forms/game-form';
+import { TvFilmForm } from '@/components/forms/tv-film-form';
 import { TagFilterModal } from '@/components/tag-filter-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { TvFilmForm } from '@/components/tv-film-form';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Game } from '@/data/game';
-import { Hobby, HobbyType } from '@/data/hobby';
+import { BookItem, CustomItem, Game, Hobby, HobbyType, TvFilmItem } from '@/data/hobby';
 import { useHobbyStorage } from '@/hooks/use-hobby-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -16,7 +14,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Image, Keyboard, Modal, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 
 export default function HobbyDetailScreen() {
-  const { hobbyId, hobbyName } = useLocalSearchParams<{ hobbyId: string; hobbyName: string }>();
+  const { hobbyId } = useLocalSearchParams<{ hobbyId: string; hobbyName: string }>();
   const { hobbies, deleteHobby, updateHobby, addItemToHobby, updateItemInHobby, deleteItemFromHobby } = useHobbyStorage();
   const [hobby, setHobby] = useState<Hobby | null>(null);
   const [showAddItemModal, setShowAddItemModal] = useState(false);
@@ -31,6 +29,7 @@ export default function HobbyDetailScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date()); // Always start with valid current date
   const [searchText, setSearchText] = useState('');
+
   const router = useRouter();
 
   useEffect(() => {
@@ -64,7 +63,7 @@ export default function HobbyDetailScreen() {
   // Filter items based on selected tags and search text
   const getFilteredItems = () => {
     if (!hobby) return [];
-    
+
     return hobby.items.filter((item: any) => {
       // Apply tag filter
       if (selectedFilterTags.length > 0) {
@@ -73,36 +72,36 @@ export default function HobbyDetailScreen() {
           return false;
         }
       }
-      
+
       // Apply search filter
       if (searchText.trim()) {
         const searchLower = searchText.toLowerCase().trim();
-        
+
         // Search in title/name
         if (item.title?.toLowerCase().includes(searchLower)) return true;
         if (item.name?.toLowerCase().includes(searchLower)) return true;
-        
+
         // Search in author (books)
         if (item.author?.toLowerCase().includes(searchLower)) return true;
-        
+
         // Search in director (TV/Film)
         if (item.director?.toLowerCase().includes(searchLower)) return true;
-        
+
         // Search in platform (games)
         if (item.platform?.toLowerCase().includes(searchLower)) return true;
-        
+
         // Custom items don't have a description field - their name is already checked above
-        
+
         // Search in tags
         if (item.tags && Array.isArray(item.tags)) {
           if (item.tags.some((tag: string) => tag.toLowerCase().includes(searchLower))) {
             return true;
           }
         }
-        
+
         return false;
       }
-      
+
       return true; // Show item if no filters applied
     });
   };
@@ -120,16 +119,16 @@ export default function HobbyDetailScreen() {
 
   const getFilteredTvFilmItems = () => {
     const filtered = getFilteredItems();
-    return filtered.filter((item: any) => item.director !== undefined); // TV/Films have director property
+    return filtered.filter((item: any) => item.title !== undefined); // TV/Films have director property
   };
 
   const getFilteredCustomItems = () => {
     const filtered = getFilteredItems();
-    return filtered.filter((item: any) => 
+    return filtered.filter((item: any) =>
       // Custom items have a 'name' field but not the type-specific fields that other items have
-      item.name !== undefined && 
-      item.platform === undefined && 
-      item.author === undefined && 
+      item.name !== undefined &&
+      item.platform === undefined &&
+      item.author === undefined &&
       item.director === undefined &&
       item.title === undefined  // Custom items use 'name' not 'title'
     );
@@ -158,7 +157,7 @@ export default function HobbyDetailScreen() {
   const handleEditHobby = () => {
     if (hobby) {
       setEditHobbyName(hobby.name);
-      
+
       // Try to parse the existing date, fallback to current date if invalid
       let date = new Date(hobby.dateStarted);
       if (isNaN(date.getTime())) {
@@ -166,7 +165,7 @@ export default function HobbyDetailScreen() {
         date = new Date();
         console.log('Invalid date found, using current date as fallback');
       }
-      
+
       setSelectedDate(date);
       setEditHobbyDate(date.toLocaleDateString());
       setShowEditHobbyModal(true);
@@ -175,22 +174,22 @@ export default function HobbyDetailScreen() {
 
   const handleSaveHobbyEdits = async () => {
     if (!hobby || !hobbyId) return;
-    
+
     const trimmedName = editHobbyName.trim();
     if (!trimmedName) {
       Alert.alert('Error', 'Hobby name cannot be empty.');
       return;
     }
-    
+
     try {
       await updateHobby(hobbyId, {
         name: trimmedName,
         dateStarted: selectedDate.toISOString().split('T')[0] // Save as YYYY-MM-DD format
       });
-      
+
       setShowEditHobbyModal(false);
       setRefreshKey(prev => prev + 1);
-      
+
       Alert.alert('Success', 'Hobby updated successfully!');
     } catch (error) {
       console.error('Error updating hobby:', error);
@@ -198,28 +197,11 @@ export default function HobbyDetailScreen() {
     }
   };
 
-  const formatDateForInput = (dateString: string) => {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      // If invalid date, return current date in YYYY-MM-DD format
-      return new Date().toISOString().split('T')[0];
-    }
-    return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD format
-  };
-
-  const formatDateFromInput = (dateString: string) => {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      return 'Invalid Date';
-    }
-    return date.toLocaleDateString();
-  };
-
   const handleDateChange = (event: any, date?: Date) => {
     if (Platform.OS === 'android') {
       setShowDatePicker(false);
     }
-    
+
     if (date && event.type !== 'dismissed') {
       setSelectedDate(date);
       setEditHobbyDate(date.toLocaleDateString());
@@ -231,8 +213,7 @@ export default function HobbyDetailScreen() {
     setShowDatePicker(true);
   };
 
-  // Test function to manually trigger tag filter
-  const testTagFilter = () => {
+  const handleTagFilter = () => {
     console.log('🏷️ Manual test - opening tag filter');
     setShowTagFilter(true);
   };
@@ -253,6 +234,45 @@ export default function HobbyDetailScreen() {
   const handleEditItem = (item: any) => {
     setEditingItem(item);
     setShowEditItemModal(true);
+  };
+
+  const handleToggleCollapse = async (itemId: string) => {
+    if (!hobbyId || !hobby) return;
+    try {
+      if (hobby.type === HobbyType.GAMES) {
+        const gameToUpdate = hobby.items.find((item: Game) => item.id === itemId) as Game;
+        if (!gameToUpdate) return;
+        await updateItemInHobby(hobbyId, itemId, {
+          ...gameToUpdate,
+          collapsed: !gameToUpdate.collapsed
+        });
+      } else if (hobby.type === HobbyType.BOOKS) {
+        const bookToUpdate = hobby.items.find((item: BookItem) => item.id === itemId) as BookItem;
+        if (!bookToUpdate) return;
+        await updateItemInHobby(hobbyId, itemId, {
+          ...bookToUpdate,
+          collapsed: !bookToUpdate.collapsed
+        });
+      } else if (hobby.type === HobbyType.TV_FILM) {
+        const tvFilmToUpdate = hobby.items.find((item: TvFilmItem) => item.id === itemId) as TvFilmItem;
+        if (!tvFilmToUpdate) return;
+        await updateItemInHobby(hobbyId, itemId, {
+          ...tvFilmToUpdate,
+          collapsed: !tvFilmToUpdate.collapsed
+        });
+      } else if (hobby.type === HobbyType.CUSTOM) {
+        const customToUpdate = hobby.items.find((item: CustomItem) => item.id === itemId) as CustomItem;
+        if (!customToUpdate) return;
+        await updateItemInHobby(hobbyId, itemId, {
+          ...customToUpdate,
+          collapsed: !customToUpdate.collapsed
+        });
+      }
+      setRefreshKey(prev => prev + 1);
+
+    } catch (error) {
+      console.error('Error toggling collapse state:', error);
+    }
   };
 
   const handleUpdateItem = async (itemData: any) => {
@@ -315,7 +335,7 @@ export default function HobbyDetailScreen() {
             {hobby.name}
           </ThemedText>
           <View style={styles.hobbyActions}>
-            <TouchableOpacity onPress={testTagFilter} style={styles.editHobbyButton}>
+            <TouchableOpacity onPress={handleTagFilter} style={styles.editHobbyButton}>
               <IconSymbol name="tag" size={18} color="#00AA00" />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleEditHobby} style={styles.editHobbyButton}>
@@ -326,7 +346,7 @@ export default function HobbyDetailScreen() {
             </TouchableOpacity>
           </View>
         </View>
-        
+
         <ThemedText style={styles.hobbyInfo}>
           Hobby Started: {formatDate(hobby.dateStarted)}
         </ThemedText>
@@ -334,7 +354,7 @@ export default function HobbyDetailScreen() {
         <ThemedText style={styles.itemCount}>
           {hobby.items.length} items {getFilteredItems().length !== hobby.items.length && `(${getFilteredItems().length} shown)`}
         </ThemedText>
-        
+
         {/* Search Input */}
         <View style={styles.searchContainer}>
           <IconSymbol name="magnifyingglass" size={16} color="#999" style={styles.searchIcon} />
@@ -354,11 +374,11 @@ export default function HobbyDetailScreen() {
         </View>
 
         {hobby.type === HobbyType.GAMES && (
-          <View style={styles.gameSection}>
+          <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionTitleContainer}>
                 <ThemedText type="subtitle" style={styles.sectionTitle}>
-                  Games Collection
+                  {hobby.name} Collection
                 </ThemedText>
                 {selectedFilterTags.length > 0 && (
                   <ThemedText style={styles.filterIndicator}>
@@ -367,39 +387,91 @@ export default function HobbyDetailScreen() {
                 )}
               </View>
               <View style={styles.headerButtons}>
-                <TouchableOpacity 
-                  style={[styles.filterButton, selectedFilterTags.length > 0 && styles.filterButtonActive]} 
-                  onPress={() => {
-                    console.log('🏷️ Filter button pressed');
-                    const availableTags = getAllTags();
-                    console.log('🏷️ Available tags for filter:', availableTags);
-                    setShowTagFilter(true);
-                  }}
+                <TouchableOpacity
+                  style={[styles.filterButton, selectedFilterTags.length > 0 && styles.filterButtonActive]}
+                  onPress={() => setShowTagFilter(true)}
                 >
                   <ThemedText style={[styles.filterButtonText, selectedFilterTags.length > 0 && styles.filterButtonTextActive]}>
                     🏷️ Filter{selectedFilterTags.length > 0 && ` (${selectedFilterTags.length})`}
                   </ThemedText>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.addButton} 
+                <TouchableOpacity
+                  style={styles.addButton}
                   onPress={() => setShowAddItemModal(true)}
                 >
-                  <ThemedText style={styles.addButtonText}>+ Add Game</ThemedText>
+                  <ThemedText style={styles.addButtonText}>+ Add {hobby.name}</ThemedText>
                 </TouchableOpacity>
               </View>
             </View>
             {getFilteredGameItems().length > 0 ? (
-              <GameList 
-                games={[...getFilteredGameItems()].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime())} 
-                onDeleteGame={handleDeleteItem}
-                onUpdateGame={() => {}}
-                onEditGame={handleEditItem}
-              />
+              <View>
+                {[...getFilteredGameItems()].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).map((game: any) => (
+                  <TouchableOpacity
+                    key={game.id}
+                    style={styles.itemCard}
+                    onLongPress={() => handleEditItem(game)}
+                    onPress={() => handleToggleCollapse(game.id)}
+                  >
+                    <ThemedText style={styles.expandIcon}>{game.collapsed ? '−' : '+'}
+                    </ThemedText>
+                    <ThemedText style={styles.itemTitle}>{game.title}</ThemedText>
+
+                    {game.collapsed && (
+                      <View style={styles.itemContent}>
+                        {game.thumbnail && (
+                          <Image source={{ uri: game.thumbnail }} style={styles.itemThumbnail} />
+                        )}
+                        <View style={styles.itemInfo}>
+                          <View style={styles.gameRow}>
+                            <ThemedText style={styles.gameLabel}>Platform:</ThemedText>
+                            <ThemedText style={styles.gameValue}>{game.platform}</ThemedText>
+                          </View>
+                          <ThemedText style={styles.itemStatus}>Status: {game.status}</ThemedText>
+
+                          {game.totalPages && (
+                            <ThemedText style={styles.itemProgress}>
+                              Progress: {game.pagesRead || 0} / {game.totalPages} pages
+                            </ThemedText>
+                          )}
+
+                          {game.timeToBeat && (
+                            <View style={styles.gameRow}>
+                              <ThemedText style={styles.gameLabel}>Time to Beat:</ThemedText>
+                              <ThemedText style={styles.gameValue}>{game.timeToBeat}h</ThemedText>
+                            </View>
+                          )}
+                          {game.hoursPlayed && (
+                            <View style={styles.gameRow}>
+                              <ThemedText style={styles.gameLabel}>Hours Played:</ThemedText>
+                              <ThemedText style={styles.gameValue}>{game.hoursPlayed}h</ThemedText>
+                            </View>
+                          )}
+                          {game.tags && game.tags.length > 0 && (
+                            <View style={styles.tagsContainer}>
+                              {game.tags.map((tag: string, index: number) => (
+                                <View key={index} style={styles.tag}>
+                                  <ThemedText style={styles.tagText}>{tag}</ThemedText>
+                                </View>
+                              ))}
+                            </View>
+                          )}
+                          <TouchableOpacity
+                            onPress={() => handleDeleteItem(game)}
+                          >
+                            <ThemedText style={styles.deleteItemButtonText}>Click to Delete</ThemedText>
+                          </TouchableOpacity>
+                          <ThemedText style={styles.editHint}>Hold to edit game</ThemedText>
+                        </View>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
             ) : (
               <ThemedText style={styles.emptyText}>
-                {(selectedFilterTags.length > 0 || searchText.trim()) 
-                  ? "No games match your search or filters. Try adjusting your criteria." 
-                  : "No games added yet. Tap 'Add Game' to get started!"}
+                {(selectedFilterTags.length > 0 || searchText.trim())
+                  ? "No books match your search or filters. Try adjusting your criteria."
+                  : "No books added yet. Tap 'Add Book' to get started!"}
               </ThemedText>
             )}
           </View>
@@ -419,16 +491,16 @@ export default function HobbyDetailScreen() {
                 )}
               </View>
               <View style={styles.headerButtons}>
-                <TouchableOpacity 
-                  style={[styles.filterButton, selectedFilterTags.length > 0 && styles.filterButtonActive]} 
+                <TouchableOpacity
+                  style={[styles.filterButton, selectedFilterTags.length > 0 && styles.filterButtonActive]}
                   onPress={() => setShowTagFilter(true)}
                 >
                   <ThemedText style={[styles.filterButtonText, selectedFilterTags.length > 0 && styles.filterButtonTextActive]}>
                     🏷️ Filter{selectedFilterTags.length > 0 && ` (${selectedFilterTags.length})`}
                   </ThemedText>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.addButton} 
+                <TouchableOpacity
+                  style={styles.addButton}
                   onPress={() => setShowAddItemModal(true)}
                 >
                   <ThemedText style={styles.addButtonText}>+ Add Book</ThemedText>
@@ -438,52 +510,55 @@ export default function HobbyDetailScreen() {
             {getFilteredBookItems().length > 0 ? (
               <View>
                 {[...getFilteredBookItems()].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).map((book: any) => (
-                  <TouchableOpacity 
-                    key={book.id} 
-                    style={styles.itemCard} 
-                    onPress={() => handleEditItem(book)}
-                    onLongPress={() => handleDeleteItem(book)}
+                  <TouchableOpacity
+                    key={book.id}
+                    style={styles.itemCard}
+                    onLongPress={() => handleEditItem(book)}
+                    onPress={() => handleToggleCollapse(book.id)}
                   >
-                    <View style={styles.itemContent}>
-                      {book.thumbnail && (
-                        <Image source={{ uri: book.thumbnail }} style={styles.itemThumbnail} />
-                      )}
-                      <View style={styles.itemInfo}>
-                        <View style={styles.itemHeader}>
-                          <ThemedText style={styles.itemTitle}>{book.title}</ThemedText>
+                    <ThemedText style={styles.expandIcon}>{book.collapsed ? '−' : '+'}
+                    </ThemedText>
+                    <ThemedText style={styles.itemTitle}>{book.title}</ThemedText>
+
+                    {book.collapsed && (
+                      <View style={styles.itemContent}>
+                        {book.thumbnail && (
+                          <Image source={{ uri: book.thumbnail }} style={styles.itemThumbnail} />
+                        )}
+                        <View style={styles.itemInfo}>
+                          {book.author && <ThemedText style={styles.itemSubtitle}>by {book.author}</ThemedText>}
+                          <ThemedText style={styles.itemStatus}>Status: {book.status}</ThemedText>
+                          {book.totalPages && (
+                            <ThemedText style={styles.itemProgress}>
+                              Progress: {book.pagesRead || 0} / {book.totalPages} pages
+                            </ThemedText>
+                          )}
+                          {book.tags && book.tags.length > 0 && (
+                            <View style={styles.tagsContainer}>
+                              {book.tags.map((tag: string, index: number) => (
+                                <View key={index} style={styles.tag}>
+                                  <ThemedText style={styles.tagText}>{tag}</ThemedText>
+                                </View>
+                              ))}
+                            </View>
+                          )}
                           <TouchableOpacity
                             onPress={() => handleDeleteItem(book)}
-                            style={styles.deleteItemButton}
                           >
-                            <ThemedText style={styles.deleteItemButtonText}>×</ThemedText>
+                            <ThemedText style={styles.deleteItemButtonText}>Click to Delete</ThemedText>
                           </TouchableOpacity>
+                          <ThemedText style={styles.editHint}>Hold to edit book</ThemedText>
                         </View>
-                        {book.author && <ThemedText style={styles.itemSubtitle}>by {book.author}</ThemedText>}
-                        <ThemedText style={styles.itemStatus}>Status: {book.status}</ThemedText>
-                        {book.totalPages && (
-                          <ThemedText style={styles.itemProgress}>
-                            Progress: {book.pagesRead || 0} / {book.totalPages} pages
-                          </ThemedText>
-                        )}
-                        {book.tags && book.tags.length > 0 && (
-                          <View style={styles.tagsContainer}>
-                            {book.tags.map((tag: string, index: number) => (
-                              <View key={index} style={styles.tag}>
-                                <ThemedText style={styles.tagText}>{tag}</ThemedText>
-                              </View>
-                            ))}
-                          </View>
-                        )}
-                        <ThemedText style={styles.editHint}>Tap to edit</ThemedText>
+
                       </View>
-                    </View>
+                    )}
                   </TouchableOpacity>
                 ))}
               </View>
             ) : (
               <ThemedText style={styles.emptyText}>
-                {(selectedFilterTags.length > 0 || searchText.trim()) 
-                  ? "No books match your search or filters. Try adjusting your criteria." 
+                {(selectedFilterTags.length > 0 || searchText.trim())
+                  ? "No books match your search or filters. Try adjusting your criteria."
                   : "No books added yet. Tap 'Add Book' to get started!"}
               </ThemedText>
             )}
@@ -504,16 +579,16 @@ export default function HobbyDetailScreen() {
                 )}
               </View>
               <View style={styles.headerButtons}>
-                <TouchableOpacity 
-                  style={[styles.filterButton, selectedFilterTags.length > 0 && styles.filterButtonActive]} 
+                <TouchableOpacity
+                  style={[styles.filterButton, selectedFilterTags.length > 0 && styles.filterButtonActive]}
                   onPress={() => setShowTagFilter(true)}
                 >
                   <ThemedText style={[styles.filterButtonText, selectedFilterTags.length > 0 && styles.filterButtonTextActive]}>
                     🏷️ Filter{selectedFilterTags.length > 0 && ` (${selectedFilterTags.length})`}
                   </ThemedText>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.addButton} 
+                <TouchableOpacity
+                  style={styles.addButton}
                   onPress={() => setShowAddItemModal(true)}
                 >
                   <ThemedText style={styles.addButtonText}>+ Add TV/Film</ThemedText>
@@ -523,53 +598,55 @@ export default function HobbyDetailScreen() {
             {getFilteredTvFilmItems().length > 0 ? (
               <View>
                 {[...getFilteredTvFilmItems()].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).map((movie: any) => (
-                  <TouchableOpacity 
-                    key={movie.id} 
-                    style={styles.itemCard} 
-                    onPress={() => handleEditItem(movie)}
-                    onLongPress={() => handleDeleteItem(movie)}
+                  <TouchableOpacity
+                    key={movie.id}
+                    style={styles.itemCard}
+                    onLongPress={() => handleEditItem(movie)}
+                    onPress={() => handleToggleCollapse(movie.id)}
                   >
-                    <View style={styles.itemContent}>
-                      {movie.thumbnail && (
-                        <Image source={{ uri: movie.thumbnail }} style={styles.itemThumbnail} />
-                      )}
-                      <View style={styles.itemInfo}>
-                        <View style={styles.itemHeader}>
-                          <ThemedText style={styles.itemTitle}>{movie.title}</ThemedText>
+                    <ThemedText style={styles.expandIcon}>{movie.collapsed ? '−' : '+'}
+                    </ThemedText>
+                    <ThemedText style={styles.itemTitle}>{movie.title}</ThemedText>
+                    {movie.collapsed && (
+                      <View style={styles.itemContent}>
+                        {movie.thumbnail && (
+                          <Image source={{ uri: movie.thumbnail }} style={styles.itemThumbnail} />
+                        )}
+                        <View style={styles.itemInfo}>
+                          {movie.director && <ThemedText style={styles.itemSubtitle}>Directed by {movie.director}</ThemedText>}
+                          {movie.currentSeason && <ThemedText style={styles.itemSubtitle}>Season: {movie.currentSeason}</ThemedText>}
+                          <ThemedText style={styles.itemStatus}>Status: {movie.status}</ThemedText>
+                          {movie.rating && (
+                            <ThemedText style={styles.itemRating}>
+                              Rating: {'★'.repeat(movie.rating)}{'☆'.repeat(5 - movie.rating)}
+                            </ThemedText>
+                          )}
+                          {movie.tags && movie.tags.length > 0 && (
+                            <View style={styles.tagsContainer}>
+                              {movie.tags.map((tag: string, index: number) => (
+                                <View key={index} style={styles.tag}>
+                                  <ThemedText style={styles.tagText}>{tag}</ThemedText>
+                                </View>
+                              ))}
+                            </View>
+                          )}
                           <TouchableOpacity
                             onPress={() => handleDeleteItem(movie)}
-                            style={styles.deleteItemButton}
                           >
-                            <ThemedText style={styles.deleteItemButtonText}>×</ThemedText>
+                            <ThemedText style={styles.deleteItemButtonText}>Click to Delete</ThemedText>
                           </TouchableOpacity>
+                          <ThemedText style={styles.editHint}>Hold to edit</ThemedText>
                         </View>
-                        {movie.director && <ThemedText style={styles.itemSubtitle}>Directed by {movie.director}</ThemedText>}
-                        {movie.currentSeason && <ThemedText style={styles.itemSubtitle}>Season: {movie.currentSeason}</ThemedText>}
-                        <ThemedText style={styles.itemStatus}>Status: {movie.status}</ThemedText>
-                        {movie.rating && (
-                          <ThemedText style={styles.itemRating}>
-                            Rating: {'★'.repeat(movie.rating)}{'☆'.repeat(5 - movie.rating)}
-                          </ThemedText>
-                        )}
-                        {movie.tags && movie.tags.length > 0 && (
-                          <View style={styles.tagsContainer}>
-                            {movie.tags.map((tag: string, index: number) => (
-                              <View key={index} style={styles.tag}>
-                                <ThemedText style={styles.tagText}>{tag}</ThemedText>
-                              </View>
-                            ))}
-                          </View>
-                        )}
-                        <ThemedText style={styles.editHint}>Tap to edit</ThemedText>
+                        
                       </View>
-                    </View>
+                    )}
                   </TouchableOpacity>
                 ))}
               </View>
             ) : (
               <ThemedText style={styles.emptyText}>
-                {(selectedFilterTags.length > 0 || searchText.trim()) 
-                  ? "No TV shows or movies match your search or filters. Try adjusting your criteria." 
+                {(selectedFilterTags.length > 0 || searchText.trim())
+                  ? "No TV shows or movies match your search or filters. Try adjusting your criteria."
                   : "No TV shows or movies added yet. Tap 'Add TV/Film' to get started!"}
               </ThemedText>
             )}
@@ -590,16 +667,16 @@ export default function HobbyDetailScreen() {
                 )}
               </View>
               <View style={styles.headerButtons}>
-                <TouchableOpacity 
-                  style={[styles.filterButton, selectedFilterTags.length > 0 && styles.filterButtonActive]} 
+                <TouchableOpacity
+                  style={[styles.filterButton, selectedFilterTags.length > 0 && styles.filterButtonActive]}
                   onPress={() => setShowTagFilter(true)}
                 >
                   <ThemedText style={[styles.filterButtonText, selectedFilterTags.length > 0 && styles.filterButtonTextActive]}>
                     🏷️ Filter{selectedFilterTags.length > 0 && ` (${selectedFilterTags.length})`}
                   </ThemedText>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.addButton} 
+                <TouchableOpacity
+                  style={styles.addButton}
                   onPress={() => setShowAddItemModal(true)}
                 >
                   <ThemedText style={styles.addButtonText}>+ Add Item</ThemedText>
@@ -609,48 +686,51 @@ export default function HobbyDetailScreen() {
             {getFilteredCustomItems().length > 0 ? (
               <View>
                 {[...getFilteredCustomItems()].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).map((item: any) => (
-                  <TouchableOpacity 
-                    key={item.id} 
-                    style={styles.itemCard} 
-                    onPress={() => handleEditItem(item)}
-                    onLongPress={() => handleDeleteItem(item)}
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.itemCard}
+                    onLongPress={() => handleEditItem(item)}
+                    onPress={() => handleToggleCollapse(item.id)}
                   >
-                    <View style={styles.itemContent}>
-                      {item.thumbnail && (
-                        <Image source={{ uri: item.thumbnail }} style={styles.itemThumbnail} />
-                      )}
-                      <View style={styles.itemInfo}>
-                        <View style={styles.itemHeader}>
-                          <ThemedText style={styles.itemTitle}>{item.name}</ThemedText>
+                    <ThemedText style={styles.expandIcon}>{item.collapsed ? '−' : '+'}
+                    </ThemedText>
+                    <ThemedText style={styles.itemTitle}>{item.name}</ThemedText>
+
+                    {item.collapsed && (
+                      <View style={styles.itemContent}>
+                        {item.thumbnail && (
+                          <Image source={{ uri: item.thumbnail }} style={styles.itemThumbnail} />
+                        )}
+                        <View style={styles.itemInfo}>
+                          <ThemedText style={styles.itemDate}>
+                            Added: {new Date(item.dateAdded).toLocaleDateString()}
+                          </ThemedText>
+                          {item.tags && item.tags.length > 0 && (
+                            <View style={styles.tagsContainer}>
+                              {item.tags.map((tag: string, index: number) => (
+                                <View key={index} style={styles.tag}>
+                                  <ThemedText style={styles.tagText}>{tag}</ThemedText>
+                                </View>
+                              ))}
+                            </View>
+                          )}
                           <TouchableOpacity
                             onPress={() => handleDeleteItem(item)}
-                            style={styles.deleteItemButton}
                           >
-                            <ThemedText style={styles.deleteItemButtonText}>×</ThemedText>
+                            <ThemedText style={styles.deleteItemButtonText}>Click to Delete</ThemedText>
                           </TouchableOpacity>
+                          <ThemedText style={styles.editHint}>Hold to edit</ThemedText>
                         </View>
-                        <ThemedText style={styles.itemDate}>
-                          Added: {new Date(item.dateAdded).toLocaleDateString()}
-                        </ThemedText>
-                        {item.tags && item.tags.length > 0 && (
-                          <View style={styles.tagsContainer}>
-                            {item.tags.map((tag: string, index: number) => (
-                              <View key={index} style={styles.tag}>
-                                <ThemedText style={styles.tagText}>{tag}</ThemedText>
-                              </View>
-                            ))}
-                          </View>
-                        )}
-                        <ThemedText style={styles.editHint}>Tap to edit</ThemedText>
                       </View>
-                    </View>
+                    )}
                   </TouchableOpacity>
+
                 ))}
               </View>
             ) : (
               <ThemedText style={styles.emptyText}>
-                {(selectedFilterTags.length > 0 || searchText.trim()) 
-                  ? "No items match your search or filters. Try adjusting your criteria." 
+                {(selectedFilterTags.length > 0 || searchText.trim())
+                  ? "No items match your search or filters. Try adjusting your criteria."
                   : "No items added yet. Tap 'Add Item' to get started!"}
               </ThemedText>
             )}
@@ -773,7 +853,7 @@ export default function HobbyDetailScreen() {
       </ScrollView>
       {renderAddItemModal()}
       {renderEditItemModal()}
-      
+
       {/* Edit Hobby Modal */}
       <Modal
         visible={showEditHobbyModal}
@@ -789,76 +869,76 @@ export default function HobbyDetailScreen() {
             <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
               <View style={styles.editHobbyModal}>
                 <ThemedText style={styles.editHobbyTitle}>Edit Hobby</ThemedText>
-            
-            <ThemedText style={styles.editHobbyLabel}>Hobby Name</ThemedText>
-            <TextInput
-              style={styles.editHobbyInput}
-              value={editHobbyName}
-              onChangeText={setEditHobbyName}
-              placeholder="Enter hobby name"
-              autoFocus={true}
-              returnKeyType="done"
-              onSubmitEditing={() => Keyboard.dismiss()}
-            />
-            
-            <ThemedText style={styles.editHobbyLabel}>Date Started</ThemedText>
-            <TouchableOpacity
-              style={styles.datePickerButton}
-              onPress={showDatePickerModal}
-            >
-              <ThemedText style={styles.datePickerText}>
-                {editHobbyDate || 'Select Date'}
-              </ThemedText>
-              <IconSymbol name="calendar" size={16} color="#007AFF" />
-            </TouchableOpacity>
-            
-            {showDatePicker && (
-              <>
-                <DateTimePicker
-                  value={selectedDate}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  onChange={handleDateChange}
-                  maximumDate={new Date()}
+
+                <ThemedText style={styles.editHobbyLabel}>Hobby Name</ThemedText>
+                <TextInput
+                  style={styles.editHobbyInput}
+                  value={editHobbyName}
+                  onChangeText={setEditHobbyName}
+                  placeholder="Enter hobby name"
+                  autoFocus={true}
+                  returnKeyType="done"
+                  onSubmitEditing={() => Keyboard.dismiss()}
                 />
-                {Platform.OS === 'ios' && (
-                  <View style={styles.datePickerActions}>
-                    <TouchableOpacity
-                      style={styles.datePickerDoneButton}
-                      onPress={() => setShowDatePicker(false)}
-                    >
-                      <ThemedText style={styles.datePickerDoneText}>Done</ThemedText>
-                    </TouchableOpacity>
-                  </View>
+
+                <ThemedText style={styles.editHobbyLabel}>Date Started</ThemedText>
+                <TouchableOpacity
+                  style={styles.datePickerButton}
+                  onPress={showDatePickerModal}
+                >
+                  <ThemedText style={styles.datePickerText}>
+                    {editHobbyDate || 'Select Date'}
+                  </ThemedText>
+                  <IconSymbol name="calendar" size={16} color="#007AFF" />
+                </TouchableOpacity>
+
+                {showDatePicker && (
+                  <>
+                    <DateTimePicker
+                      value={selectedDate}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      onChange={handleDateChange}
+                      maximumDate={new Date()}
+                    />
+                    {Platform.OS === 'ios' && (
+                      <View style={styles.datePickerActions}>
+                        <TouchableOpacity
+                          style={styles.datePickerDoneButton}
+                          onPress={() => setShowDatePicker(false)}
+                        >
+                          <ThemedText style={styles.datePickerDoneText}>Done</ThemedText>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </>
                 )}
-              </>
-            )}
-            
-            <View style={styles.editHobbyButtonContainer}>
-              <TouchableOpacity
-                style={styles.editHobbyCancelButton}
-                onPress={() => setShowEditHobbyModal(false)}
-              >
-                <ThemedText style={[styles.editHobbyButtonText, styles.editHobbyCancelText]}>
-                  Cancel
-                </ThemedText>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={styles.editHobbySaveButton}
-                onPress={handleSaveHobbyEdits}
-              >
-                <ThemedText style={[styles.editHobbyButtonText, styles.editHobbySaveText]}>
-                  Save
-                </ThemedText>
-              </TouchableOpacity>
+
+                <View style={styles.editHobbyButtonContainer}>
+                  <TouchableOpacity
+                    style={styles.editHobbyCancelButton}
+                    onPress={() => setShowEditHobbyModal(false)}
+                  >
+                    <ThemedText style={[styles.editHobbyButtonText, styles.editHobbyCancelText]}>
+                      Cancel
+                    </ThemedText>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.editHobbySaveButton}
+                    onPress={handleSaveHobbyEdits}
+                  >
+                    <ThemedText style={[styles.editHobbyButtonText, styles.editHobbySaveText]}>
+                      Save
+                    </ThemedText>
+                  </TouchableOpacity>
                 </View>
               </View>
             </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>
       </Modal>
-      
+
       {/* Tag Filter Modal */}
       <TagFilterModal
         visible={showTagFilter}
@@ -970,7 +1050,7 @@ const styles = StyleSheet.create({
   itemTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 10,
     color: '#000',
   },
   itemSubtitle: {
@@ -983,6 +1063,29 @@ const styles = StyleSheet.create({
     color: '#4a90e2',
     fontWeight: '500',
     marginBottom: 4,
+  },
+  gameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  gameLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+    flex: 1,
+  },
+  gameValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+    textAlign: 'right',
+    color: '#333',
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   itemProgress: {
     fontSize: 14,
@@ -1020,17 +1123,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4,
   },
-  deleteItemButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#dc3545',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   deleteItemButtonText: {
-    color: '#fff',
+    color: '#551414ff',
     fontSize: 16,
+    paddingTop: 30,
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
     fontWeight: '600',
   },
   editHint: {
@@ -1056,7 +1154,7 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: 11,
-    color: '#1976d2',
+    color: '#12181fff',
     fontWeight: '500',
   },
   sectionTitleContainer: {
@@ -1225,5 +1323,11 @@ const styles = StyleSheet.create({
   },
   editHobbySaveText: {
     color: '#fff',
+  },
+  expandIcon: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#4a90e2',
+    width: 30,
   },
 });

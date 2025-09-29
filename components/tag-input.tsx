@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import {
-    Alert,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface TagInputProps {
@@ -20,7 +20,7 @@ export const TagInput: React.FC<TagInputProps> = ({
   tags,
   onTagsChange,
   placeholder = 'Add tag...',
-  maxTags = 5,
+  maxTags = 10,
   protectedTags = [],
 }) => {
   const [inputValue, setInputValue] = useState('');

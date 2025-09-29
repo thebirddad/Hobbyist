@@ -7,14 +7,14 @@ export interface BaseHobby {
 
 export enum HobbyType {
   GAMES = 'Games',
-  BOOKS = 'Books', 
+  BOOKS = 'Books',
   TV_FILM = 'TV/Film',
   CUSTOM = 'Custom'
 }
 
 export interface GameHobby extends BaseHobby {
   type: HobbyType.GAMES;
-  items: GameItem[];
+  items: Game[];
 }
 
 export interface BookHobby extends BaseHobby {
@@ -35,7 +35,7 @@ export interface CustomHobby extends BaseHobby {
 export type Hobby = GameHobby | BookHobby | TvFilmHobby | CustomHobby;
 
 // Game item structure (similar to existing Game interface)
-export interface GameItem {
+export interface Game {
   id: string;
   title: string;
   platform: string;
@@ -44,8 +44,9 @@ export interface GameItem {
   hoursPlayed?: number;
   dateAdded: string;
   dateCompleted?: string;
-  thumbnail?: string;
+  thumbnail?: string; // URI to the game's thumbnail image
   tags?: string[]; // max 5 tags
+  collapsed?: boolean; // UI state, not stored in DB
 }
 
 export enum GameStatus {
@@ -67,6 +68,7 @@ export interface BookItem {
   dateCompleted?: string;
   thumbnail?: string;
   tags?: string[]; // max 5 tags
+  collapsed?: boolean; // UI state, not stored in DB
 }
 
 export enum BookStatus {
@@ -88,6 +90,7 @@ export interface TvFilmItem {
   dateWatched?: string;
   thumbnail?: string;
   tags?: string[]; // max 5 tags
+  collapsed?: boolean; // UI state, not stored in DB
 }
 
 export enum TvFilmStatus {
@@ -107,4 +110,5 @@ export interface CustomItem {
   dateAdded: string;
   thumbnail?: string;
   tags?: string[]; // max 5 tags
+  collapsed?: boolean; // UI state, not stored in DB
 }

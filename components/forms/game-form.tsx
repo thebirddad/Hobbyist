@@ -1,3 +1,7 @@
+import { GameImagePicker } from '@/components/game-image-picker';
+import { TagInput } from '@/components/tag-input';
+import { Game, GameStatus } from '@/data/hobby';
+import { useConsoleStorage } from '@/hooks/use-console-storage';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
@@ -9,10 +13,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Game, GameStatus } from '../data/game';
-import { useConsoleStorage } from '../hooks/use-console-storage';
-import { GameImagePicker } from './game-image-picker';
-import { TagInput } from './tag-input';
 
 interface GameFormProps {
   visible: boolean;
@@ -22,18 +22,18 @@ interface GameFormProps {
   initialGame?: Game; // For editing existing games
 }
 
-export const GameForm: React.FC<GameFormProps> = ({ 
-  visible, 
-  onGameAdded, 
-  onGameUpdated, 
-  onClose, 
-  initialGame 
+export const GameForm: React.FC<GameFormProps> = ({
+  visible,
+  onGameAdded,
+  onGameUpdated,
+  onClose,
+  initialGame
 }) => {
   const isEditing = !!initialGame;
-  
+
   const { getConsoleNames } = useConsoleStorage();
   const availablePlatforms = useMemo(() => getConsoleNames(), [getConsoleNames]);
-  
+
   const [title, setTitle] = useState('');
   const [platform, setPlatform] = useState(availablePlatforms[0] || 'PC');
   const [status, setStatus] = useState<GameStatus>(GameStatus.WANT_TO_PLAY);
@@ -56,7 +56,7 @@ export const GameForm: React.FC<GameFormProps> = ({
       setTimeToBeat(initialGame.timeToBeat?.toString() || '');
       setHoursPlayed(initialGame.hoursPlayed?.toString() || '');
       setThumbnail(initialGame.thumbnail);
-      
+
       // Set tags with mandatory 'Game' and platform tags
       const initialTags = initialGame.tags || [];
       const filteredTags = initialTags.filter(tag => tag !== 'Game' && tag !== initialGame.platform);
@@ -80,9 +80,9 @@ export const GameForm: React.FC<GameFormProps> = ({
   useEffect(() => {
     setTags(prevTags => {
       // Remove any existing platform tags and add the new one
-      const filteredTags = prevTags.filter(tag => 
-        tag !== 'Game' && 
-        tag !== platform && 
+      const filteredTags = prevTags.filter(tag =>
+        tag !== 'Game' &&
+        tag !== platform &&
         !['PC', 'PlayStation 5', 'Xbox Series X', 'Nintendo Switch'].includes(tag)
       );
       return ['Game', platform, ...filteredTags];
@@ -122,7 +122,7 @@ export const GameForm: React.FC<GameFormProps> = ({
     }
 
     console.log('🖼️ Form submission - thumbnail value:', thumbnail);
-    
+
     if (isEditing && initialGame && onGameUpdated) {
       const updatedGame: Game = {
         ...initialGame,
@@ -148,7 +148,7 @@ export const GameForm: React.FC<GameFormProps> = ({
       onGameAdded(newGame);
       resetForm();
     }
-    
+
     onClose();
   }, [title, platform, status, timeToBeat, hoursPlayed, thumbnail, tags, isEditing, initialGame, onGameAdded, onGameUpdated, onClose]);
 
@@ -199,14 +199,14 @@ export const GameForm: React.FC<GameFormProps> = ({
               </View>
             ) : (
               <>
-                <TouchableOpacity 
-                  style={styles.pickerButton} 
+                <TouchableOpacity
+                  style={styles.pickerButton}
                   onPress={() => setShowPlatformPicker(!showPlatformPicker)}
                 >
                   <Text style={styles.pickerButtonText}>{platform}</Text>
                   <Text style={styles.pickerArrow}>{showPlatformPicker ? '▲' : '▼'}</Text>
                 </TouchableOpacity>
-                
+
                 {showPlatformPicker && (
                   <View style={styles.pickerOptions}>
                     {availablePlatforms.map((p) => (
@@ -237,8 +237,8 @@ export const GameForm: React.FC<GameFormProps> = ({
           {!isEditing && (
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Status</Text>
-              <TouchableOpacity 
-                style={styles.pickerButton} 
+              <TouchableOpacity
+                style={styles.pickerButton}
                 onPress={() => setShowStatusPicker(!showStatusPicker)}
               >
                 <Text style={styles.pickerButtonText}>
@@ -246,7 +246,7 @@ export const GameForm: React.FC<GameFormProps> = ({
                 </Text>
                 <Text style={styles.pickerArrow}>{showStatusPicker ? '▲' : '▼'}</Text>
               </TouchableOpacity>
-              
+
               {showStatusPicker && (
                 <View style={styles.pickerOptions}>
                   {statusOptions.map((option) => (
@@ -302,14 +302,14 @@ export const GameForm: React.FC<GameFormProps> = ({
               tags={tags}
               onTagsChange={(newTags) => {
                 // Always ensure 'Game' and platform tags are present
-                const filteredTags = newTags.filter(tag => 
-                  tag !== 'Game' && 
+                const filteredTags = newTags.filter(tag =>
+                  tag !== 'Game' &&
                   !availablePlatforms.includes(tag)
                 );
                 setTags(['Game', platform, ...filteredTags]);
               }}
               placeholder="Add tag (e.g., RPG, Action)..."
-              maxTags={5}
+              maxTags={10}
               protectedTags={['Game', platform]}
             />
           </View>

@@ -3,16 +3,16 @@ import { TagInput } from '@/components/tag-input';
 import { CustomItem } from '@/data/hobby';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface CustomFormProps {
@@ -116,7 +116,7 @@ export const CustomForm: React.FC<CustomFormProps> = ({
                 tags={tags}
                 onTagsChange={setTags}
                 placeholder="Add tag (e.g., Collection, Project)..."
-                maxTags={5}
+                maxTags={10}
               />
             </View>
 
