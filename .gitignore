@@ -47,4 +47,5 @@ app-example
 /summaries
 .vscode
 .expo
+expo-env.d.ts
 
