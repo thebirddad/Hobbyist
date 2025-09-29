@@ -39,10 +39,17 @@ export const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
   const [startIndex, setStartIndex] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  // Import SerpApi configuration
-  // Note: In a real app, you'd import this from a config file
-  // For demo purposes, keeping it simple here
-  const SERPAPI_KEY = 'ec01683685b82e0e8f0846e42bf32786b91f8f5fed82677af6a20d7873e34a99'; // Replace with your actual key
+  // Import SerpApi configuration from secure config file
+  // The config file is in .gitignore to keep API keys secure
+  let SERPAPI_KEY: string | undefined;
+  
+  try {
+    const { SERPAPI_CONFIG } = require('../config/serpapi');
+    SERPAPI_KEY = SERPAPI_CONFIG?.API_KEY === 'YOUR_SERPAPI_KEY' ? undefined : SERPAPI_CONFIG?.API_KEY;
+  } catch (error) {
+    console.log('No SerpApi config found, using fallback mode');
+    SERPAPI_KEY = undefined;
+  }
 
   const searchImages = async (query: string, start: number = 1, append: boolean = false) => {
     if (!query.trim()) {

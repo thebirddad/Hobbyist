@@ -1,7 +1,7 @@
 import { GameImagePicker } from '@/components/game-image-picker';
 import { TagInput } from '@/components/tag-input';
 import { CustomItem } from '@/data/hobby';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     Alert,
     KeyboardAvoidingView,
@@ -33,6 +33,17 @@ export const CustomForm: React.FC<CustomFormProps> = ({
   const [name, setName] = useState(initialItem?.name || '');
   const [thumbnail, setThumbnail] = useState(initialItem?.thumbnail || '');
   const [tags, setTags] = useState<string[]>(initialItem?.tags || []);
+
+  // Initialize form data when initialItem changes
+  useEffect(() => {
+    if (initialItem) {
+      setName(initialItem.name || '');
+      setThumbnail(initialItem.thumbnail || '');
+      setTags(initialItem.tags || []);
+    } else {
+      resetForm();
+    }
+  }, [initialItem]);
 
   const resetForm = useCallback(() => {
     if (mode === 'add') {

@@ -2,7 +2,7 @@ import { GameImagePicker } from '@/components/game-image-picker';
 import { TagInput } from '@/components/tag-input';
 import { BookItem, BookStatus } from '@/data/hobby';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     Alert,
     KeyboardAvoidingView,
@@ -45,6 +45,32 @@ export const BookForm: React.FC<BookFormProps> = ({
     return ['Book', ...filteredTags];
   });
   const [showStatusPicker, setShowStatusPicker] = useState(false);
+
+  // Initialize form data when initialBook changes
+  useEffect(() => {
+    if (initialBook) {
+      setTitle(initialBook.title || '');
+      setAuthor(initialBook.author || '');
+      setStatus(initialBook.status || BookStatus.WANT_TO_READ);
+      setTotalPages(initialBook.totalPages?.toString() || '');
+      setPagesRead(initialBook.pagesRead?.toString() || '');
+      setThumbnail(initialBook.thumbnail || '');
+      setDateCompleted(initialBook.dateCompleted || '');
+      const initialTags = initialBook.tags || [];
+      const filteredTags = initialTags.filter(tag => tag !== 'Book');
+      setTags(['Book', ...filteredTags]);
+    } else if (mode === 'add') {
+      setTitle('');
+      setAuthor('');
+      setStatus(BookStatus.WANT_TO_READ);
+      setTotalPages('');
+      setPagesRead('');
+      setThumbnail('');
+      setDateCompleted('');
+      setTags(['Book']);
+      setShowStatusPicker(false);
+    }
+  }, [initialBook, mode]);
 
   const bookStatusOptions = [
     { key: BookStatus.WANT_TO_READ, label: 'Want to Read' },

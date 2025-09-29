@@ -391,9 +391,9 @@ export default function HobbyDetailScreen() {
             {getFilteredGameItems().length > 0 ? (
               <GameList 
                 games={[...getFilteredGameItems()].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime())} 
-                onDeleteGame={() => {}}
+                onDeleteGame={handleDeleteItem}
                 onUpdateGame={() => {}}
-                onEditGame={() => {}}
+                onEditGame={handleEditItem}
               />
             ) : (
               <ThemedText style={styles.emptyText}>
@@ -718,7 +718,7 @@ export default function HobbyDetailScreen() {
               setShowEditItemModal(false);
               setEditingItem(null);
             }}
-            onGameAdded={handleUpdateItem}
+            onGameUpdated={handleUpdateItem}
             initialGame={editingItem}
           />
         );

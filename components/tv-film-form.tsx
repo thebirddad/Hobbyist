@@ -1,7 +1,7 @@
 import { GameImagePicker } from '@/components/game-image-picker';
 import { TagInput } from '@/components/tag-input';
 import { TvFilmItem, TvFilmStatus } from '@/data/hobby';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     Alert,
     KeyboardAvoidingView,
@@ -44,6 +44,32 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
     return ['Film', ...filteredTags];
   });
   const [showStatusPicker, setShowStatusPicker] = useState(false);
+
+  // Initialize form data when initialTvFilmItem changes
+  useEffect(() => {
+    if (initialTvFilmItem) {
+      setTitle(initialTvFilmItem.title || '');
+      setDirector(initialTvFilmItem.director || '');
+      setStatus(initialTvFilmItem.status || TvFilmStatus.WANT_TO_WATCH);
+      setRating(initialTvFilmItem.rating?.toString() || '');
+      setCurrentSeason(initialTvFilmItem.currentSeason || '');
+      setThumbnail(initialTvFilmItem.thumbnail || '');
+      setDateWatched(initialTvFilmItem.dateWatched || '');
+      const initialTags = initialTvFilmItem.tags || [];
+      const filteredTags = initialTags.filter(tag => tag !== 'Film');
+      setTags(['Film', ...filteredTags]);
+    } else if (mode === 'add') {
+      setTitle('');
+      setDirector('');
+      setStatus(TvFilmStatus.WANT_TO_WATCH);
+      setRating('');
+      setCurrentSeason('');
+      setThumbnail('');
+      setDateWatched('');
+      setTags(['Film']);
+      setShowStatusPicker(false);
+    }
+  }, [initialTvFilmItem, mode]);
 
   const tvFilmStatusOptions = [
     { key: TvFilmStatus.WANT_TO_WATCH, label: 'Want to Watch' },
