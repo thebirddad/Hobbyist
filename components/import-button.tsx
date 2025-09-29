@@ -1,5 +1,6 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
+import { Hobby } from '@/data/hobby';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useHobbyStorage } from '@/hooks/use-hobby-storage';
 import { HobbyExportService } from '@/services/export-service';

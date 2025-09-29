@@ -1,5 +1,4 @@
-﻿import ExportButton from '@/components/export-button';
-import { useActivityTracking } from '@/hooks/use-activity-tracking';
+﻿import { useActivityTracking } from '@/hooks/use-activity-tracking';
 import { useCompletionStats } from '@/hooks/use-completion-stats';
 import { useInstallationDate } from '@/hooks/use-installation-date';
 import React from 'react';
@@ -80,11 +79,6 @@ export default function HomePage() {
         </View>
       </View>
 
-      {/* Export Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Export Your Data</Text>
-        <ExportButton />
-      </View>
     </ScrollView>
   );
 }

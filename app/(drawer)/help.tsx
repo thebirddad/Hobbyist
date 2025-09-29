@@ -1,9 +1,9 @@
 import React from 'react';
-import { Alert, Linking, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -49,11 +49,24 @@ export default function HelpScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: Colors[colorScheme ?? 'light'].background }]}>
-      <ThemedView style={styles.content}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <IconSymbol name="questionmark.circle.fill" size={60} color={tintColor} />
           <ThemedText style={styles.title}>Help & Support</ThemedText>
           <ThemedText style={styles.subtitle}>We're here to help you succeed</ThemedText>
+        </View>
+
+        
+        <View style={styles.section}>
+          <ThemedText style={styles.sectionTitle}>Handle Your Data</ThemedText>
+          <ThemedText style={styles.description}>
+            Backup and restore your hobby data with CSV export and import functionality.
+          </ThemedText>
+          <View style={styles.dataButtons}>
+            <ExportButton />
+            <ImportButton />
+            <ClearDataButton />
+          </View>
         </View>
         
         <View style={styles.section}>
@@ -94,7 +107,7 @@ export default function HelpScreen() {
             </ThemedText>
           </View>
         </View>
-      </ThemedView>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -103,11 +116,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  content: {
     padding: 24,
     paddingTop: 40,
-    justifyContent: 'flex-start',
   },
   header: {
     alignItems: 'center',
@@ -179,5 +193,9 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     opacity: 0.7,
     flex: 1,
+  },
+  dataButtons: {
+    marginTop: 16,
+    gap: 8,
   },
 });

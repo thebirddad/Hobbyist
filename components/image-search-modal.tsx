@@ -74,7 +74,7 @@ export const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
   const searchGoogleImages = async (query: string, start: number): Promise<ImageResult[]> => {
     try {
       // If no API key is set, use fallback
-      if (!SERPAPI_KEY || SERPAPI_KEY === 'YOUR_SERPAPI_KEY') {
+      if (!SERPAPI_KEY) {
         console.log('No SerpApi key found, using fallback images...');
         return mockImageSearch(query, Math.ceil(start / 6));
       }
@@ -202,6 +202,19 @@ export const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
           >
             <Text style={styles.searchButtonText}>Search</Text>
           </TouchableOpacity>
+          {(images.length > 0 || searchQuery) && (
+            <TouchableOpacity
+              style={styles.clearButton}
+              onPress={() => {
+                setImages([]);
+                setSearchQuery('');
+                setStartIndex(1);
+                setHasMore(true);
+              }}
+            >
+              <Text style={styles.clearButtonText}>Clear</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <ScrollView style={styles.resultsContainer} showsVerticalScrollIndicator={false}>
@@ -407,5 +420,17 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     fontSize: 14,
     color: '#999',
+  },
+  clearButton: {
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
+  clearButtonText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '500',
   },
 });
