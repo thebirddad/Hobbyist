@@ -7,8 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { TvFilmForm } from '@/components/tv-film-form';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Game } from '@/data/game';
-import { Hobby, HobbyType } from '@/data/hobby';
+import { Game, Hobby, HobbyType } from '@/data/hobby';
 import { useHobbyStorage } from '@/hooks/use-hobby-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -31,7 +30,6 @@ export default function HobbyDetailScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date()); // Always start with valid current date
   const [searchText, setSearchText] = useState('');
-  const [isGameExpanded, setIsGameExpanded] = useState(true);
   
   const router = useRouter();
 
@@ -198,23 +196,6 @@ export default function HobbyDetailScreen() {
       console.error('Error updating hobby:', error);
       Alert.alert('Error', 'Failed to update hobby. Please try again.');
     }
-  };
-
-  const formatDateForInput = (dateString: string) => {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      // If invalid date, return current date in YYYY-MM-DD format
-      return new Date().toISOString().split('T')[0];
-    }
-    return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD format
-  };
-
-  const formatDateFromInput = (dateString: string) => {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      return 'Invalid Date';
-    }
-    return date.toLocaleDateString();
   };
 
   const handleDateChange = (event: any, date?: Date) => {
@@ -390,6 +371,8 @@ export default function HobbyDetailScreen() {
                 </TouchableOpacity>
               </View>
             </View>
+
+            
             {getFilteredGameItems().length > 0 ? (
               <GameList 
                 games={[...getFilteredGameItems()].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime())} 

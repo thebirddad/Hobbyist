@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Game, GameStatus } from '../data/game';
+import { Game, GameStatus } from '../data/hobby';
 
 interface GameStatsProps {
   games: Game[];

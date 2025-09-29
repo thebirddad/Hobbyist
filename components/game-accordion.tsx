@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Game, GameStatus } from '../data/game';
+import { Game, GameStatus } from '../data/hobby';
 import { GameList } from './game-list';
 
 interface GameAccordionProps {

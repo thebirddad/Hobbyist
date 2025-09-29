@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Game, GameStatus } from '../data/game';
+import { Game, GameStatus } from '../data/hobby';
 import { useConsoleStorage } from '../hooks/use-console-storage';
 import { GameImagePicker } from './game-image-picker';
 import { TagInput } from './tag-input';

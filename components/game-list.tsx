@@ -7,13 +7,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Game, GameStatus } from '../data/game';
+import { Game, GameStatus } from '../data/hobby';
 
 interface GameListProps {
   games: Game[];
   onDeleteGame: (id: string) => void;
   onUpdateGame?: (id: string, updates: Partial<Game>) => void;
   onEditGame?: (game: Game) => void;
+  onToggleCollapse?: (id: string) => void;
   emptyTitle?: string;
   emptySubtitle?: string;
 }
@@ -23,6 +24,7 @@ export const GameList: React.FC<GameListProps> = ({
   onDeleteGame,
   onUpdateGame,
   onEditGame,
+  onToggleCollapse,
   emptyTitle = "No games added yet",
   emptySubtitle = "Tap the \"+\" button to add your first game!"
 }) => {
@@ -68,20 +70,34 @@ export const GameList: React.FC<GameListProps> = ({
   };
 
   const handleTilePress = (game: Game) => {
-    if (onEditGame) {
-      onEditGame(game);
+    console.log("Pressed game tile:", game);
+    console.log("Current collapsed state:", game.collapsed);
+    
+    if (onToggleCollapse) {
+      onToggleCollapse(game.id);
+    } else if (onUpdateGame) {
+      // Fallback to using onUpdateGame if onToggleCollapse is not provided
+      onUpdateGame(game.id, { collapsed: !game.collapsed });
     }
-  };
+  }
 
   const renderGameItem = ({ item }: { item: Game }) => {
     console.log(`🖼️ Rendering game "${item.title}" with thumbnail:`, item.thumbnail);
     
     return (
-      <TouchableOpacity 
-        style={styles.gameItem} 
-        onPress={() => handleTilePress(item)}
-        activeOpacity={0.7}
-      >
+      <View>
+        <TouchableOpacity
+          style={styles.gameItem}
+          onPress={() => handleTilePress(item)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.gameTitle}>{item.title}</Text>
+          <Text style={styles.expandIcon}>
+            {item.collapsed ? '−' : '+'}
+          </Text>
+        </TouchableOpacity>
+
+        {item.collapsed && (
         <View style={styles.gameItemContent}>
           {item.thumbnail && (
             <View style={styles.thumbnailContainer}>
@@ -95,7 +111,6 @@ export const GameList: React.FC<GameListProps> = ({
           
           <View style={styles.gameInfoContainer}>
             <View style={styles.gameHeader}>
-              <Text style={styles.gameTitle}>{item.title}</Text>
               <TouchableOpacity
                 onPress={() => handleDeleteGame(item)}
                 style={styles.deleteButton}
@@ -203,7 +218,8 @@ export const GameList: React.FC<GameListProps> = ({
             )}
           </View>
         </View>
-      </TouchableOpacity>
+         )}
+      </View>
     );
   };
 
@@ -407,5 +423,12 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#1976d2',
     fontWeight: '500',
+  },
+  expandIcon: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#4a90e2',
+    width: 30,
+    textAlign: 'center',
   },
 });
