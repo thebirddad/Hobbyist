@@ -5,12 +5,12 @@ import { useHobbyStorage } from '@/hooks/use-hobby-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    Platform,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View
+  Alert,
+  Platform,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 interface HobbyFormProps {
@@ -98,6 +98,7 @@ export const HobbyForm: React.FC<HobbyFormProps> = ({ onHobbyCreated }) => {
     { value: HobbyType.BOOKS, label: 'Books', description: 'Track books with pages read and reading progress' },
     { value: HobbyType.TV_FILM, label: 'TV/Film', description: 'Track movies and TV shows with ratings, seasons, and watch status' },
     { value: HobbyType.CUSTOM, label: 'Custom', description: 'Simple tracking with just name and image' },
+    { value: HobbyType.CARDS, label: 'Cards', description: 'Track trading card collections with details and condition' },
   ];
 
   return (

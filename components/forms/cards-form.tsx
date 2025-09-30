@@ -1,255 +1,190 @@
 import { ImageCapture } from '@/components/image-picker';
 import { TagInput } from '@/components/tag-input';
-import { Game, GameStatus } from '@/data/hobby';
-import { useConsoleStorage } from '@/hooks/use-console-storage';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { CardItem, CardStatus, CardType } from '@/data/hobby';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
-interface GameFormProps {
+interface CardFormProps {
   visible: boolean;
-  onGameAdded?: (game: Omit<Game, 'id' | 'dateAdded'>) => void;
-  onGameUpdated?: (game: Game) => void;
   onClose: () => void;
-  initialGame?: Game; // For editing existing games
+  onSubmit: (cardItem: Omit<CardItem, 'id' | 'dateAdded'>) => void;
+  initialCardItem?: CardItem;
+  mode?: 'add' | 'edit';
 }
 
-export const GameForm: React.FC<GameFormProps> = ({
+export const CardForm: React.FC<CardFormProps> = ({
   visible,
-  onGameAdded,
-  onGameUpdated,
   onClose,
-  initialGame
+  onSubmit,
+  initialCardItem,
+  mode = 'add'
 }) => {
-  const isEditing = !!initialGame;
-
-  const { getConsoleNames } = useConsoleStorage();
-  const availablePlatforms = useMemo(() => getConsoleNames(), [getConsoleNames]);
-
-  const [title, setTitle] = useState('');
-  const [platform, setPlatform] = useState(availablePlatforms[0] || 'PC');
-  const [status, setStatus] = useState<GameStatus>(GameStatus.WANT_TO_PLAY);
-  const [timeToBeat, setTimeToBeat] = useState('');
-  const [hoursPlayed, setHoursPlayed] = useState('');
-  const [thumbnail, setThumbnail] = useState<string | undefined>(undefined);
-  const [tags, setTags] = useState<string[]>(['Game', 'PC']);
-
-  // Selection state
-  const [showPlatformPicker, setShowPlatformPicker] = useState(false);
+  const [cardName, setCardName] = useState(initialCardItem?.cardName || '');
+  const [setName, setSetName] = useState(initialCardItem?.setName || '');
+  const [collectorNumber, setCollectorNumber] = useState(initialCardItem?.collectorNumber || '');
+  const [condition, setCondition] = useState(initialCardItem?.condition || '');
+  const [type, setType] = useState<CardType>(initialCardItem?.type || CardType.NON_FOIL);
+  const [quantity, setQuantity] = useState(initialCardItem?.quantity.toString() || '1');
+  const [pricePaid, setPricePaid] = useState(initialCardItem?.pricePaid?.toString() || '');
+  const [currentValue, setCurrentValue] = useState(initialCardItem?.currentValue?.toString() || '');
+  const [thumbnail, setThumbnail] = useState(initialCardItem?.thumbnail || '');
+  const [status, setStatus] = useState<CardStatus>(initialCardItem?.status || CardStatus.WISHLIST);
+  const [tags, setTags] = useState<string[]>(() => {
+    const initialTags = initialCardItem?.tags || [];
+    const filteredTags = initialTags.filter(tag => tag !== 'Card');
+    return ['Card', ...filteredTags];
+  });
   const [showStatusPicker, setShowStatusPicker] = useState(false);
+  const [showTypePicker, setShowTypePicker] = useState(false);
+  const cardStatusOptions = CardStatus ? Object.values(CardStatus).map(status => ({ key: status, label: status })) : [];
 
-  // Initialize form data when initialGame changes
+  const cardTypeOptions = CardType ? Object.values(CardType).map(type => ({ key: type, label: type })) : [];
+  // Initialize form data when initialCardItem changes
   useEffect(() => {
-    if (initialGame) {
-      console.log('🖼️ GameForm initializing with existing game:', initialGame.title, 'thumbnail:', initialGame.thumbnail);
-      setTitle(initialGame.title);
-      setPlatform(initialGame.platform);
-      setStatus(initialGame.status);
-      setTimeToBeat(initialGame.timeToBeat?.toString() || '');
-      setHoursPlayed(initialGame.hoursPlayed?.toString() || '');
-      setThumbnail(initialGame.thumbnail);
-
-      // Set tags with mandatory 'Game' and platform tags
-      const initialTags = initialGame.tags || [];
-      const filteredTags = initialTags.filter(tag => tag !== 'Game' && tag !== initialGame.platform);
-      setTags(['Game', initialGame.platform, ...filteredTags]);
-    } else {
-      console.log('🖼️ GameForm initializing for new game');
-      const defaultPlatform = availablePlatforms[0] || 'PC';
-      setTitle('');
-      setPlatform(defaultPlatform);
-      setStatus(GameStatus.WANT_TO_PLAY);
-      setTimeToBeat('');
-      setHoursPlayed('');
-      setThumbnail(undefined);
-      setTags(['Game', defaultPlatform]);
-      setShowPlatformPicker(false);
+    if (initialCardItem) {
+      setCardName(initialCardItem.cardName || '');
+      setSetName(initialCardItem.setName || '');
+      setCollectorNumber(initialCardItem.collectorNumber || '');
+      setCondition(initialCardItem.condition || '');
+      setType(initialCardItem.type || CardType.NON_FOIL);
+      setQuantity(initialCardItem.quantity.toString() || '1');
+      setPricePaid(initialCardItem.pricePaid?.toString() || '');
+      setCurrentValue(initialCardItem.currentValue?.toString() || '');
+      setThumbnail(initialCardItem.thumbnail || '');
+      setStatus(initialCardItem.status || CardStatus.WISHLIST);
+      const initialTags = initialCardItem.tags || [];
+      const filteredTags = initialTags.filter(tag => tag !== 'Card');
+      setTags(['Card', ...filteredTags]);
       setShowStatusPicker(false);
+      setShowTypePicker(false);
+    } else if (mode === 'add') {
+      // Reset form for adding new item
+      setCardName('');
+      setSetName('');
+      setCollectorNumber('');
+      setCondition('');
+      setType(CardType.NON_FOIL);
+      setQuantity('1');
+      setPricePaid('');
+      setCurrentValue('');
+      setThumbnail('');
+      setStatus(CardStatus.WISHLIST);
+      setTags(['Card']);
+      setShowStatusPicker(false);
+      setShowTypePicker(false);
     }
-  }, [initialGame, availablePlatforms]);
-
-  // Update tags when platform changes
-  useEffect(() => {
-    setTags(prevTags => {
-      // Remove any existing platform tags and add the new one
-      const filteredTags = prevTags.filter(tag =>
-        tag !== 'Game' &&
-        tag !== platform &&
-        !['PC', 'PlayStation 5', 'Xbox Series X', 'Nintendo Switch'].includes(tag)
-      );
-      return ['Game', platform, ...filteredTags];
-    });
-  }, [platform]);
+  }, [initialCardItem, mode]);
 
   const resetForm = useCallback(() => {
-    const defaultPlatform = availablePlatforms[0] || 'PC';
-    setTitle('');
-    setPlatform(defaultPlatform);
-    setStatus(GameStatus.WANT_TO_PLAY);
-    setTimeToBeat('');
-    setHoursPlayed('');
-    setThumbnail(undefined);
-    setTags(['Game', defaultPlatform]);
-    setShowPlatformPicker(false);
+    if (mode === 'add') {
+      setCardName('');
+      setSetName('');
+      setCollectorNumber('');
+      setCondition('');
+      setType(CardType.NON_FOIL);
+      setQuantity('1');
+      setPricePaid('');
+      setCurrentValue('');
+      setThumbnail('');
+      setStatus(CardStatus.WISHLIST);
+      setTags(['Card']);
+    }
     setShowStatusPicker(false);
-  }, [availablePlatforms]);
+    setShowTypePicker(false);
+  }, [mode]);
 
-  const handleSubmit = useCallback(() => {
-    if (!isEditing && !title.trim()) {
-      Alert.alert('Error', 'Please enter a game title');
+  const handleSubmit = () => {
+    if (!cardName.trim()) {
+      Alert.alert('Error', 'Please enter a card name');
       return;
     }
 
-    const timeToBeatNum = timeToBeat ? parseFloat(timeToBeat) : undefined;
-    const hoursPlayedNum = hoursPlayed ? parseFloat(hoursPlayed) : undefined;
-
-    if (timeToBeat && (isNaN(timeToBeatNum!) || timeToBeatNum! < 0)) {
-      Alert.alert('Error', 'Time to beat must be a valid positive number');
-      return;
-    }
-
-    if (hoursPlayed && (isNaN(hoursPlayedNum!) || hoursPlayedNum! < 0)) {
-      Alert.alert('Error', 'Hours played must be a valid positive number');
-      return;
-    }
-
-    console.log('🖼️ Form submission - thumbnail value:', thumbnail);
-
-    if (isEditing && initialGame && onGameUpdated) {
-      const updatedGame: Game = {
-        ...initialGame,
-        timeToBeat: timeToBeatNum,
-        hoursPlayed: hoursPlayedNum,
-        thumbnail,
-        tags: tags.length > 0 ? tags : undefined,
-      };
-      console.log('🖼️ Updating game with thumbnail:', updatedGame.thumbnail);
-      onGameUpdated(updatedGame);
-    } else if (onGameAdded) {
-      const newGame: Omit<Game, 'id' | 'dateAdded'> = {
-        title: title.trim(),
-        platform,
-        status,
-        timeToBeat: timeToBeatNum,
-        hoursPlayed: hoursPlayedNum,
-        dateCompleted: status === GameStatus.COMPLETED ? new Date().toISOString() : undefined,
-        thumbnail,
-        tags: tags.length > 0 ? tags : undefined,
-      };
-      console.log('🖼️ Adding new game with thumbnail:', newGame.thumbnail);
-      onGameAdded(newGame);
-      resetForm();
-    }
-
+    const cardData: Omit<CardItem, 'id' | 'dateAdded'> = {
+      title: cardName.trim(),
+      cardName: cardName.trim(),
+      setName: setName.trim(),
+      collectorNumber: collectorNumber.trim(),
+      condition: condition.trim(),
+      type,
+      quantity: parseInt(quantity, 10) || 1,
+      pricePaid: pricePaid ? parseFloat(pricePaid) : undefined,
+      currentValue: currentValue ? parseFloat(currentValue) : undefined,
+      thumbnail: thumbnail || undefined,
+      status,
+      tags: tags.length > 0 ? tags : undefined,
+    };
+    onSubmit(cardData);
+    resetForm();
     onClose();
-  }, [title, platform, status, timeToBeat, hoursPlayed, thumbnail, tags, isEditing, initialGame, onGameAdded, onGameUpdated, onClose]);
+  };
 
-  const statusOptions = [
-    { key: GameStatus.WANT_TO_PLAY, label: 'Want to Play' },
-    { key: GameStatus.PLAYING, label: 'Currently Playing' },
-    { key: GameStatus.COMPLETED, label: 'Completed' },
-    { key: GameStatus.DROPPED, label: 'Dropped' },
-  ];
+  const handleCancel = () => {
+    resetForm();
+    onClose();
+  };
+
+  const handleImageSelected = useCallback((uri: string) => {
+    console.log('Card form received image URI:', uri);
+    setThumbnail(uri);
+  }, []);
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-      <View style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
         <View style={styles.header}>
-          <Text style={styles.title}>{isEditing ? 'Edit Game' : 'Add New Game'}</Text>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>✕</Text>
+          <TouchableOpacity onPress={handleCancel}>
+            <Text style={styles.cancelButton}>Cancel</Text>
+          </TouchableOpacity>
+          <Text style={styles.title}>
+            {mode === 'add' ? 'Add a Card' : 'Edit a Card'}
+          </Text>
+          <TouchableOpacity onPress={handleSubmit}>
+            <Text style={styles.saveButton}>Save</Text>
           </TouchableOpacity>
         </View>
 
-        <ScrollView style={styles.form} keyboardShouldPersistTaps="handled">
-          {/* Game Title */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Game Title</Text>
-            {isEditing ? (
-              <View style={[styles.textInput, styles.readOnlyInput]}>
-                <Text style={styles.readOnlyText}>{title}</Text>
-              </View>
-            ) : (
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          <View style={styles.form}>
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Title *</Text>
               <TextInput
-                style={styles.textInput}
-                value={title}
-                onChangeText={setTitle}
-                placeholder="Enter game title"
-                autoCorrect={false}
-                autoCapitalize="words"
+                style={styles.input}
+                value={cardName}
+                onChangeText={setCardName}
+                placeholder="Enter card name..."
+                placeholderTextColor="#999"
               />
-            )}
-          </View>
+            </View>
 
-          {/* Platform Selection */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Platform</Text>
-            <Text style={styles.subLabel}>Add more consoles in the 'Consoles' menu option</Text>
-            {isEditing ? (
-              <View style={[styles.pickerButton, styles.readOnlyInput]}>
-                <Text style={styles.readOnlyText}>{platform}</Text>
-              </View>
-            ) : (
-              <>
-                <TouchableOpacity
-                  style={styles.pickerButton}
-                  onPress={() => setShowPlatformPicker(!showPlatformPicker)}
-                >
-                  <Text style={styles.pickerButtonText}>{platform}</Text>
-                  <Text style={styles.pickerArrow}>{showPlatformPicker ? '▲' : '▼'}</Text>
-                </TouchableOpacity>
-
-                {showPlatformPicker && (
-                  <View style={styles.pickerOptions}>
-                    {availablePlatforms.map((p) => (
-                      <TouchableOpacity
-                        key={p}
-                        style={[
-                          styles.pickerOption,
-                          platform === p && styles.pickerOptionSelected
-                        ]}
-                        onPress={() => {
-                          setPlatform(p);
-                          setShowPlatformPicker(false);
-                        }}
-                      >
-                        <Text style={[
-                          styles.pickerOptionText,
-                          platform === p && styles.pickerOptionTextSelected
-                        ]}>{p}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
-              </>
-            )}
-          </View>
-
-          {/* Status Selection - Hidden when editing */}
-          {!isEditing && (
-            <View style={styles.inputGroup}>
+            <View style={styles.formGroup}>
               <Text style={styles.label}>Status</Text>
               <TouchableOpacity
                 style={styles.pickerButton}
                 onPress={() => setShowStatusPicker(!showStatusPicker)}
               >
                 <Text style={styles.pickerButtonText}>
-                  {statusOptions.find(opt => opt.key === status)?.label || 'Select Status'}
+                  {cardStatusOptions.find(opt => opt.key === status)?.label || 'Select Status'}
                 </Text>
-                <Text style={styles.pickerArrow}>{showStatusPicker ? '▲' : '▼'}</Text>
+                <Text style={styles.pickerArrow}>{showStatusPicker ? '\u25b2' : '\u25bc'}</Text>
               </TouchableOpacity>
 
               {showStatusPicker && (
                 <View style={styles.pickerOptions}>
-                  {statusOptions.map((option) => (
+                  {cardStatusOptions.map((option) => (
                     <TouchableOpacity
                       key={option.key}
                       style={[
@@ -270,76 +205,33 @@ export const GameForm: React.FC<GameFormProps> = ({
                 </View>
               )}
             </View>
-          )}
 
-          {/* Time to Beat */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Time to Beat (hours)</Text>
-            <TextInput
-              style={styles.textInput}
-              value={timeToBeat}
-              onChangeText={setTimeToBeat}
-              placeholder="0"
-              keyboardType="numeric"
-            />
-          </View>
+            <View style={styles.formGroup}>
+              <TagInput
+                tags={tags}
+                onTagsChange={(newTags) => {
+                  // Always ensure 'Card' tag is present and first
+                  const filteredTags = newTags.filter(tag => tag !== 'Card');
+                  setTags(['Card', ...filteredTags]);
+                }}
+                placeholder="Add tag (e.g., Magic, Star Wars Unlimited)..."
+                maxTags={10}
+                protectedTags={['Card']}
+              />
+            </View>
 
-          {/* Hours Played */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Hours Played</Text>
-            <TextInput
-              style={styles.textInput}
-              value={hoursPlayed}
-              onChangeText={setHoursPlayed}
-              placeholder="0"
-              keyboardType="numeric"
-            />
-          </View>
-
-          {/* Tags */}
-          <View style={styles.inputGroup}>
-            <TagInput
-              tags={tags}
-              onTagsChange={(newTags) => {
-                // Always ensure 'Game' and platform tags are present
-                const filteredTags = newTags.filter(tag =>
-                  tag !== 'Game' &&
-                  !availablePlatforms.includes(tag)
-                );
-                setTags(['Game', platform, ...filteredTags]);
-              }}
-              placeholder="Add tag (e.g., RPG, Action)..."
-              maxTags={10}
-              protectedTags={['Game', platform]}
-            />
-          </View>
-
-          {/* Game Thumbnail */}
-          <View style={styles.inputGroup}>
-            <ImageCapture
-              imageUri={thumbnail}
-              onImageSelected={(uri) => {
-                console.log('🖼️ GameForm received new thumbnail URI:', uri);
-                setThumbnail(uri);
-              }}
-              onImageRemoved={() => {
-                console.log('🖼️ GameForm thumbnail removed');
-                setThumbnail(undefined);
-              }}
-              itemType="Game"
-              label="Game Thumbnail"
-            />
+            <View style={styles.formGroup}>
+              <ImageCapture
+                onImageSelected={handleImageSelected}
+                onImageRemoved={() => setThumbnail('')}
+                imageUri={thumbnail}
+                itemType="Card"
+                label="Card Thumbnail"
+              />
+            </View>
           </View>
         </ScrollView>
-
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>
-              {isEditing ? 'Update Game' : 'Add Game'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
@@ -347,97 +239,85 @@ export const GameForm: React.FC<GameFormProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 15,
-    backgroundColor: '#fff',
+    paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
   },
-  closeButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeButtonText: {
+  cancelButton: {
     fontSize: 16,
     color: '#666',
-    fontWeight: 'bold',
   },
-  form: {
+  saveButton: {
+    fontSize: 16,
+    color: '#4a90e2',
+    fontWeight: '600',
+  },
+  scrollView: {
     flex: 1,
   },
-  inputGroup: {
-    marginHorizontal: 20,
-    marginTop: 20,
+  form: {
+    padding: 20,
+  },
+  formGroup: {
+    marginBottom: 20,
   },
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
     marginBottom: 8,
+    color: '#000',
   },
-  subLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 8,
-    fontStyle: 'italic',
-  },
-  textInput: {
-    backgroundColor: '#fff',
+  input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#ccc',
     borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    padding: 12,
     fontSize: 16,
-    color: '#333',
+    backgroundColor: '#fff',
+    color: '#000',
   },
   pickerButton: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#fff',
   },
   pickerButtonText: {
     fontSize: 16,
-    color: '#333',
+    color: '#000',
   },
   pickerArrow: {
     fontSize: 12,
     color: '#666',
   },
   pickerOptions: {
-    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#ccc',
     borderTopWidth: 0,
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
+    borderRadius: 8,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    backgroundColor: '#fff',
     maxHeight: 200,
   },
   pickerOption: {
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    padding: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
@@ -446,35 +326,10 @@ const styles = StyleSheet.create({
   },
   pickerOptionText: {
     fontSize: 16,
-    color: '#333',
+    color: '#000',
   },
   pickerOptionTextSelected: {
     color: '#1976d2',
     fontWeight: '600',
-  },
-  footer: {
-    padding: 20,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-  },
-  submitButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  submitButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  readOnlyInput: {
-    backgroundColor: '#f8f8f8',
-    borderColor: '#e0e0e0',
-  },
-  readOnlyText: {
-    fontSize: 16,
-    color: '#666',
   },
 });

@@ -1,4 +1,5 @@
 import { BookForm } from '@/components/forms/book-form';
+import { CardForm } from '@/components/forms/cards-form';
 import { CustomForm } from '@/components/forms/custom-form';
 import { GameForm } from '@/components/forms/game-form';
 import { TvFilmForm } from '@/components/forms/tv-film-form';
@@ -6,13 +7,13 @@ import { TagFilterModal } from '@/components/tag-filter-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { BookItem, CustomItem, Game, Hobby, HobbyType, TvFilmItem } from '@/data/hobby';
+import { BookItem, CardItem, CustomItem, Game, Hobby, HobbyType, TvFilmItem } from '@/data/hobby';
 import { useHobbyStorage } from '@/hooks/use-hobby-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, Image, Keyboard, Modal, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
-
+ 
 export default function HobbyDetailScreen() {
   const { hobbyId } = useLocalSearchParams<{ hobbyId: string; hobbyName: string }>();
   const { hobbies, deleteHobby, updateHobby, addItemToHobby, updateItemInHobby, deleteItemFromHobby } = useHobbyStorage();
@@ -80,6 +81,7 @@ export default function HobbyDetailScreen() {
         // Search in title/name
         if (item.title?.toLowerCase().includes(searchLower)) return true;
         if (item.name?.toLowerCase().includes(searchLower)) return true;
+        if (item.cardName?.toLowerCase().includes(searchLower)) return true; 
 
         // Search in author (books)
         if (item.author?.toLowerCase().includes(searchLower)) return true;
@@ -120,6 +122,11 @@ export default function HobbyDetailScreen() {
   const getFilteredTvFilmItems = () => {
     const filtered = getFilteredItems();
     return filtered.filter((item: any) => item.title !== undefined); // TV/Films have director property
+  };
+
+  const getFilteredCardItems = () => {
+    const filtered = getFilteredItems();
+    return filtered.filter((item: any) => item.cardName !== undefined) as CardItem[]; // Cards have cardName property
   };
 
   const getFilteredCustomItems = () => {
@@ -219,8 +226,10 @@ export default function HobbyDetailScreen() {
   };
 
   const handleAddItem = async (itemData: any) => {
+    console.log('Adding item data:', itemData);
     if (hobbyId) {
       try {
+        console.log('Adding item to hobby:', itemData);
         await addItemToHobby(hobbyId, itemData);
         setShowAddItemModal(false);
         // Force refresh
@@ -266,6 +275,13 @@ export default function HobbyDetailScreen() {
         await updateItemInHobby(hobbyId, itemId, {
           ...customToUpdate,
           collapsed: !customToUpdate.collapsed
+        });
+      } else if (hobby.type === HobbyType.CARDS) {
+        const cardToUpdate = hobby.items.find((item: CardItem) => item.id === itemId) as CardItem;
+        if (!cardToUpdate) return;
+        await updateItemInHobby(hobbyId, itemId, {
+          ...cardToUpdate,
+          collapsed: !cardToUpdate.collapsed
         });
       }
       setRefreshKey(prev => prev + 1);
@@ -744,6 +760,79 @@ export default function HobbyDetailScreen() {
           </View>
         )}
 
+         {hobby.type === HobbyType.CARDS && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionTitleContainer}>
+                <ThemedText type="subtitle" style={styles.sectionTitle}>
+                  Card Collection
+                </ThemedText>
+                {selectedFilterTags.length > 0 && (
+                  <ThemedText style={styles.filterIndicator}>
+                    Filtered by: {selectedFilterTags.join(', ')}
+                  </ThemedText>
+                )}
+              </View>
+              <View style={styles.headerButtons}>
+                <TouchableOpacity
+                  style={[styles.filterButton, selectedFilterTags.length > 0 && styles.filterButtonActive]}
+                  onPress={() => setShowTagFilter(true)}
+                >
+                  <ThemedText style={[styles.filterButtonText, selectedFilterTags.length > 0 && styles.filterButtonTextActive]}>
+                    🏷️ Filter{selectedFilterTags.length > 0 && ` (${selectedFilterTags.length})`}
+                  </ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.addButton}
+                  onPress={() => setShowAddItemModal(true)}
+                >
+                  <ThemedText style={styles.addButtonText}>+ Add Cards</ThemedText>
+                </TouchableOpacity>
+              </View>
+            </View>
+            {getFilteredCardItems().length > 0 ? (
+              <View>
+                {[...getFilteredCardItems()].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).map((card: any) => (
+                  <TouchableOpacity
+                    key={card.id}
+                    style={styles.itemCard}
+                    onLongPress={() => handleEditItem(card)}
+                    onPress={() => handleToggleCollapse(card.id)}
+                  >
+                    <ThemedText style={styles.expandIcon}>{card.collapsed ? '−' : '+'}
+                    </ThemedText>
+                    <ThemedText style={styles.itemTitle}>{card.title}</ThemedText>
+                    {card.collapsed && (
+                      <View style={styles.itemContent}>
+                        {card.thumbnail && (
+                          <Image source={{ uri: card.thumbnail }} style={styles.itemThumbnail} />
+                        )}
+                        <View style={styles.itemInfo}>
+                          {card.cardName && <ThemedText style={styles.itemSubtitle}>by {card.cardName}</ThemedText>}
+                          <ThemedText style={styles.itemStatus}>Status: {card.status}</ThemedText>
+                          <TouchableOpacity
+                            onPress={() => handleDeleteItem(card)}
+                          >
+                            <ThemedText style={styles.deleteItemButtonText}>Click to Delete</ThemedText>
+                          </TouchableOpacity>
+                          <ThemedText style={styles.editHint}>Hold to edit card</ThemedText>
+                        </View>
+
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              <ThemedText style={styles.emptyText}>
+                {(selectedFilterTags.length > 0 || searchText.trim())
+                  ? "No cards match your search or filters. Try adjusting your criteria."
+                  : "No cards added yet. Tap 'Add Card' to get started!"}
+              </ThemedText>
+            )}
+          </View>
+        )}
+
 
       </View>
     );
@@ -773,6 +862,15 @@ export default function HobbyDetailScreen() {
       case HobbyType.TV_FILM:
         return (
           <TvFilmForm
+            visible={showAddItemModal}
+            onClose={() => setShowAddItemModal(false)}
+            onSubmit={handleAddItem}
+            mode="add"
+          />
+        );
+       case HobbyType.CARDS:
+        return (
+          <CardForm
             visible={showAddItemModal}
             onClose={() => setShowAddItemModal(false)}
             onSubmit={handleAddItem}

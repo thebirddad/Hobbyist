@@ -16,7 +16,7 @@ interface ImageCaptureProps {
   imageUri?: string;
   onImageSelected: (uri: string) => void;
   onImageRemoved: () => void;
-  itemType?: 'Game' | 'Book' | 'Movie' | 'TV/Film' | 'Item';
+  itemType?: 'Game' | 'Book' | 'Movie' | 'TV/Film' | 'Item' | 'Card';
   label?: string;
 }
 

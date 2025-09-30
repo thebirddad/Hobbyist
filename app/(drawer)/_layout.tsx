@@ -17,15 +17,7 @@ function CustomDrawerContent(props: any) {
   const { hobbies, canAddHobby, loading } = useHobbyStorage();
   const [isHobbiesExpanded, setIsHobbiesExpanded] = useState(true);
   const [isGamingExpanded, setIsGamingExpanded] = useState(true);
-  let APP_VERSION: string | undefined;
   
-  try {
-    const { APP_CONFIG } = require('@/config/appConfig');
-    APP_VERSION = APP_CONFIG?.VERSION === '0.0.0' ? undefined : APP_CONFIG?.VERSION;
-  } catch (error) {
-    console.log('No App config found, using fallback mode');
-    APP_VERSION = undefined;
-  }
   // Check if there's at least one Game hobby
   const hasGameHobby = useMemo(() => {
     return hobbies.some(hobby => hobby.type === HobbyType.GAMES);
@@ -178,7 +170,7 @@ function CustomDrawerContent(props: any) {
           © 2025
         </Text>
         <Text style={styles.copyrightText}>
-          Version {APP_VERSION || 'Unknown'}
+          Version 0.5.0-BETA
         </Text>
       </View>
     </SafeAreaView>
