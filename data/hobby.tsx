@@ -2,7 +2,25 @@ export enum HobbyType {
   GAMES = 'Games',
   BOOKS = 'Books',
   TV_FILM = 'TV/Film',
-  CUSTOM = 'Custom'
+  CUSTOM = 'Custom',
+  CARDS = 'Cards',
+}
+
+export interface BaseHobby {
+  id: string;
+  name: string;
+  dateStarted: string;
+  type: HobbyType;
+}
+
+export interface ItemBase {
+  id: string;
+  title: string;
+  dateAdded: string;
+  dateCompleted?: string;
+  thumbnail?: string; 
+  tags?: string[];
+  collapsed?: boolean; 
 }
 
 export interface GameHobby extends BaseHobby {
@@ -27,15 +45,7 @@ export interface CustomHobby extends BaseHobby {
 
 export type Hobby = GameHobby | BookHobby | TvFilmHobby | CustomHobby;
 
-export interface BaseHobby {
-  id: string;
-  title: string;
-  dateAdded: string;
-  dateCompleted?: string;
-  thumbnail?: string; 
-  tags?: string[];
-  collapsed?: boolean; 
-}
+
 
 export enum GameStatus {
   WANT_TO_PLAY = 'Want to Play',
@@ -44,7 +54,7 @@ export enum GameStatus {
   DROPPED = 'Dropped'
 }
 
-export interface Game extends BaseHobby {
+export interface Game extends ItemBase {
   platform: string;
   status: GameStatus;
   timeToBeat?: number; 
@@ -65,7 +75,7 @@ export enum BookStatus {
   COMPLETED = 'Completed',
 }
 
-export interface BookItem extends BaseHobby{
+export interface BookItem extends ItemBase{
   author?: string;
   status: BookStatus;
   totalPages?: number;
@@ -81,7 +91,7 @@ export enum TvFilmStatus {
   WATCHING = 'Currently Watching',
 }
 
-export interface TvFilmItem extends BaseHobby {
+export interface TvFilmItem extends ItemBase {
   director?: string;
   status: TvFilmStatus;
   rating?: number; // 1-5 stars
@@ -90,7 +100,7 @@ export interface TvFilmItem extends BaseHobby {
   dateWatched?: string;
 }
 
-export interface CustomItem extends BaseHobby{
+export interface CustomItem extends ItemBase{
   name: string;
 }
 
@@ -108,7 +118,7 @@ export enum CardType {
   OTHER = 'Other',
 }
 
-export interface CardItem extends BaseHobby {
+export interface CardItem extends ItemBase {
   cardName: string;
   setName: string;
   collectorNumber: string;
