@@ -1,6 +1,6 @@
-import { GameImagePicker } from '@/components/game-image-picker';
+import { ImageCapture } from '@/components/image-picker';
 import { TagInput } from '@/components/tag-input';
-import { BookItem, BookStatus } from '@/data/hobby';
+import { BookFormat, BookItem, BookStatus } from '@/data/hobby';
 
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -34,6 +34,7 @@ export const BookForm: React.FC<BookFormProps> = ({
   const [title, setTitle] = useState(initialBook?.title || '');
   const [author, setAuthor] = useState(initialBook?.author || '');
   const [status, setStatus] = useState<BookStatus>(initialBook?.status || BookStatus.WANT_TO_READ);
+  const [format, setFormat] = useState<BookFormat>(initialBook?.format || BookFormat.HARDCOVER);
   const [totalPages, setTotalPages] = useState(initialBook?.totalPages?.toString() || '');
   const [pagesRead, setPagesRead] = useState(initialBook?.pagesRead?.toString() || '');
   const [thumbnail, setThumbnail] = useState(initialBook?.thumbnail || '');
@@ -45,6 +46,7 @@ export const BookForm: React.FC<BookFormProps> = ({
     return ['Book', ...filteredTags];
   });
   const [showStatusPicker, setShowStatusPicker] = useState(false);
+  const [showFormatPicker, setShowFormatPicker] = useState(false);
 
   // Initialize form data when initialBook changes
   useEffect(() => {
@@ -52,6 +54,7 @@ export const BookForm: React.FC<BookFormProps> = ({
       setTitle(initialBook.title || '');
       setAuthor(initialBook.author || '');
       setStatus(initialBook.status || BookStatus.WANT_TO_READ);
+      setFormat(initialBook.format || BookFormat.HARDCOVER);
       setTotalPages(initialBook.totalPages?.toString() || '');
       setPagesRead(initialBook.pagesRead?.toString() || '');
       setThumbnail(initialBook.thumbnail || '');
@@ -63,12 +66,14 @@ export const BookForm: React.FC<BookFormProps> = ({
       setTitle('');
       setAuthor('');
       setStatus(BookStatus.WANT_TO_READ);
+      setFormat(BookFormat.HARDCOVER);
       setTotalPages('');
       setPagesRead('');
       setThumbnail('');
       setDateCompleted('');
       setTags(['Book']);
       setShowStatusPicker(false);
+      setShowFormatPicker(false);
     }
   }, [initialBook, mode]);
 
@@ -76,7 +81,13 @@ export const BookForm: React.FC<BookFormProps> = ({
     { key: BookStatus.WANT_TO_READ, label: 'Want to Read' },
     { key: BookStatus.READING, label: 'Currently Reading' },
     { key: BookStatus.COMPLETED, label: 'Completed' },
-    { key: BookStatus.DROPPED, label: 'Dropped' },
+  ];
+
+  const bookFormatOptions = [
+    { key: BookFormat.HARDCOVER, label: 'Hardcover' },
+    { key: BookFormat.PAPERBACK, label: 'Paperback' },
+    { key: BookFormat.EBOOK, label: 'eBook' },
+    { key: BookFormat.AUDIOBOOK, label: 'Audiobook' },
   ];
 
   const resetForm = useCallback(() => {
@@ -84,6 +95,7 @@ export const BookForm: React.FC<BookFormProps> = ({
       setTitle('');
       setAuthor('');
       setStatus(BookStatus.WANT_TO_READ);
+      setFormat(BookFormat.HARDCOVER);
       setTotalPages('');
       setPagesRead('');
       setThumbnail('');
@@ -91,6 +103,7 @@ export const BookForm: React.FC<BookFormProps> = ({
       setTags(['Book']);
     }
     setShowStatusPicker(false);
+    setShowFormatPicker(false);
   }, [mode]);
 
   const handleSubmit = () => {
@@ -111,6 +124,7 @@ export const BookForm: React.FC<BookFormProps> = ({
       title: title.trim(),
       author: author.trim() || undefined,
       status,
+      format,
       totalPages: totalPagesNum,
       pagesRead: pagesReadNum,
       thumbnail: thumbnail || undefined,
@@ -214,6 +228,42 @@ export const BookForm: React.FC<BookFormProps> = ({
             </View>
 
             <View style={styles.formGroup}>
+              <Text style={styles.label}>Format</Text>
+              <TouchableOpacity 
+                style={styles.pickerButton} 
+                onPress={() => setShowFormatPicker(!showFormatPicker)}
+              > 
+                <Text style={styles.pickerButtonText}>
+                  {bookFormatOptions.find(opt => opt.key === format)?.label || 'Select Format'}
+                </Text>
+                <Text style={styles.pickerArrow}>{showFormatPicker ? '▲' : '▼'}</Text>
+              </TouchableOpacity>
+
+              {showFormatPicker && (
+                <View style={styles.pickerOptions}>
+                  {bookFormatOptions.map((option) => (
+                    <TouchableOpacity
+                      key={option.key}
+                      style={[
+                        styles.pickerOption,
+                        format === option.key && styles.pickerOptionSelected
+                      ]}
+                      onPress={() => {
+                        setFormat(option.key);
+                        setShowFormatPicker(false);
+                      }}
+                    >
+                      <Text style={[
+                        styles.pickerOptionText,
+                        format === option.key && styles.pickerOptionTextSelected
+                      ]}>{option.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            <View style={styles.formGroup}>
               <Text style={styles.label}>Total Pages</Text>
               <TextInput
                 style={styles.input}
@@ -252,7 +302,7 @@ export const BookForm: React.FC<BookFormProps> = ({
             </View>
 
             <View style={styles.formGroup}>
-              <GameImagePicker
+              <ImageCapture
                 onImageSelected={handleImageSelected}
                 onImageRemoved={() => setThumbnail('')}
                 imageUri={thumbnail}

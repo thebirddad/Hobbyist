@@ -1,10 +1,3 @@
-export interface BaseHobby {
-  id: string;
-  name: string;
-  dateStarted: string;
-  type: HobbyType;
-}
-
 export enum HobbyType {
   GAMES = 'Games',
   BOOKS = 'Books',
@@ -34,19 +27,14 @@ export interface CustomHobby extends BaseHobby {
 
 export type Hobby = GameHobby | BookHobby | TvFilmHobby | CustomHobby;
 
-// Game item structure (similar to existing Game interface)
-export interface Game {
+export interface BaseHobby {
   id: string;
   title: string;
-  platform: string;
-  status: GameStatus;
-  timeToBeat?: number; // hours
-  hoursPlayed?: number;
   dateAdded: string;
   dateCompleted?: string;
-  thumbnail?: string; // URI to the game's thumbnail image
-  tags?: string[]; // max 5 tags
-  collapsed?: boolean; // UI state, not stored in DB
+  thumbnail?: string; 
+  tags?: string[];
+  collapsed?: boolean; 
 }
 
 export enum GameStatus {
@@ -56,41 +44,35 @@ export enum GameStatus {
   DROPPED = 'Dropped'
 }
 
-// Book item structure
-export interface BookItem {
-  id: string;
-  title: string;
-  author?: string;
-  status: BookStatus;
-  totalPages?: number;
-  pagesRead?: number;
-  dateAdded: string;
-  dateCompleted?: string;
-  thumbnail?: string;
-  tags?: string[]; // max 5 tags
-  collapsed?: boolean; // UI state, not stored in DB
+export interface Game extends BaseHobby {
+  platform: string;
+  status: GameStatus;
+  timeToBeat?: number; 
+  hoursPlayed?: number;
+  rating?: number; 
+}
+
+export enum BookFormat {
+  HARDCOVER = 'Hardcover',
+  PAPERBACK = 'Paperback',
+  EBOOK = 'eBook',
+  AUDIOBOOK = 'Audiobook'
 }
 
 export enum BookStatus {
   WANT_TO_READ = 'Want to Read',
   READING = 'Currently Reading',
   COMPLETED = 'Completed',
-  DROPPED = 'Dropped'
 }
 
-// TV/Film item structure
-export interface TvFilmItem {
-  id: string;
-  title: string;
-  director?: string;
-  status: TvFilmStatus;
+export interface BookItem extends BaseHobby{
+  author?: string;
+  status: BookStatus;
+  totalPages?: number;
+  pagesRead?: number;
   rating?: number; // 1-5 stars
-  currentSeason?: string; // For TV shows
-  dateAdded: string;
-  dateWatched?: string;
-  thumbnail?: string;
-  tags?: string[]; // max 5 tags
-  collapsed?: boolean; // UI state, not stored in DB
+  genre?: string;
+  format?: BookFormat;
 }
 
 export enum TvFilmStatus {
@@ -99,16 +81,41 @@ export enum TvFilmStatus {
   WATCHING = 'Currently Watching',
 }
 
-// Keep MovieStatus for backward compatibility
-export const MovieStatus = TvFilmStatus;
-export type MovieItem = TvFilmItem;
-
-// Custom item structure (minimal)
-export interface CustomItem {
-  id: string;
-  name: string;
+export interface TvFilmItem extends BaseHobby {
+  director?: string;
+  status: TvFilmStatus;
+  rating?: number; // 1-5 stars
+  currentSeason?: string; // For TV shows
   dateAdded: string;
-  thumbnail?: string;
-  tags?: string[]; // max 5 tags
-  collapsed?: boolean; // UI state, not stored in DB
+  dateWatched?: string;
+}
+
+export interface CustomItem extends BaseHobby{
+  name: string;
+}
+
+export enum CardStatus {
+  OWNED = 'Owned',
+  WISHLIST = 'Wishlist',
+}
+
+export enum CardType {
+  FOIL = 'Foil',
+  NON_FOIL = 'Non-Foil',
+  PROMO = 'Promo',
+  ALTERNATE_ART = 'Alternate Art',
+  SIGNED = 'Signed',
+  OTHER = 'Other',
+}
+
+export interface CardItem extends BaseHobby {
+  cardName: string;
+  setName: string;
+  collectorNumber: string;
+  condition: string; // e.g., Near Mint, Lightly Played
+  status: CardStatus;
+  type: CardType;
+  quantity: number;
+  pricePaid?: number; // Price paid per card
+  currentValue?: number; // Current market value per card
 }

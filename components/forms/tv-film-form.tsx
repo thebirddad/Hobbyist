@@ -1,18 +1,18 @@
-import { GameImagePicker } from '@/components/game-image-picker';
+import { ImageCapture } from '@/components/image-picker';
 import { TagInput } from '@/components/tag-input';
 import { TvFilmItem, TvFilmStatus } from '@/data/hobby';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 interface TvFilmFormProps {
@@ -272,7 +272,7 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
             </View>
 
             <View style={styles.formGroup}>
-              <GameImagePicker
+              <ImageCapture
                 onImageSelected={handleImageSelected}
                 onImageRemoved={() => setThumbnail('')}
                 imageUri={thumbnail}

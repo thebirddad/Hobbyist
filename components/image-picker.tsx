@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { ImageSearchModal } from './image-search-modal';
 
-interface GameImagePickerProps {
+interface ImageCaptureProps {
   imageUri?: string;
   onImageSelected: (uri: string) => void;
   onImageRemoved: () => void;
@@ -20,7 +20,7 @@ interface GameImagePickerProps {
   label?: string;
 }
 
-export const GameImagePicker: React.FC<GameImagePickerProps> = ({
+export const ImageCapture: React.FC<ImageCaptureProps> = ({
   imageUri,
   onImageSelected,
   onImageRemoved,
@@ -30,7 +30,7 @@ export const GameImagePicker: React.FC<GameImagePickerProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showImageSearch, setShowImageSearch] = useState(false);
   
-  console.log('🖼️ GameImagePicker rendered with imageUri:', imageUri);
+  console.log('🖼️ ImageCapture rendered with imageUri:', imageUri);
 
   const requestPermissions = async () => {
     // Request camera permissions
