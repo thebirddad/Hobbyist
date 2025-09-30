@@ -5,6 +5,7 @@ export enum HobbyType {
   CUSTOM = 'Custom',
   CARDS = 'Cards',
 }
+export type Hobby = GameHobby | BookHobby | TvFilmHobby | CustomHobby | CardHobby;
 
 export interface BaseHobby {
   id: string;
@@ -28,6 +29,7 @@ export interface GameHobby extends BaseHobby {
   items: Game[];
 }
 
+//HOBBY INTERFACES==============================================
 export interface BookHobby extends BaseHobby {
   type: HobbyType.BOOKS;
   items: BookItem[];
@@ -43,15 +45,65 @@ export interface CustomHobby extends BaseHobby {
   items: CustomItem[];
 }
 
-export type Hobby = GameHobby | BookHobby | TvFilmHobby | CustomHobby;
+export interface CardHobby extends BaseHobby {
+  type: HobbyType.CARDS;
+  items: CardItem[];
+}
 
-
-
+//STATUS ENUMS==============================================
 export enum GameStatus {
   WANT_TO_PLAY = 'Want to Play',
   PLAYING = 'Currently Playing',
   COMPLETED = 'Completed',
   DROPPED = 'Dropped'
+}
+
+export enum BookStatus {
+  WANT_TO_READ = 'Want to Read',
+  READING = 'Currently Reading',
+  COMPLETED = 'Completed',
+}
+
+export enum BookFormat {
+  HARDCOVER = 'Hardcover',
+  PAPERBACK = 'Paperback',
+  EBOOK = 'eBook',
+  AUDIOBOOK = 'Audiobook'
+}
+
+export enum BookGenre {
+  FICTION = 'Fiction',
+  NON_FICTION = 'Non-Fiction',
+  MYSTERY = 'Mystery',
+  FANTASY = 'Fantasy',
+  SCIENCE_FICTION = 'Science Fiction',
+  BIOGRAPHY = 'Biography',
+  HISTORY = 'History',
+  ROMANCE = 'Romance',
+  THRILLER = 'Thriller',
+  SELF_HELP = 'Self-Help',
+  OTHER = 'Other',
+}
+
+export enum TvFilmStatus {
+  WANT_TO_WATCH = 'Want to Watch',
+  WATCHED = 'Watched',
+  WATCHING = 'Currently Watching',
+}
+
+export enum CardStatus {
+  OWNED = 'Owned',
+  WISHLIST = 'Wishlist',
+}
+
+//ITEM ENUMS==============================================
+export enum CardType {
+  FOIL = 'Foil',
+  NON_FOIL = 'Non-Foil',
+  PROMO = 'Promo',
+  ALTERNATE_ART = 'Alternate Art',
+  SIGNED = 'Signed',
+  OTHER = 'Other',
 }
 
 export interface Game extends ItemBase {
@@ -62,19 +114,6 @@ export interface Game extends ItemBase {
   rating?: number; 
 }
 
-export enum BookFormat {
-  HARDCOVER = 'Hardcover',
-  PAPERBACK = 'Paperback',
-  EBOOK = 'eBook',
-  AUDIOBOOK = 'Audiobook'
-}
-
-export enum BookStatus {
-  WANT_TO_READ = 'Want to Read',
-  READING = 'Currently Reading',
-  COMPLETED = 'Completed',
-}
-
 export interface BookItem extends ItemBase{
   author?: string;
   status: BookStatus;
@@ -83,12 +122,6 @@ export interface BookItem extends ItemBase{
   rating?: number; // 1-5 stars
   genre?: string;
   format?: BookFormat;
-}
-
-export enum TvFilmStatus {
-  WANT_TO_WATCH = 'Want to Watch',
-  WATCHED = 'Watched',
-  WATCHING = 'Currently Watching',
 }
 
 export interface TvFilmItem extends ItemBase {
@@ -102,20 +135,6 @@ export interface TvFilmItem extends ItemBase {
 
 export interface CustomItem extends ItemBase{
   name: string;
-}
-
-export enum CardStatus {
-  OWNED = 'Owned',
-  WISHLIST = 'Wishlist',
-}
-
-export enum CardType {
-  FOIL = 'Foil',
-  NON_FOIL = 'Non-Foil',
-  PROMO = 'Promo',
-  ALTERNATE_ART = 'Alternate Art',
-  SIGNED = 'Signed',
-  OTHER = 'Other',
 }
 
 export interface CardItem extends ItemBase {

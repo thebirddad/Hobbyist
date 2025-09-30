@@ -1,6 +1,6 @@
 import { ImageCapture } from '@/components/image-picker';
 import { TagInput } from '@/components/tag-input';
-import { BookFormat, BookItem, BookStatus } from '@/data/hobby';
+import { BookFormat, BookGenre, BookItem, BookStatus } from '@/data/hobby';
 
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -13,7 +13,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 
 interface BookFormProps {
@@ -39,6 +39,8 @@ export const BookForm: React.FC<BookFormProps> = ({
   const [pagesRead, setPagesRead] = useState(initialBook?.pagesRead?.toString() || '');
   const [thumbnail, setThumbnail] = useState(initialBook?.thumbnail || '');
   const [dateCompleted, setDateCompleted] = useState(initialBook?.dateCompleted || '');
+  const [rating, setRating] = useState(initialBook?.rating?.toString() || '');
+  const [genre, setGenre] = useState(initialBook?.genre || BookGenre.FICTION);
   const [tags, setTags] = useState<string[]>(() => {
     const initialTags = initialBook?.tags || [];
     // Ensure 'Book' tag is always present and first
@@ -47,6 +49,7 @@ export const BookForm: React.FC<BookFormProps> = ({
   });
   const [showStatusPicker, setShowStatusPicker] = useState(false);
   const [showFormatPicker, setShowFormatPicker] = useState(false);
+  const [showGenrePicker, setShowGenrePicker] = useState(false);
 
   // Initialize form data when initialBook changes
   useEffect(() => {
@@ -59,6 +62,8 @@ export const BookForm: React.FC<BookFormProps> = ({
       setPagesRead(initialBook.pagesRead?.toString() || '');
       setThumbnail(initialBook.thumbnail || '');
       setDateCompleted(initialBook.dateCompleted || '');
+      setRating(initialBook.rating?.toString() || '');
+      setGenre(initialBook.genre || BookGenre.FICTION);
       const initialTags = initialBook.tags || [];
       const filteredTags = initialTags.filter(tag => tag !== 'Book');
       setTags(['Book', ...filteredTags]);
@@ -71,24 +76,20 @@ export const BookForm: React.FC<BookFormProps> = ({
       setPagesRead('');
       setThumbnail('');
       setDateCompleted('');
+      setRating('');
+      setGenre(BookGenre.FICTION);
       setTags(['Book']);
       setShowStatusPicker(false);
       setShowFormatPicker(false);
+      setShowGenrePicker(false);
     }
   }, [initialBook, mode]);
 
-  const bookStatusOptions = [
-    { key: BookStatus.WANT_TO_READ, label: 'Want to Read' },
-    { key: BookStatus.READING, label: 'Currently Reading' },
-    { key: BookStatus.COMPLETED, label: 'Completed' },
-  ];
+  const bookStatusOptions = BookStatus ? Object.values(BookStatus).map(status => ({ key: status, label: status })) : [];
 
-  const bookFormatOptions = [
-    { key: BookFormat.HARDCOVER, label: 'Hardcover' },
-    { key: BookFormat.PAPERBACK, label: 'Paperback' },
-    { key: BookFormat.EBOOK, label: 'eBook' },
-    { key: BookFormat.AUDIOBOOK, label: 'Audiobook' },
-  ];
+  const bookFormatOptions = BookFormat ? Object.values(BookFormat).map(format => ({ key: format, label: format })) : [];
+
+  const bookGenreOptions = BookGenre ? Object.values(BookGenre).map(genre => ({ key: genre, label: genre })) : [];
 
   const resetForm = useCallback(() => {
     if (mode === 'add') {
@@ -100,13 +101,23 @@ export const BookForm: React.FC<BookFormProps> = ({
       setPagesRead('');
       setThumbnail('');
       setDateCompleted('');
+      setRating('');
+      setGenre(BookGenre.FICTION);
       setTags(['Book']);
     }
     setShowStatusPicker(false);
     setShowFormatPicker(false);
+    setShowGenrePicker(false);
   }, [mode]);
 
   const handleSubmit = () => {
+
+    const ratingNum = rating ? parseInt(rating) : undefined;
+    if (ratingNum && (ratingNum < 1 || ratingNum > 5)) {
+      Alert.alert('Error', 'Rating must be between 1 and 5 stars');
+      return;
+    }
+
     if (!title.trim()) {
       Alert.alert('Error', 'Please enter a book title');
       return;
@@ -128,9 +139,11 @@ export const BookForm: React.FC<BookFormProps> = ({
       totalPages: totalPagesNum,
       pagesRead: pagesReadNum,
       thumbnail: thumbnail || undefined,
-      dateCompleted: status === BookStatus.COMPLETED && !dateCompleted 
-        ? new Date().toISOString() 
+      dateCompleted: status === BookStatus.COMPLETED && !dateCompleted
+        ? new Date().toISOString()
         : dateCompleted || undefined,
+      rating: ratingNum,
+      genre,
       tags: tags.length > 0 ? tags : undefined,
     };
 
@@ -149,10 +162,41 @@ export const BookForm: React.FC<BookFormProps> = ({
     setThumbnail(uri);
   }, []);
 
+
+  const StarRatingSelector = () => {
+    const stars = [1, 2, 3, 4, 5];
+    const currentRating = rating ? parseInt(rating) : 0;
+
+    return (
+      <View style={styles.starContainer}>
+        {stars.map((star) => (
+          <TouchableOpacity
+            key={star}
+            onPress={() => setRating(star.toString())}
+            style={styles.starButton}
+          >
+            <Text style={[
+              styles.star,
+              star <= currentRating ? styles.starFilled : styles.starEmpty
+            ]}>
+              ★
+            </Text>
+          </TouchableOpacity>
+        ))}
+        <TouchableOpacity
+          onPress={() => setRating('')}
+          style={styles.clearRatingButton}
+        >
+          <Text style={styles.clearRatingText}>Clear</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-      <KeyboardAvoidingView 
-        style={styles.container} 
+      <KeyboardAvoidingView
+        style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={styles.header}>
@@ -193,8 +237,8 @@ export const BookForm: React.FC<BookFormProps> = ({
 
             <View style={styles.formGroup}>
               <Text style={styles.label}>Status</Text>
-              <TouchableOpacity 
-                style={styles.pickerButton} 
+              <TouchableOpacity
+                style={styles.pickerButton}
                 onPress={() => setShowStatusPicker(!showStatusPicker)}
               >
                 <Text style={styles.pickerButtonText}>
@@ -202,7 +246,7 @@ export const BookForm: React.FC<BookFormProps> = ({
                 </Text>
                 <Text style={styles.pickerArrow}>{showStatusPicker ? '▲' : '▼'}</Text>
               </TouchableOpacity>
-              
+
               {showStatusPicker && (
                 <View style={styles.pickerOptions}>
                   {bookStatusOptions.map((option) => (
@@ -229,10 +273,10 @@ export const BookForm: React.FC<BookFormProps> = ({
 
             <View style={styles.formGroup}>
               <Text style={styles.label}>Format</Text>
-              <TouchableOpacity 
-                style={styles.pickerButton} 
+              <TouchableOpacity
+                style={styles.pickerButton}
                 onPress={() => setShowFormatPicker(!showFormatPicker)}
-              > 
+              >
                 <Text style={styles.pickerButtonText}>
                   {bookFormatOptions.find(opt => opt.key === format)?.label || 'Select Format'}
                 </Text>
@@ -286,6 +330,38 @@ export const BookForm: React.FC<BookFormProps> = ({
                 keyboardType="numeric"
               />
             </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Rating (1-5 stars)</Text>
+              <StarRatingSelector />
+            </View>
+
+            <View style={{ maxHeight: 200 }}>
+              <Text style={styles.label}>Genre</Text>
+
+              <ScrollView>
+                {bookGenreOptions.map((option) => (
+                  <TouchableOpacity
+                    key={option.key}
+                    style={[
+                      styles.pickerOption,
+                      genre === option.key && styles.pickerOptionSelected
+                    ]}
+                    onPress={() => {
+                      setGenre(option.key);
+                      setShowGenrePicker(false);
+                    }}
+                  >
+                    <Text style={[
+                      styles.pickerOptionText,
+                      genre === option.key && styles.pickerOptionTextSelected
+                    ]}>{option.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+
 
             <View style={styles.formGroup}>
               <TagInput
@@ -412,5 +488,33 @@ const styles = StyleSheet.create({
   pickerOptionTextSelected: {
     color: '#1976d2',
     fontWeight: '600',
+  },
+  starContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  starButton: {
+    marginRight: 8,
+  },
+  star: {
+    fontSize: 24,
+  },
+  starFilled: {
+    color: '#ffd700',
+  },
+  starEmpty: {
+    color: '#ccc',
+  },
+  clearRatingButton: {
+    marginLeft: 15,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 5,
+    backgroundColor: '#f0f0f0',
+  },
+  clearRatingText: {
+    fontSize: 12,
+    color: '#666',
   },
 });

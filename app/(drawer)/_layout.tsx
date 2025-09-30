@@ -1,15 +1,14 @@
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Colors } from '@/constants/theme';
+import { HobbyType } from '@/data/hobby';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useHobbyStorage } from '@/hooks/use-hobby-storage';
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { router } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { HobbyType } from '@/data/hobby';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useHobbyStorage } from '@/hooks/use-hobby-storage';
 
 function CustomDrawerContent(props: any) {
   
@@ -42,6 +41,8 @@ function CustomDrawerContent(props: any) {
         return 'tv.fill';
       case HobbyType.CUSTOM:
         return 'star.fill';
+      case HobbyType.CARDS:
+        return 'suit.club.fill';
       default:
         return 'folder.fill';
     }

@@ -528,6 +528,13 @@ export default function HobbyDetailScreen() {
                         <View style={styles.itemInfo}>
                           {book.author && <ThemedText style={styles.itemSubtitle}>by {book.author}</ThemedText>}
                           <ThemedText style={styles.itemStatus}>Status: {book.status}</ThemedText>
+                          <ThemedText style={styles.itemFormat}>Format: {book.format}</ThemedText>
+                          <ThemedText style={styles.itemFormat}>Genre: {book.genre}</ThemedText>
+                          {book.rating && (
+                            <ThemedText >
+                              Rating: <ThemedText style={styles.itemRating}>{'★'.repeat(book.rating)}{'☆'.repeat(5 - book.rating)}</ThemedText>
+                            </ThemedText>
+                          )}
                           {book.totalPages && (
                             <ThemedText style={styles.itemProgress}>
                               Progress: {book.pagesRead || 0} / {book.totalPages} pages
@@ -617,8 +624,8 @@ export default function HobbyDetailScreen() {
                           {movie.currentSeason && <ThemedText style={styles.itemSubtitle}>Season: {movie.currentSeason}</ThemedText>}
                           <ThemedText style={styles.itemStatus}>Status: {movie.status}</ThemedText>
                           {movie.rating && (
-                            <ThemedText style={styles.itemRating}>
-                              Rating: {'★'.repeat(movie.rating)}{'☆'.repeat(5 - movie.rating)}
+                           <ThemedText >
+                              Rating: <ThemedText style={styles.itemRating}>{'★'.repeat(movie.rating)}{'☆'.repeat(5 - movie.rating)}</ThemedText>
                             </ThemedText>
                           )}
                           {movie.tags && movie.tags.length > 0 && (
@@ -637,7 +644,7 @@ export default function HobbyDetailScreen() {
                           </TouchableOpacity>
                           <ThemedText style={styles.editHint}>Hold to edit</ThemedText>
                         </View>
-                        
+
                       </View>
                     )}
                   </TouchableOpacity>
@@ -1061,6 +1068,12 @@ const styles = StyleSheet.create({
   itemStatus: {
     fontSize: 14,
     color: '#4a90e2',
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  itemFormat: {
+    fontSize: 14,
+    color: '#1a1e22ff',
     fontWeight: '500',
     marginBottom: 4,
   },
