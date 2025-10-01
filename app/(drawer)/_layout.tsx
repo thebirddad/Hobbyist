@@ -170,7 +170,7 @@ function CustomDrawerContent(props: any) {
           © 2025
         </Text>
         <Text style={styles.copyrightText}>
-          Version 0.5.0-BETA
+          Version 0.1.1-BETA
         </Text>
       </View>
     </SafeAreaView>
