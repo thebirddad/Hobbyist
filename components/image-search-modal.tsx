@@ -45,7 +45,7 @@ export const ImageSearchModal: React.FC<ImageSearchModalProps> = ({
   
   try {
     const { APP_CONFIG } = require('@/config/appConfig');
-    SERPAPI_KEY = APP_CONFIG?.VERSION === '0.0.0' ? undefined : APP_CONFIG?.API_KEY;
+    SERPAPI_KEY = APP_CONFIG?.API_KEY === '0.0.0' ? undefined : APP_CONFIG?.API_KEY;
   } catch (error) {
     console.log('No App config found, using fallback mode');
     SERPAPI_KEY = undefined;

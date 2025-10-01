@@ -73,37 +73,6 @@ export default function HomeScreen() {
     await updateItemInHobby(game._hobbyId, game.id, gameItem);
   };
 
-  // Adapter function for GameAccordion interface
-  const handleUpdateGameById = async (gameId: string, updates: Partial<Game>) => {
-    // Find the game in our games array to get the hobbyId
-    const gameWithHobby = games.find(g => g.id === gameId) as Game & { _hobbyId?: string };
-    if (!gameWithHobby || !gameWithHobby._hobbyId) {
-      Alert.alert('Error', 'Cannot update game: hobby not found');
-      return;
-    }
-
-    // Apply updates to the game
-    const updatedGame = { ...gameWithHobby, ...updates };
-    await handleUpdateGame(updatedGame);
-  };
-
-  const deleteGame = async (gameId: string) => {
-    // Find which hobby this game belongs to
-    const gameHobbies = hobbies.filter(hobby => hobby.type === HobbyType.GAMES);
-    for (const hobby of gameHobbies) {
-      if (hobby.items?.some((item: Game) => item.id === gameId)) {
-        await deleteItemFromHobby(hobby.id, gameId);
-        return;
-      }
-    }
-    Alert.alert('Error', 'Game not found in any hobby');
-  };
-
-  const handleEditGame = (game: Game) => {
-    setEditingGame(game);
-    setIsFormVisible(true);
-  };
-
   const handleCloseForm = () => {
     setIsFormVisible(false);
     setEditingGame(null);

@@ -19,9 +19,9 @@ export interface ItemBase {
   title: string;
   dateAdded: string;
   dateCompleted?: string;
-  thumbnail?: string; 
+  thumbnail?: string;
   tags?: string[];
-  collapsed?: boolean; 
+  collapsed?: boolean;
 }
 
 export interface GameHobby extends BaseHobby {
@@ -109,12 +109,12 @@ export enum CardType {
 export interface Game extends ItemBase {
   platform: string;
   status: GameStatus;
-  timeToBeat?: number; 
+  timeToBeat?: number;
   hoursPlayed?: number;
-  rating?: number; 
+  rating?: number;
 }
 
-export interface BookItem extends ItemBase{
+export interface BookItem extends ItemBase {
   author?: string;
   status: BookStatus;
   totalPages?: number;
@@ -131,9 +131,15 @@ export interface TvFilmItem extends ItemBase {
   currentSeason?: string; // For TV shows
   dateAdded: string;
   dateWatched?: string;
+  rottenTomatoes?: boolean;
+  rottenValue?: string;
+  releaseYear?: string;
+  runTime?: string;
+  plot?: string;
+  imdbRating?: string;
 }
 
-export interface CustomItem extends ItemBase{
+export interface CustomItem extends ItemBase {
   name: string;
 }
 

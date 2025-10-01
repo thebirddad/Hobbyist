@@ -3,17 +3,49 @@ import { TagInput } from '@/components/tag-input';
 import { TvFilmItem, TvFilmStatus } from '@/data/hobby';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Button,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
+
+interface MovieResult {
+  Title: string;
+  Year: string;
+  Rated: string;
+  Released: string;
+  Runtime: string;
+  Genre: string;
+  Director: string;
+  Writer: string;
+  Actors: string;
+  Plot: string;
+  Language: string;
+  Country: string;
+  Awards: string;
+  Poster: string;
+  Ratings: {
+    Source: string;
+    Value: string;
+  }[];
+  Metascore: string;
+  imdbRating: string;
+  imdbVotes: string;
+  imdbID: string;
+  Type: string;
+  DVD: string;
+  BoxOffice: string;
+  Production: string;
+  Website: string;
+  Response: string;
+}
 
 interface TvFilmFormProps {
   visible: boolean;
@@ -30,13 +62,103 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
   initialTvFilmItem,
   mode = 'add'
 }) => {
+  //OMDB logic
+  let OMDB_KEY: string | undefined;
+  try {
+    const { OMDB_CONFIG } = require('@/config/appConfig');
+    OMDB_KEY = OMDB_CONFIG?.API_KEY === '0.0.0' ? undefined : OMDB_CONFIG?.API_KEY;
+    console.log(OMDB_KEY);
+  } catch (error) {
+    console.log('No App config found, using fallback mode');
+    OMDB_KEY = undefined;
+  }
+
+  const searchMovies = async (query: string): Promise<MovieResult[]> => {
+    try {
+      if (!OMDB_KEY) {
+        console.log('No key found, cannot perform OMDB search...');
+        return [];
+      }
+
+      const omdbUrl = `https://www.omdbapi.com/?t=${encodeURIComponent(query)}&apikey=${OMDB_KEY}`;
+      console.log(omdbUrl);
+
+      const response = await fetch(omdbUrl);
+      if (!response.ok) {
+        throw new Error(`Search failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(data);
+      if (data.Response === 'False') {
+        return [];
+      }
+
+      return [data];
+    } catch (error) {
+      console.error('OMDB search error:', error);
+      return [];
+    }
+  };
+
+  const applyMovieToForm = (movie: MovieResult) => {
+    setTitle(movie.Title || '');
+    setDirector(movie.Director || '');
+    setThumbnail(movie.Poster || '');
+    setPlot(movie.Plot || '');
+    setReleaseYear(movie.Released || '');
+    setRuntime(movie.Runtime || '');
+    if (movie.Genre) {
+      const genres = movie.Genre.split(',').map(g => g.trim());
+      setTags(['Film', ...genres]);
+    }
+    if (movie.Ratings && movie.Ratings.length > 0) {
+      const imdb = movie.Ratings.find(r => r.Source === "Internet Movie Database");
+      const rotten = movie.Ratings.find(r => r.Source === "Rotten Tomatoes");
+      if (imdb) {
+        // "8.0/10" → 8.0
+        const value = parseFloat(imdb.Value.split('/')[0]);
+        const starRating = Math.round(value / 2); // convert 10 scale → 5 star scale
+        setImdbRating(starRating.toString());
+      }
+      if (rotten) {
+        setRottenTomatoes(true);
+        setRottenValue(rotten.Value);
+      }
+    }
+    if (movie.imdbRating) {
+      const starRating = Math.round(parseFloat(movie.imdbRating) / 2); // 7.6 → 4 stars
+      setImdbRating(starRating.toString());
+    }
+  };
+
+
+  const [movies, setMovies] = useState<MovieResult[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const handleSearch = async () => {
+    setLoading(true);
+    const results = await searchMovies(title);
+    setMovies(results);
+    applyMovieToForm(results[0]);
+    console.log('applied the movie');
+    setLoading(false);
+  };
+
+  //Form logic
   const [title, setTitle] = useState(initialTvFilmItem?.title || '');
   const [director, setDirector] = useState(initialTvFilmItem?.director || '');
   const [status, setStatus] = useState<TvFilmStatus>(initialTvFilmItem?.status || TvFilmStatus.WANT_TO_WATCH);
+  const [imdbRating, setImdbRating] = useState(initialTvFilmItem?.imdbRating?.toString() || '');
   const [rating, setRating] = useState(initialTvFilmItem?.rating?.toString() || '');
   const [currentSeason, setCurrentSeason] = useState(initialTvFilmItem?.currentSeason || '');
   const [thumbnail, setThumbnail] = useState(initialTvFilmItem?.thumbnail || '');
   const [dateWatched, setDateWatched] = useState(initialTvFilmItem?.dateWatched || '');
+  const [rottenTomatoes, setRottenTomatoes] = useState<boolean>(initialTvFilmItem?.rottenTomatoes ?? false);
+  const [rottenValue, setRottenValue] = useState(initialTvFilmItem?.rottenValue || '');
+  const [plot, setPlot] = useState(initialTvFilmItem?.plot || '');
+  const [runTime, setRuntime] = useState(initialTvFilmItem?.runTime || '');
+  const [releaseYear, setReleaseYear] = useState(initialTvFilmItem?.releaseYear || '');
   const [tags, setTags] = useState<string[]>(() => {
     const initialTags = initialTvFilmItem?.tags || [];
     // Ensure 'Film' tag is always present and first
@@ -51,6 +173,7 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
       setTitle(initialTvFilmItem.title || '');
       setDirector(initialTvFilmItem.director || '');
       setStatus(initialTvFilmItem.status || TvFilmStatus.WANT_TO_WATCH);
+      setImdbRating(initialTvFilmItem.imdbRating || '');
       setRating(initialTvFilmItem.rating?.toString() || '');
       setCurrentSeason(initialTvFilmItem.currentSeason || '');
       setThumbnail(initialTvFilmItem.thumbnail || '');
@@ -58,14 +181,21 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
       const initialTags = initialTvFilmItem.tags || [];
       const filteredTags = initialTags.filter(tag => tag !== 'Film');
       setTags(['Film', ...filteredTags]);
+      setPlot(initialTvFilmItem.plot || '');
+      setRuntime(initialTvFilmItem.runTime || '');
+      setReleaseYear(initialTvFilmItem.releaseYear || '');
     } else if (mode === 'add') {
       setTitle('');
       setDirector('');
       setStatus(TvFilmStatus.WANT_TO_WATCH);
       setRating('');
+      setImdbRating('');
       setCurrentSeason('');
       setThumbnail('');
       setDateWatched('');
+      setPlot('');
+      setRuntime('');
+      setReleaseYear('');
       setTags(['Film']);
       setShowStatusPicker(false);
     }
@@ -110,11 +240,18 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
       rating: ratingNum,
       currentSeason: currentSeason.trim() || undefined,
       thumbnail: thumbnail || undefined,
-      dateWatched: status === TvFilmStatus.WATCHED && !dateWatched 
-        ? new Date().toISOString() 
+      dateWatched: status === TvFilmStatus.WATCHED && !dateWatched
+        ? new Date().toISOString()
         : dateWatched || undefined,
       tags: tags.length > 0 ? tags : undefined,
+      plot: plot || undefined,
+      runTime: runTime || undefined,
+      releaseYear: releaseYear || undefined,
+      imdbRating: imdbRating || undefined,
+      rottenTomatoes,
+      rottenValue: rottenValue || undefined,
     };
+
 
     onSubmit(tvFilmData);
     resetForm();
@@ -161,10 +298,33 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
     );
   };
 
+  const IMDBRatingView = () => {
+    const stars = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    const currentRating = imdbRating ? parseInt(imdbRating) : 0;
+
+    return (
+      <View style={styles.starContainer}>
+        {stars.map((star) => (
+          <Text
+            key={star}
+            style={styles.starButton}
+          >
+            <Text style={[
+              styles.star,
+              star <= currentRating ? styles.starFilled : styles.starEmpty
+            ]}>
+              ★
+            </Text>
+          </Text>
+        ))}
+      </View>
+    );
+  };
+
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-      <KeyboardAvoidingView 
-        style={styles.container} 
+      <KeyboardAvoidingView
+        style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={styles.header}>
@@ -180,18 +340,26 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
         </View>
 
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+
           <View style={styles.form}>
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Title *</Text>
+            <View>
+              <Text style={styles.label}>Title</Text>
               <TextInput
+                placeholder="Search a movie..."
                 style={styles.input}
                 value={title}
                 onChangeText={setTitle}
-                placeholder="Enter movie or TV show title..."
+                onSubmitEditing={handleSearch} // press enter on keyboard = search
                 placeholderTextColor="#999"
               />
-            </View>
+              <Button title="Search" onPress={handleSearch} />
 
+              {/* Results */}
+              {loading && <Text>Searching...</Text>}
+              {!loading && movies.length === 0 && (
+                <Text style={{ marginTop: 10 }}>No results yet. Try searching!</Text>
+              )}
+            </View>
             <View style={styles.formGroup}>
               <Text style={styles.label}>Director/Creator</Text>
               <TextInput
@@ -204,22 +372,44 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Current Season (for TV shows)</Text>
-              <TextInput
-                style={styles.input}
-                value={currentSeason}
-                onChangeText={setCurrentSeason}
-                placeholder="e.g., 3, 5, 12..."
-                placeholderTextColor="#999"
-                keyboardType="numeric"
-                maxLength={3}
-              />
+              <Text style={styles.label}>Plot</Text>
+              <Text>{plot}</Text>
+              <Text style={styles.imdb}>Imdb Rating:<IMDBRatingView /> </Text>
+
             </View>
 
             <View style={styles.formGroup}>
+              {rottenTomatoes && (
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>Rotten Tomatoes: {rottenValue}</Text>
+                </View>
+              )}
+              <Text style={styles.label}>Runtime</Text>
+              <Text>{runTime}</Text>
+              <Text style={styles.label}>Released</Text>
+              <Text>{releaseYear}</Text>
+
+            </View>
+
+            {movies.length > 0 && movies[0].Type !== 'movie' && (
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Current Season (for TV shows)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={currentSeason}
+                  onChangeText={setCurrentSeason}
+                  placeholder="e.g., 3, 5, 12..."
+                  placeholderTextColor="#999"
+                  keyboardType="numeric"
+                  maxLength={3}
+                />
+              </View>
+            )}
+
+            <View style={styles.formGroup}>
               <Text style={styles.label}>Status</Text>
-              <TouchableOpacity 
-                style={styles.pickerButton} 
+              <TouchableOpacity
+                style={styles.pickerButton}
                 onPress={() => setShowStatusPicker(!showStatusPicker)}
               >
                 <Text style={styles.pickerButtonText}>
@@ -227,7 +417,7 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
                 </Text>
                 <Text style={styles.pickerArrow}>{showStatusPicker ? '\u25b2' : '\u25bc'}</Text>
               </TouchableOpacity>
-              
+
               {showStatusPicker && (
                 <View style={styles.pickerOptions}>
                   {tvFilmStatusOptions.map((option) => (
@@ -253,7 +443,7 @@ export const TvFilmForm: React.FC<TvFilmFormProps> = ({
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Rating (1-5 stars)</Text>
+              <Text style={styles.label}>Your (1-5 stars)</Text>
               <StarRatingSelector />
             </View>
 
@@ -356,6 +546,11 @@ const styles = StyleSheet.create({
   pickerArrow: {
     fontSize: 12,
     color: '#666',
+  },
+  imdb: {
+    paddingTop: 15,
+    color: '#666',
+    fontStyle: 'italic',
   },
   pickerOptions: {
     borderWidth: 1,
