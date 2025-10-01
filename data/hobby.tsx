@@ -144,13 +144,75 @@ export interface CustomItem extends ItemBase {
 }
 
 export interface CardItem extends ItemBase {
-  cardName: string;
-  setName: string;
-  collectorNumber: string;
-  condition: string; // e.g., Near Mint, Lightly Played
+  // Basic identity
+  cardName: string;               // "Subway Train"
+  typeLine: string;               // "Artifact — Vehicle"
+  manaCost?: string;              // "{2}"
+  cmc?: number;                   // 2
+  oracleText?: string;            // Rules text
+  keywords?: string[];            // ["Crew"]
+  power?: string;                 // "3"
+  toughness?: string;             // "1"
+  rarity?: string;                // "common"
+
+  // Set info
+  setName: string;                // "Marvel's Spider-Man"
+  setCode: string;                // "spm"
+  collectorNumber: string;        // "178"
+  releasedAt?: string;            // "2025-09-26"
+
+  // Card state
+  foil?: boolean;                 // true
+  nonfoil?: boolean;              // true
+  digital?: boolean;              // false
+  promo?: boolean;                // false
+  fullArt?: boolean;              // false
+
+  // Artist / art
+  artist?: string;                // "Jonas De Ro"
+  artistId?: string;              // single artist id if needed
+  illustrationId?: string;        // id of illustration
+  imageUris?: {
+    small?: string;
+    normal?: string;
+    large?: string;
+    png?: string;
+    artCrop?: string;
+    borderCrop?: string;
+  };
+
+  // Legalities
+  legalities?: Record<string, "legal" | "not_legal" | "restricted" | "banned">;
+
+  // Market info
+  pricePaid?: number;
+  currentValue?: number;
+  prices?: {
+    usd?: string | null;
+    usdFoil?: string | null;
+    eur?: string | null;
+    eurFoil?: string | null;
+    tix?: string | null;
+  };
+
+  // Game / card state
   status: CardStatus;
   type: CardType;
+  condition: string;              // e.g., "Near Mint", "Lightly Played"
   quantity: number;
-  pricePaid?: number; // Price paid per card
-  currentValue?: number; // Current market value per card
+
+  // Optional references
+  scryfallUri?: string;
+  purchaseUris?: {
+    tcgplayer?: string;
+    cardmarket?: string;
+    cardhoarder?: string;
+  };
+  relatedUris?: {
+    edhrec?: string;
+    tcgplayerArticles?: string;
+    tcgplayerDecks?: string;
+  };
 }
+
+

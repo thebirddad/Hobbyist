@@ -126,6 +126,7 @@ export default function HobbyDetailScreen() {
 
   const getFilteredCardItems = () => {
     const filtered = getFilteredItems();
+    console.log(filtered);
     return filtered.filter((item: any) => item.cardName !== undefined) as CardItem[]; // Cards have cardName property
   };
 
@@ -765,7 +766,7 @@ export default function HobbyDetailScreen() {
             <View style={styles.sectionHeader}>
               <View style={styles.sectionTitleContainer}>
                 <ThemedText type="subtitle" style={styles.sectionTitle}>
-                  Card Collection
+                 Card Collection
                 </ThemedText>
                 {selectedFilterTags.length > 0 && (
                   <ThemedText style={styles.filterIndicator}>
@@ -786,7 +787,7 @@ export default function HobbyDetailScreen() {
                   style={styles.addButton}
                   onPress={() => setShowAddItemModal(true)}
                 >
-                  <ThemedText style={styles.addButtonText}>+ Add Cards</ThemedText>
+                  <ThemedText style={styles.addButtonText}>+ Add a Card</ThemedText>
                 </TouchableOpacity>
               </View>
             </View>
@@ -808,14 +809,12 @@ export default function HobbyDetailScreen() {
                           <Image source={{ uri: card.thumbnail }} style={styles.itemThumbnail} />
                         )}
                         <View style={styles.itemInfo}>
-                          {card.cardName && <ThemedText style={styles.itemSubtitle}>by {card.cardName}</ThemedText>}
-                          <ThemedText style={styles.itemStatus}>Status: {card.status}</ThemedText>
                           <TouchableOpacity
                             onPress={() => handleDeleteItem(card)}
                           >
                             <ThemedText style={styles.deleteItemButtonText}>Click to Delete</ThemedText>
                           </TouchableOpacity>
-                          <ThemedText style={styles.editHint}>Hold to edit card</ThemedText>
+                          <ThemedText style={styles.editHint}>Hold to edit</ThemedText>
                         </View>
 
                       </View>
@@ -826,8 +825,8 @@ export default function HobbyDetailScreen() {
             ) : (
               <ThemedText style={styles.emptyText}>
                 {(selectedFilterTags.length > 0 || searchText.trim())
-                  ? "No cards match your search or filters. Try adjusting your criteria."
-                  : "No cards added yet. Tap 'Add Card' to get started!"}
+                  ? "No TV shows or movies match your search or filters. Try adjusting your criteria."
+                  : "No TV shows or movies added yet. Tap 'Add TV/Film' to get started!"}
               </ThemedText>
             )}
           </View>
@@ -943,6 +942,19 @@ export default function HobbyDetailScreen() {
             }}
             onSubmit={handleUpdateItem}
             initialItem={editingItem}
+            mode="edit"
+          />
+        );
+      case HobbyType.CARDS:
+        return (
+          <CardForm
+            visible={showEditItemModal}
+            onClose={() => {
+              setShowEditItemModal(false);
+              setEditingItem(null);
+            }}
+            onSubmit={handleUpdateItem}
+            initialCardItem={editingItem}
             mode="edit"
           />
         );
